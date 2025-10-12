@@ -28,7 +28,6 @@ div {
 }
 
 #header-buttons{
-    display: flex;
     margin-left: auto;
     margin-right: 1%;
 }
@@ -68,18 +67,6 @@ div {
 #tree-bar {
     width: 100%;
     height: 3%;
-    display: flex;
-}
-
-#selection-options {
-    display: flex;
-    width: fit-content;
-}
-
-#tree-options {
-    display: flex;
-    width: fit-content;
-    margin-left: auto;
 }
 
 #sandbox {
@@ -89,9 +76,26 @@ div {
 
 #toolbar {
     height: 4%;
-    display: flex;
 }
 
 #tool-body {
     height: 96%;
+}
+
+.link {
+  fill: none;
+  stroke: #aaa;
+  stroke-width: 2px;
+}
+
+.node circle {
+  fill: #4285f4;
+  stroke: #333;
+  stroke-width: 1.5px;
+}
+
+.node text {
+  font-size: 14px;
+  font-weight: 500;
+  fill: #222;
 }
