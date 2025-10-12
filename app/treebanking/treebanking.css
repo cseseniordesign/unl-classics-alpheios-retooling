@@ -28,6 +28,7 @@ div {
 }
 
 #header-buttons{
+    display: flex;
     margin-left: auto;
     margin-right: 1%;
 }
@@ -67,6 +68,18 @@ div {
 #tree-bar {
     width: 100%;
     height: 3%;
+    display: flex;
+}
+
+#selection-options { 
+    display: flex; 
+    width: fit-content; 
+} 
+
+#tree-options { 
+    display: flex; 
+    width: fit-content; 
+    margin-left: auto;
 }
 
 #sandbox {
@@ -76,6 +89,7 @@ div {
 
 #toolbar {
     height: 4%;
+    display: flex;
 }
 
 #tool-body {
