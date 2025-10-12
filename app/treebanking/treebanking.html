@@ -6,21 +6,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="treebanking.css">
-     <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
     <title>Arethusa</title>
 </head>
 
 <body>
     <div id="header">
         <img src="../../assets/arethusa-small.png" alt="Arethusa Logo">
+        <input type="text" id="doc-search" placeholder="Search for ducuments..." />
+        <button type="submit">Search</button>
+        <p>Doc Name</p>
+        <button id="first" type="button">first</button>
+        <button id="back" type="button">back</button>
+        <p>NUM</p>
+        <button id="next" type="button">next</button>
+        <button id="last" type="button">last</button>
         <div id="header-buttons">
-            <button id="idk" type="button">idk</button>
-            <button id="save" type="button">language</button>
-            <button id="undo" type="button">exit</button>
-            <button id="redo" type="button">language</button>
-            <button id="comments" type="button">exit</button>
-            <button id="settings" type="button">language</button>
-            <button id="questions" type="button">exit</button>
+            <button id="save" type="button">save</button>
+            <button id="download" type="button">download</button>
+            <button id="undo" type="button">undo</button>
+            <button id="redo" type="button">redo</button>
+            <button id="comment" type="button">comment</button>
+            <button id="settings" type="button">settings</button>
+            <button id="questions" type="button">questions</button>
             <button id="language" type="button">language</button>
             <button id="exit" type="button">exit</button>
         </div>
@@ -31,11 +39,24 @@
                 <p>This is where a sentence would go after being tokenized.</p>
             </div>
             <div id="tree-bank">
-                <div id="tree-bar">
-                    <p>this is the tree view editing bar</p>
+                <div id="tree-bar"> 
+                    <div id="selection-options"> 
+                        <p>Selection:</p> 
+                        <button id="none" type="button">save</button> 
+                        <button id="unused" type="button">unused</button> 
+                        <button id="highlight" type="button">highlight</button>
+                    </div> 
+                    <div id="tree-options"> 
+                        <button id="compact" type="button">compact</button> 
+                        <button id="expand" type="button">expand</button> 
+                        <button id="flip" type="button">flip</button> 
+                        <button id="focus-root" type="button">F R</button> 
+                        <button id="focus-selection" type="button">F S</button> 
+                        <button id="center" type="button">center</button> 
+                        <button id="fit" type="button">fit</button> 
+                    </div> 
                 </div>
                 <div id="sandbox">
-                    <p>this is where you treebank</p>
                     <h2>Dependency Tree Visualization</h2>
                         <svg width="900" height="600"></svg>
                 </div>
@@ -43,7 +64,13 @@
         </div>
         <div id="tools">
             <div id="toolbar">
-                <p>this is the toolbar</p>
+                <button id="morph" type="button">morph</button> 
+                <button id="relation" type="button">relation</button> 
+                <button id="aT" type="button">aT</button> 
+                <button id="selector" type="button">selector</button> 
+                <button id="history" type="button">history</button> 
+                <button id="comments" type="button">comments</button> 
+                <button id="settings" type="button">settings</button> 
             </div>
             <div id="tool-body">
                 <p>this is the body of each tool option</p>
