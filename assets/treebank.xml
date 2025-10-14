@@ -1,0 +1,44 @@
+<treebank xmlns="http://data.perseus.org/ns/syntax/treebank/2"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:alph="http://alpheios.net/rdfvocab/inflections/1"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    xmlns:sgdt="http://data.perseus.org/rdfvocab/ns/syntax/smythgrammar/1"
+    xsi:schemaLocation="http://data.perseus.org/ns/syntax/treebank/2 ../xsd/treebank-2.0.xsd"
+    version="2.0" 
+    xml:lang="grc"
+    dir="ltr"
+    document_uri="http://data.perseus.org/collections/urn:cite:perseus:grctb.1.1"
+    prefix="doc: urn:cts:greekLit:tlg0016.tlg001.perseus-grc1 
+         aldt:http://data.perseus.org/rdfvocab/syntax/aldt#"
+    >
+
+    <link xlink:role="http://www.w3.org/ns/prov#has_provenance" xlink:href="provenance-URI"/>
+    <link xlink:role="http://www.w3.org/ns/prov#has_anchor" xlink:href="target-URI"/>
+    <link xlink:role="http://purl.org/dc/terms/format"
+        xlink:href="http://data.perseus.org/tagsets/syntax/aldt.json"/>
+    <link xlink:role="http://purl.org/dc/terms/format"
+        xlink:href="http://data.perseus.org/tagsets/syntax/sg.json"/>
+    <comment class="title"> Sample treebank of Herodotus Histories (from Vanessa Gorman's treebank)
+        to show use of use of new schema </comment>
+    <sentence n="1" cite="doc:1.1">
+        <comment class="note"> Sample sentence level comment</comment>
+        <word n="1-1" lemma="Ἡρόδοτος" head="1-3" relation="aldt:ATR" alph:pofs="noun"
+            alph:num="singular" alph:gend="masculine" alph:case="genitive" sgdt:case="PRP"
+            cite="doc:1.1@Ἡροδότου[1]">Ἡροδότου</word>
+        <word n="1-2" lemma="Ἁλικαρνησσεύς" relation="aldt:ATR" alph:pofs="noun" alph:num="singular"
+            alph:gend="masculine" alph:case="genitive" cite="doc:1.1@Ἁλικαρνησσέος[1]"
+            >Ἁλικαρνησσέος</word>
+        <word n="1-3" lemma="ἱστορία" head="1-4" relation="aldt:ATR" alph:pofs="noun"
+            alph:num="singular" alph:gend="feminine" alph:case="genitive" cite="doc:1.1@ἱστορία[1]"
+            >ἱστορία</word>
+        <word n="1-4" lemma="ἀπόδειξις" head="1-0" relation="aldt:PNOM_ExD0_PRED" alph:pofs="noun"
+            alph:num="singular" alph:gend="feminine" alph:case="nominative"
+            cite="doc:1.1@ἀπόδεξις[1]">
+            <comment class="note"> Sample word level comment</comment>
+            ἀπόδεξις</word>
+        <word n="1-5" lemma="ὅδε" head="1-0" relation="SBJ_ExD0_PRED" alph:pofs="pronoun"
+            alph:num="singular" alph:gend="feminine" alph:case="nominative" cite="doc:1.1@ἥδε[1]"
+            >ἥδε</word>
+
+    </sentence>
+</treebank>
