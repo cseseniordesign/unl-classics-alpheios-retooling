@@ -7,7 +7,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="treebanking.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <title>Arethusa</title>
+    <title>Arethusa Lite</title>
 </head>
 
 <body>
@@ -18,7 +18,7 @@
         <p>Doc Name</p>
         <button id="first" type="button">first</button>
         <button id="back" type="button">back</button>
-        <p>NUM</p>
+        <select id="sentence-select" class="select"></select>
         <button id="next" type="button">next</button>
         <button id="last" type="button">last</button>
         <div id="header-buttons">
@@ -37,12 +37,13 @@
         <div id="tree-view">
             <div id="sentence">
                 <p>This is where a sentence would go after being tokenized.</p>
+                <input onchange="getLocalTreebankXML()" type="file" id="file" accept=".xml,.tb,.tb.xml"/>
             </div>
             <div id="tree-bank">
                 <div id="tree-bar"> 
                     <div id="selection-options"> 
-                        <p>Selection:</p> 
-                        <button id="none" type="button">save</button> 
+                        <p style="margin: 0">Selection:</p> 
+                        <button id="none" type="button">none</button> 
                         <button id="unused" type="button">unused</button> 
                         <button id="highlight" type="button">highlight</button>
                     </div> 
@@ -57,8 +58,7 @@
                     </div> 
                 </div>
                 <div id="sandbox">
-                    <h2>Dependency Tree Visualization</h2>
-                        <svg width="900" height="600"></svg>
+                    <svg width="900" height="600"></svg>
                 </div>
             </div>
         </div>
