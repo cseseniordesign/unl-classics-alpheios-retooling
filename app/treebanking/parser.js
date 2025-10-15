@@ -11,10 +11,10 @@ export default function parseTreeBankXML(xmlString) {
   const xmlDoc = parser.parseFromString(xmlString, "application/xml");
   
   const sentence = xmlDoc.querySelector("sentence");
+  console.log(sentence)
   let words = Array.from(sentence.querySelectorAll("word"));
-
   words = words.map(word=> ({
-    word: word.textContent
+    word: word.getAttribute("form")
   }));
   return words;
 
