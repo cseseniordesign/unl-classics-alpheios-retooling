@@ -28,3 +28,30 @@ fetch('/assets/treebank.xml')
     tokenizedSentence.append(`${word.word} `);
   })
 })
+
+
+// NEEDS TO SAVE THE FILE FROM parseTreeBAnkXML not working yet
+function saveLocal() {
+  if (confirm("Would you like to save this treebank?")) {
+    const doctype = new XMLSerializer().serializeToString(document.doctype);
+    const html = document.documentElement.outerHTML;
+    const fullHTML = doctype + "\n" + html;
+
+    const blob = new Blob([fullHTML], { type: "text/html" });
+    const fileName = "Treebank.html";
+    const el = document.createElement('a');
+    el.href = URL.createObjectURL(blob);
+    el.download = fileName;
+
+    document.body.appendChild(el);
+    el.click();
+    document.body.removeChild(el);
+    URL.revokeObjectURL(el.href);
+  }
+}
+
+// Find the save button once the page has loaded
+document.addEventListener("DOMContentLoaded", () => {
+  const button = document.getElementById("save");
+  button.addEventListener("click", saveLocal);
+});
