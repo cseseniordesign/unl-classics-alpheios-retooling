@@ -1,3 +1,4 @@
+import parseTreeBankXML from './parser.js'
 /**
  * This function handles the XML file selector and currently
  * just returns the file. It is possible to instead of returning,
@@ -6,7 +7,6 @@
  * step and might not want to finish right away.
  * @returns file
  */
-import parseTreeBankXML from './parser.js'
 function getLocalTreebankXML() {
     const fileInput = document.getElementById('file');
     const file = fileInput.files[0];
