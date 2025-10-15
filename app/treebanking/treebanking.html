@@ -36,7 +36,7 @@
     <div id="body">
         <div id="tree-view">
             <div id="sentence">
-                <p>This is where a sentence would go after being tokenized.</p>
+                <p id="tokenized-sentence"></p>
                 <input onchange="getLocalTreebankXML()" type="file" id="file" accept=".xml,.tb,.tb.xml"/>
             </div>
             <div id="tree-bank">
@@ -78,5 +78,5 @@
         </div>
     </div>
 </body>
-<script src="treebanking.js"></script>
+<script type = "module" src="treebanking.js"></script>
 </html>

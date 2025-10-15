@@ -6,6 +6,7 @@
  * step and might not want to finish right away.
  * @returns file
  */
+import parseTreeBankXML from './parser.js'
 function getLocalTreebankXML() {
     const fileInput = document.getElementById('file');
     const file = fileInput.files[0];
@@ -15,3 +16,15 @@ function getLocalTreebankXML() {
     //DELTE THIS COMMENT WHEN THAT IS DONE.
     return file;
 }
+
+//parses treebank.xml 
+// adds the words to the main page
+const tokenizedSentence = document.getElementById('tokenized-sentence');
+fetch('/assets/treebank.xml')
+.then(response=> response.text())
+.then(xmlText=> {
+  const words = parseTreeBankXML(xmlText);
+  words.forEach((word)=> {
+    tokenizedSentence.append(`${word.word} `);
+  })
+})
