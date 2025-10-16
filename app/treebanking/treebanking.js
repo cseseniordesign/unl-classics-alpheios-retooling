@@ -17,17 +17,30 @@ function getLocalTreebankXML() {
     return file;
 }
 
-//parses treebank.xml 
+// parses treebank.xml 
 // adds the words to the main page
 const tokenizedSentence = document.getElementById('tokenized-sentence');
 fetch('/assets/treebank.xml')
 .then(response=> response.text())
 .then(xmlText=> {
+  // Parse XML into a list of word objects
   const words = parseTreeBankXML(xmlText);
+
+  // Ensures only one sentence is displayed at a time
+  tokenizedSentence.textContent = "";
+
+  // Display each word's form on the page
   words.forEach((word)=> {
-    tokenizedSentence.append(`${word.word} `);
+    tokenizedSentence.append(`${word.form} `);
   })
+
+  // Store globally for debugging in browser console
+  // Example: wordAttributes[0].lemma
+  window.wordAttributes = words;
+
 })
+// Error handling to catch XML load or network issues
+.catch(err => console.error("Error loading XML:", err));
 
 
 // NEEDS TO SAVE THE FILE FROM parseTreeBAnkXML not working yet
@@ -54,4 +67,56 @@ function saveLocal() {
 document.addEventListener("DOMContentLoaded", () => {
   const button = document.getElementById("save");
   button.addEventListener("click", saveLocal);
+});
+
+/**
+ * Vertical resize interaction
+ * 
+ * This adds interactivity to the handle between the sentence
+ * and the tree view. Users can drag it to resize the sentence box
+ * vertically while the tree-bank area automatically adjusts.
+ */
+const treeView = document.getElementById("tree-view");
+const sentenceBox = document.getElementById("sentence");
+const treeBox = document.getElementById("tree-bank");
+const resizeHandle = document.getElementById("resize-handle");
+
+let isResizing = false;
+let startY;
+let startHeight;
+
+// When the user clicks and holds the resize bar
+resizeHandle.addEventListener("mousedown", (e) => {
+  isResizing = true;
+  startY = e.clientY;
+  startHeight = sentenceBox.offsetHeight;
+  document.body.style.cursor = "ns-resize";
+  e.preventDefault();
+});
+
+// When the user moves the mouse while resizing
+document.addEventListener("mousemove", (e) => {
+  if (!isResizing) return;
+  const dy = e.clientY - startY;
+  const newHeight = startHeight + dy;
+  const parentHeight = treeView.offsetHeight;
+
+  const minHeight = 50;
+  const contentHeight = sentenceBox.scrollHeight; // actual content height
+  const maxHeight = parentHeight * 0.85;          // safety buffer to prevent tree from being covered completely
+
+  // Apply the heigh within limits
+  if (newHeight >= minHeight && newHeight <= maxHeight) {
+    sentenceBox.style.height = `${newHeight}px`;
+    // switch between scroll and visible mode depending on available space
+    sentenceBox.style.overflowY = newHeight < contentHeight ? "auto" : "visible";
+  }
+});
+
+// When the user releases the mouse
+document.addEventListener("mouseup", () => {
+  if (isResizing) {
+    isResizing = false;
+    document.body.style.cursor = "default";
+  }
 });
