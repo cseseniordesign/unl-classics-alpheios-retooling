@@ -20,7 +20,7 @@ function getLocalTreebankXML() {
 // parses treebank.xml 
 // adds the words to the main page
 const tokenizedSentence = document.getElementById('tokenized-sentence');
-fetch('/assets/treebank.xml')
+fetch('../../assets/treebank.xml')
 .then(response=> response.text())
 .then(xmlText=> {
   // Parse XML into a list of word objects
@@ -51,6 +51,10 @@ fetch('/assets/treebank.xml')
 
 
 // NEEDS TO SAVE THE FILE FROM parseTreeBAnkXML not working yet
+/*
+*   This function is used to save the file from parseTreeBankXML
+*   to the local system of the user.
+*/
 function saveLocal() {
   if (confirm("Would you like to save this treebank?")) {
     const doctype = new XMLSerializer().serializeToString(document.doctype);
