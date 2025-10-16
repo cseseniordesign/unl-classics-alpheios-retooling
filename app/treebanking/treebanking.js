@@ -24,19 +24,26 @@ fetch('/assets/treebank.xml')
 .then(response=> response.text())
 .then(xmlText=> {
   // Parse XML into a list of word objects
-  const words = parseTreeBankXML(xmlText);
+  const data = parseTreeBankXML(xmlText);
 
   // Ensures only one sentence is displayed at a time
   tokenizedSentence.textContent = "";
 
-  // Display each word's form on the page
-  words.forEach((word)=> {
+  //gets sentence with a certain id
+  //should change to start with 1 and decrement/increment by users command
+  const sentence = data.find(sentence=> sentence.id === "1");
+
+  //need a way to track sentence bounds 
+  //so user can't go outside of them
+  if (sentence === undefined) {
+    alert("No sentence found!")
+  }
+  else {
+    // Display each word's form on the page
+    sentence.words.forEach((word)=> {
     tokenizedSentence.append(`${word.form} `);
   })
-
-  // Store globally for debugging in browser console
-  // Example: wordAttributes[0].lemma
-  window.wordAttributes = words;
+  }
 
 })
 // Error handling to catch XML load or network issues
