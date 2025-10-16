@@ -17,30 +17,51 @@ function getLocalTreebankXML() {
     return file;
 }
 
-// parses treebank.xml 
-// adds the words to the main page
-const tokenizedSentence = document.getElementById('tokenized-sentence');
-fetch('../../assets/treebank.xml')
-.then(response=> response.text())
-.then(xmlText=> {
-  // Parse XML into a list of word objects
-  const words = parseTreeBankXML(xmlText);
 
-  // Ensures only one sentence is displayed at a time
-  tokenizedSentence.textContent = "";
+// NEEDS TO SAVE THE FILE FROM parseTreeBAnkXML not working yet
+/*
+* parses treebank.xml 
+* adds the words to the main page
+*/
+ window.displaySentence = function(index){
+  const tokenizedSentence = document.getElementById('tokenized-sentence');
+  fetch('../../assets/treebank.xml')
+  .then(response=> response.text())
+  .then(xmlText=> {
+    // Parse XML into a list of word objects
+    const data = parseTreeBankXML(xmlText);
 
-  // Display each word's form on the page
-  words.forEach((word)=> {
+    // Ensures only one sentence is displayed at a time
+    tokenizedSentence.textContent = "";
+
+    //Number of sentences
+    window.totalSentences = data.length;
+
+    //ensures displayed sentence stays within boundaries
+    if (index <= 1 ) index = 1;
+    if (index >= totalSentences) index = totalSentences -1;
+
+    window.currentIndex = index;
+
+    //gets sentence with a certain id
+    //should change to start with 1 and decrement/increment by users command
+    const sentence = data.find(sentence=> sentence.id === `${index}`);
+
+
+    // Display each word's form on the page
+    sentence.words.forEach((word)=> {
     tokenizedSentence.append(`${word.form} `);
-  })
 
-  // Store globally for debugging in browser console
-  // Example: wordAttributes[0].lemma
-  window.wordAttributes = words;
+    })
+    
 
 })
 // Error handling to catch XML load or network issues
 .catch(err => console.error("Error loading XML:", err));
+}
+
+displaySentence(1);
+
 
 
 // NEEDS TO SAVE THE FILE FROM parseTreeBAnkXML not working yet

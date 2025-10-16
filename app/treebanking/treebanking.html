@@ -17,11 +17,11 @@
         <input type="text" id="doc-search" placeholder="Search for documents..." />
         <button type="submit">Search</button>
         <p>Doc Name</p>
-        <button id="first" type="button">first</button>
-        <button id="back" type="button">back</button>
+        <button onclick="displaySentence(1)" id="first" type="button">first</button>
+        <button onclick="displaySentence(window.currentIndex-1)" id="back" type="button">back</button>
         <select id="sentence-select" class="select"></select>
-        <button id="next" type="button">next</button>
-        <button id="last" type="button">last</button>
+        <button onclick="displaySentence(window.currentIndex+1)" id="next" type="button">next</button>
+        <button onclick="displaySentence(window.totalSentences)" id="last" type="button">last</button>
         <div id="header-buttons">
             <button id="save" type="button">Save</button>
             <button id="download" type="button">download</button>
