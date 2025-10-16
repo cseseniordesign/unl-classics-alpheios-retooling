@@ -55,7 +55,7 @@ function getLocalTreebankXML() {
     })
     
 
-})
+  })
 // Error handling to catch XML load or network issues
 .catch(err => console.error("Error loading XML:", err));
 }
@@ -145,3 +145,43 @@ document.addEventListener("mouseup", () => {
     document.body.style.cursor = "default";
   }
 });
+
+/**
+ * This function takes in a sentenceId, and returns a d3
+ * hierarchy that contains a synthetic root with all nodes
+ * hanging underneath it. the objects in the hierarchy only
+ * contain the word's <id> and <head>.
+ * @param {*} sentenceId 
+ */
+function createNodeHierarchy(sentenceId) {
+  fetch('../../assets/treebank.xml')
+    .then(response => response.text())
+    .then(xmlText => {
+      const data = parseTreeBankXML(xmlText);
+      const sentence = data.find(sentence => sentence.id === `${sentenceId}`);
+
+      const idParentPairs = sentence.words.map(wordNode => ({
+        id: String(wordNode.id),
+        //change root nodes to have their parent point to a synthetic root
+        parentId: (wordNode.head === 0 || wordNode.head === '0' || wordNode.head === null) ? 'root' : String(wordNode.head)
+      }));
+
+      // Add synthetic root
+      idParentPairs.push({
+        id: 'root',
+        parentId: null
+      });
+
+      console.table(idParentPairs);
+
+      const root = d3.stratify()
+        .id(d => d.id)
+        .parentId(d => d.parentId)
+        (idParentPairs);
+
+      return root;
+    });
+}
+
+
+createNodeHierarchy(1);
