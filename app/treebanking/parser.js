@@ -63,8 +63,28 @@ export default function parseTreeBankXML(xmlString) {
     return wordObj;
   });
 
+  /**
+   * wordNodes param is the array of words from an XML file
+   * with all of the data that is attatched to their object.
+   * @param {*} wordNodes 
+   */
+  function createNodeHierarchy (wordNodes) {
+    const idParentPairs = wordNodes.map(d => ({
+    id: d.id,
+    parentId: d.head === "0" ? null : d.head
+    }));
+    const root = d3.stratify()
+      .id((d) => d.id)
+      .parentId((d) => d.head)
+     (idParentPairs);
+
+     return root;
+  }
+
   // Debug output – displays the parsed data in a table format in console
   console.table(wordObjects, ["id","form", "lemma", "relation", "postag", "head"]);
-
+  const root = createNodeHierarchy(wordObjects);
   return wordObjects;
+
+
 }
