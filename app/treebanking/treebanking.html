@@ -7,14 +7,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="treebanking.css">
     <script src="https://d3js.org/d3.v7.min.js"></script>
-    <script src="treebanking.js" defer></script>
+    <script type="module" src="treebanking.js"></script>
     <title>Arethusa Lite</title>
 </head>
 
 <body>
     <div id="header">
         <img src="../../assets/arethusa-small.png" alt="Arethusa Logo">
-        <input type="text" id="doc-search" placeholder="Search for ducuments..." />
+        <input type="text" id="doc-search" placeholder="Search for documents..." />
         <button type="submit">Search</button>
         <p>Doc Name</p>
         <button id="first" type="button">first</button>
@@ -40,6 +40,7 @@
                 <p id="tokenized-sentence"></p>
                 <input onchange="getLocalTreebankXML()" type="file" id="file" accept=".xml,.tb,.tb.xml"/>
             </div>
+            <div id="resize-handle"></div>
             <div id="tree-bank">
                 <div id="tree-bar"> 
                     <div id="selection-options"> 
