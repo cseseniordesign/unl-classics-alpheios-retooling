@@ -68,18 +68,9 @@ window.displaySentence = function(index) {
       tokenizedSentence.append(`${word.form} `);
     });
 
-<<<<<<< Updated upstream
-    })
-    
-
-})
-// Error handling to catch XML load or network issues
-.catch(err => console.error("Error loading XML:", err));
-=======
     // Generate the dependency tree for this sentence
     createNodeHierarchy(index);
   }
->>>>>>> Stashed changes
 }
 
 
@@ -164,8 +155,6 @@ document.addEventListener("mouseup", () => {
     document.body.style.cursor = "default";
   }
 });
-<<<<<<< Updated upstream
-=======
 
 /**
  * This function takes in a sentenceId, and returns a d3
@@ -347,4 +336,3 @@ function createNodeHierarchy(sentenceId) {
 
 
 createNodeHierarchy(1);
->>>>>>> Stashed changes
