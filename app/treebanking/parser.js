@@ -1,5 +1,4 @@
-/**
- * Parses a full Treebank XML containing multiple <sentence> elements.
+/** Parses a full Treebank XML containing multiple <sentence> elements.
  * Returns a structured array of sentence objects, each with its own words.
  *
  * @param {string} xmlString - The XML file contents as a string
@@ -46,30 +45,18 @@ export default function parseTreeBankXML(xmlString) {
     }
 
     return wordObj;
+  };
+
+  // Map through each sentence and gather words
+  const parsedSentences = sentences.map(sentence => {
+    const sentenceId = sentence.getAttribute("id") || "";
+    const words = Array.from(sentence.querySelectorAll("word")).map(parseWordAttributes);
+
+    return {
+      id: sentenceId,
+      words
+    };
   });
 
-  /**
-   * wordNodes param is the array of words from an XML file
-   * with all of the data that is attatched to their object.
-   * @param {*} wordNodes 
-   */
-  function createNodeHierarchy (wordNodes) {
-    const idParentPairs = wordNodes.map(d => ({
-    id: d.id,
-    parentId: d.head === "0" ? null : d.head
-    }));
-    const root = d3.stratify()
-      .id((d) => d.id)
-      .parentId((d) => d.head)
-     (idParentPairs);
-
-     return root;
-  }
-
-  // Debug output – displays the parsed data in a table format in console
-  console.table(wordObjects, ["id","form", "lemma", "relation", "postag", "head"]);
-  const root = createNodeHierarchy(wordObjects);
-  return wordObjects;
-
-
+  return parsedSentences;
 }

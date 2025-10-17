@@ -72,7 +72,9 @@ window.displaySentence = function(index) {
     createNodeHierarchy(index);
   }
 }
-
+document.addEventListener("DOMContentLoaded", () => {
+  displaySentence(1);
+});
 
 // NEEDS TO SAVE THE FILE FROM parseTreeBAnkXML not working yet
 /*
