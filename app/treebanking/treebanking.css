@@ -156,3 +156,11 @@ html, body{
   font-weight: 500;
   fill: #222;
 }
+
+.link-label {
+  font-family: "Arial", sans-serif;
+  font-size: 10px;      
+  fill: #666;           
+  text-anchor: middle;
+  pointer-events: none; 
+}
