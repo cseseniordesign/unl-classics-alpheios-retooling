@@ -46,19 +46,26 @@ displaySentence(1);
 
 
 
-// NEEDS TO SAVE THE FILE FROM parseTreeBAnkXML not working yet
 /*
-*   This function is used to save the file from parseTreeBankXML
-*   to the local system of the user.
+*   This event is used to save the file from parseTreeBankXML
+*   to the local system of the user. As of now, it fetches the file
+*   specified location and saves the .xml file to the downlawds folder
+*   of the user system. Eventually it should save the xml file that is
+*   currently being worked on.
 */
-function saveLocal() {
-  if (confirm("Would you like to save this treebank?")) {
-    const doctype = new XMLSerializer().serializeToString(document.doctype);
-    const html = document.documentElement.outerHTML;
-    const fullHTML = doctype + "\n" + html;
+document.addEventListener("DOMContentLoaded", () => {
+  const button = document.getElementById("save");
 
-    const blob = new Blob([fullHTML], { type: "text/html" });
-    const fileName = "Treebank.html";
+  button.addEventListener("click", async () => {
+    // Fetch the XML file only when button is clicked
+    const response = await fetch('../../assets/treebank.xml');
+    const xmlText = await response.text();
+
+    // Create a Blob with XML content
+    const blob = new Blob([xmlText], { type: "application/xml" });
+    const fileName = "Treebank.xml";
+
+    // Create temporary download link and click it
     const el = document.createElement('a');
     el.href = URL.createObjectURL(blob);
     el.download = fileName;
@@ -67,13 +74,7 @@ function saveLocal() {
     el.click();
     document.body.removeChild(el);
     URL.revokeObjectURL(el.href);
-  }
-}
-
-// Find the save button once the page has loaded
-document.addEventListener("DOMContentLoaded", () => {
-  const button = document.getElementById("save");
-  button.addEventListener("click", saveLocal);
+  });
 });
 
 /**
