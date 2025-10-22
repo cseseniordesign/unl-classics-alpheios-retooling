@@ -28,6 +28,10 @@ import parseTreeBankXML from './parser.js'
   //should change to start with 1 and decrement/increment by users command
   const sentence = data.find(sentence=> sentence.id === `${index}`);
 
+    if (!sentence) {
+      console.warn(`Sentence with id=${index} not found.`);
+      return;
+    }
 
   // Display each word's form on the page
   sentence.words.forEach((word)=> {
