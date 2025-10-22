@@ -128,6 +128,14 @@ document.addEventListener("mouseup", () => {
   }
 });
 
+/**
+ * Opens the given .xml file and returns its
+ * information as a structured array of <sentence>
+ * objects, each with their own words with their
+ * own attributes.
+ * @param {*} filepath 
+ * @returns data
+ */
 async function loadTreebankData(filepath){
   const response = await fetch(filepath);
   const xmlText = await response.text();
