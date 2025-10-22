@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", () => {
 *   currently being worked on.
 */
 document.addEventListener("DOMContentLoaded", () => {
-  const button = document.getElementById("save");
+  const button = document.getElementById("download");
 
   button.addEventListener("click", async () => {
     // Fetch the XML file only when button is clicked
@@ -104,6 +104,14 @@ document.addEventListener("DOMContentLoaded", () => {
     el.click();
     document.body.removeChild(el);
     URL.revokeObjectURL(el.href);
+  });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const button = document.getElementById("save");
+
+  button.addEventListener("click", async () => {
+    alert("Oops! This functionality is still undrconstruction. Please check back soon!");
   });
 });
 
