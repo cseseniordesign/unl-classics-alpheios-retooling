@@ -1,4 +1,21 @@
 import parseTreeBankXML from './parser.js'
+/**
+ * This function handles the XML file selector and currently
+ * just returns the file. It is possible to instead of returning,
+ * having the function call another and passing in file while
+ * doing so. Because this is called by an event. It is the first
+ * step and might not want to finish right away.
+ * @returns file
+ */
+function getLocalTreebankXML() {
+    const fileInput = document.getElementById('file');
+    const file = fileInput.files[0];
+
+    //THIS WILL NOT ALWAYS RETURN, IT WILL
+    //FUNNEL INTO ANOTHER FUNCTION
+    //DELTE THIS COMMENT WHEN THAT IS DONE.
+    return file;
+}
 
 
 // NEEDS TO SAVE THE FILE FROM parseTreeBAnkXML not working yet
@@ -6,45 +23,58 @@ import parseTreeBankXML from './parser.js'
 * parses treebank.xml 
 * adds the words to the main page
 */
- window.displaySentence = async function(index){
+window.displaySentence = function(index) {
   const tokenizedSentence = document.getElementById('tokenized-sentence');
 
-  // Parse XML into a list of word objects
-  const data = await loadTreebankData('../../assets/treebank.xml');
+  //Fetch and parse XML once, store it globally for reuse
+  if (!window.treebankData) {
+    fetch('../../assets/treebank.xml')
+      .then(response => response.text())
+      .then(xmlText => {
+        window.treebankData = parseTreeBankXML(xmlText);
+        renderSentence(index);
+      })
+      .catch(err => console.error("Error loading XML:", err));
+  } else {
+    renderSentence(index);
+  }
 
-  // Ensures only one sentence is displayed at a time
-  tokenizedSentence.textContent = "";
+  // Helper to render both text and tree
+  function renderSentence(index) {
+    const data = window.treebankData;
 
-  //Number of sentences
-  window.totalSentences = data.length;
+    // Clear previous sentence text
+    tokenizedSentence.textContent = "";
 
-  //ensures displayed sentence stays within boundaries
-  if (index <= 1 ) index = 1;
-  if (index >= totalSentences) index = totalSentences -1;
+    // Number of sentences
+    window.totalSentences = data.length;
 
-  window.currentIndex = index;
+    //Ensure displayed sentence stays within valid range
+    if (index < 1) index = 1;
+    if (index > window.totalSentences) index = window.totalSentences;
 
-  //gets sentence with a certain id
-  //should change to start with 1 and decrement/increment by users command
-  const sentence = data.find(sentence=> sentence.id === `${index}`);
+    window.currentIndex = index;
+
+    // Get the sentence with the current id
+    const sentence = data.find(sentence => sentence.id === `${index}`);
 
     if (!sentence) {
       console.warn(`Sentence with id=${index} not found.`);
       return;
     }
 
-  // Display each word's form on the page
-  sentence.words.forEach((word)=> {
-  tokenizedSentence.append(`${word.form} `);
-  })
+    // Display sentence text (forms)
+    sentence.words.forEach((word) => {
+      tokenizedSentence.append(`${word.form} `);
+    });
 
-  createNodeHierarchy(window.currentIndex);
-
+    // Generate the dependency tree for this sentence
+    createNodeHierarchy(index);
+  }
 }
-
-displaySentence(1);
-
-
+document.addEventListener("DOMContentLoaded", () => {
+  displaySentence(1);
+});
 
 /*
 *   This event is used to save the file from parseTreeBankXML
@@ -129,13 +159,6 @@ document.addEventListener("mouseup", () => {
   }
 });
 
-async function loadTreebankData(filepath){
-  const response = await fetch(filepath);
-  const xmlText = await response.text();
-  const data = parseTreeBankXML(xmlText);
-  return data;
-}
-
 /**
  * This function takes in a sentenceId, and returns a d3
  * hierarchy that contains a synthetic root with all nodes
@@ -143,28 +166,176 @@ async function loadTreebankData(filepath){
  * contain the word's <id> and <head>.
  * @param {*} sentenceId 
  */
-async function createNodeHierarchy(sentenceId) {
-  const data = await loadTreebankData('../../assets/treebank.xml');
-  const sentence = data.find(sentence => sentence.id === `${sentenceId}`);
+function createNodeHierarchy(sentenceId) {
+  fetch('../../assets/treebank.xml')
+    .then(response => response.text())
+    .then(xmlText => {
+      const data = parseTreeBankXML(xmlText);
+      const sentence = data.find(sentence => sentence.id === `${sentenceId}`);
 
-  const idParentPairs = sentence.words.map(wordNode => ({
-    id: String(wordNode.id),
-    //change root nodes to have their parent point to a synthetic root
-    parentId: (wordNode.head === 0 || wordNode.head === '0' || wordNode.head === null) ? 'root' : String(wordNode.head)
-  }));
+      if (!sentence) {
+        console.error(`Sentence with id=${sentenceId} not found.`);
+        return;
+      }
 
-  // Add synthetic root
-  idParentPairs.push({
-    id: 'root',
-    parentId: null
-  });
+      const idParentPairs = sentence.words.map(wordNode => ({
+        id: String(wordNode.id),
+        // change root nodes to have their parent point to a synthetic root
+        parentId: (wordNode.head === 0 || wordNode.head === '0' || wordNode.head === null)
+          ? 'root'
+          : String(wordNode.head),
+        // store the actual word form for labeling
+        form: wordNode.form || wordNode.word || "(blank)",
+        relation: wordNode.relation || "" // store relation label
+      }));
 
-  console.table(idParentPairs);
+      // Add synthetic root
+      idParentPairs.push({
+        id: 'root',
+        parentId: null,
+        form: 'ROOT',
+        relation: '' // root has no relation
+      });
 
-  const root = d3.stratify()
-    .id(d => d.id)
-    .parentId(d => d.parentId)
-    (idParentPairs);
+      console.table(idParentPairs);
 
-  return root;
+      const root = d3.stratify()
+        .id(d => d.id)
+        .parentId(d => d.parentId)
+        (idParentPairs);
+
+      // Assign the 'form' and 'relation' to hierarchy nodes for display
+      root.each(d => {
+        const original = idParentPairs.find(p => p.id === d.id);
+        if (original) {
+          d.data.form = original.form;
+          d.data.relation = original.relation;
+        }
+      });
+
+      // --- D3 Drawing Section ---
+      const svg = d3.select("#sandbox svg");
+      svg.selectAll("*").remove(); // clear previous tree before redrawing
+
+      //  Dynamically size the SVG to match its container (#tree-bank)
+      const container = document.getElementById("tree-bank");
+      const width = container.clientWidth;
+      const height = container.clientHeight;
+      svg.attr("width", width).attr("height", height);
+
+      // Expand the SVG viewBox so panning doesn't clip content
+      svg.attr("viewBox", [0, 0, width, height])
+         .attr("preserveAspectRatio", "xMidYMid meet");
+
+      const margin = { top: 40, right: 40, bottom: 40, left: 40 };
+
+      const g = svg.append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+
+      // Use nodeSize to FORCE spacing (x = horizontal, y = vertical for top-down)
+      const xGap = 80;  // horizontal pixels between siblings
+      const yGap = 90;  // vertical pixels between levels
+      const treeLayout = d3.tree()
+        .nodeSize([xGap, yGap])
+        .separation((a, b) => (a.parent === b.parent ? 1.2 : 1.6)); // extra gap for cousins
+
+      const rootHierarchy = treeLayout(root);
+
+      // Inner group for drawn elements
+      const gx = g.append("g");
+
+      // Draw links (vertical, top-down)
+      const links = gx.selectAll(".link")
+        .data(rootHierarchy.links())
+        .join("path")
+        .attr("class", "link")
+        .attr("d", d3.linkHorizontal()
+          .x(d => d.x)
+          .y(d => d.y)
+        );
+
+      // Add relation labels to the middle of links
+      gx.selectAll(".link-label")
+        .data(rootHierarchy.links())
+        .join("text")
+        .attr("class", "link-label")
+        .attr("dy", "-4") 
+        .attr("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .attr("fill", "#333")
+        .attr("x", d => (d.source.x + d.target.x) / 2)
+        .attr("y", d => (d.source.y + d.target.y) / 2)
+        .text(d => {
+          const child = idParentPairs.find(p => p.id === d.target.data.id);
+          return child && child.relation ? child.relation : "";
+        });
+
+      // Draw nodes
+      const nodes = rootHierarchy.descendants();
+      const node = gx.selectAll(".node")
+        .data(nodes)
+        .join("g")
+        .attr("class", "node")
+        .attr("transform", d => `translate(${d.x},${d.y})`);
+
+      node.append("circle").attr("r", 6);
+      node.append("text")
+        .attr("dy", -10)
+        .style("text-anchor", "middle")
+        .text(d => d.data.form);
+
+      // Enable zoom/pan
+      const zoom = d3.zoom().on("zoom", (event) => {
+        g.attr("transform", `translate(${margin.left},${margin.top}) ${event.transform.toString()}`);
+      });
+      svg.call(zoom);
+
+      // Fit entire tree and center horizontally (shift upward)
+      function fitTreeToView() {
+        const newWidth = container.clientWidth;
+        const newHeight = container.clientHeight;
+        svg.attr("width", newWidth).attr("height", newHeight);
+        svg.attr("viewBox", [0, 0, newWidth, newHeight]);
+
+        const pad = 10; 
+        const bbox = gx.node().getBBox();
+        const innerW = newWidth  - margin.left - margin.right - pad * 2;
+        const innerH = newHeight - margin.top  - margin.bottom - pad * 2;
+
+        // Compute scale to fit tree tightly
+        const scale = Math.min(
+          innerW / Math.max(bbox.width, 1),
+          innerH / Math.max(bbox.height, 1)
+        );
+
+        // Compute bounding box center for horizontal alignment
+        const bboxCenterX = bbox.x + bbox.width / 2;
+
+        // Horizontal center of viewport
+        const targetX = newWidth / 2;
+
+        // Shift vertically upward based on tree height 
+        const topOffset = Math.max(margin.top, (newHeight - bbox.height * scale) * 0.15);
+        const targetY = topOffset; // top padding ~15% of leftover space
+
+        // Compute translations
+        const tx = (targetX - margin.left) - scale * bboxCenterX;
+        const ty = (targetY - margin.top)  - scale * bbox.y;
+
+        svg.transition()
+          .duration(500)
+          .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+      }
+
+      // Call fit on initial render
+      fitTreeToView();
+
+      // Auto-refit on window resize
+      window.removeEventListener("resize", fitTreeToView);
+      window.addEventListener("resize", fitTreeToView);
+    })
+    .catch(err => console.error("Error loading XML:", err));
 }
+
+
+createNodeHierarchy(1);
