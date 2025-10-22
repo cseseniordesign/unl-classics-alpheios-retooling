@@ -1,21 +1,4 @@
 import parseTreeBankXML from './parser.js'
-/**
- * This function handles the XML file selector and currently
- * just returns the file. It is possible to instead of returning,
- * having the function call another and passing in file while
- * doing so. Because this is called by an event. It is the first
- * step and might not want to finish right away.
- * @returns file
- */
-function getLocalTreebankXML() {
-    const fileInput = document.getElementById('file');
-    const file = fileInput.files[0];
-
-    //THIS WILL NOT ALWAYS RETURN, IT WILL
-    //FUNNEL INTO ANOTHER FUNCTION
-    //DELTE THIS COMMENT WHEN THAT IS DONE.
-    return file;
-}
 
 
 // NEEDS TO SAVE THE FILE FROM parseTreeBAnkXML not working yet
@@ -23,41 +6,36 @@ function getLocalTreebankXML() {
 * parses treebank.xml 
 * adds the words to the main page
 */
- window.displaySentence = function(index){
+ window.displaySentence = async function(index){
   const tokenizedSentence = document.getElementById('tokenized-sentence');
-  fetch('../../assets/treebank.xml')
-  .then(response=> response.text())
-  .then(xmlText=> {
-    // Parse XML into a list of word objects
-    const data = parseTreeBankXML(xmlText);
 
-    // Ensures only one sentence is displayed at a time
-    tokenizedSentence.textContent = "";
+  // Parse XML into a list of word objects
+  const data = await loadTreebankData('../../assets/treebank.xml');
 
-    //Number of sentences
-    window.totalSentences = data.length;
+  // Ensures only one sentence is displayed at a time
+  tokenizedSentence.textContent = "";
 
-    //ensures displayed sentence stays within boundaries
-    if (index <= 1 ) index = 1;
-    if (index >= totalSentences) index = totalSentences -1;
+  //Number of sentences
+  window.totalSentences = data.length;
 
-    window.currentIndex = index;
+  //ensures displayed sentence stays within boundaries
+  if (index <= 1 ) index = 1;
+  if (index >= totalSentences) index = totalSentences -1;
 
-    //gets sentence with a certain id
-    //should change to start with 1 and decrement/increment by users command
-    const sentence = data.find(sentence=> sentence.id === `${index}`);
+  window.currentIndex = index;
+
+  //gets sentence with a certain id
+  //should change to start with 1 and decrement/increment by users command
+  const sentence = data.find(sentence=> sentence.id === `${index}`);
 
 
-    // Display each word's form on the page
-    sentence.words.forEach((word)=> {
-    tokenizedSentence.append(`${word.form} `);
-
-    })
-    
-
+  // Display each word's form on the page
+  sentence.words.forEach((word)=> {
+  tokenizedSentence.append(`${word.form} `);
   })
-// Error handling to catch XML load or network issues
-.catch(err => console.error("Error loading XML:", err));
+
+  createNodeHierarchy(window.currentIndex);
+
 }
 
 displaySentence(1);
@@ -146,6 +124,13 @@ document.addEventListener("mouseup", () => {
   }
 });
 
+async function loadTreebankData(filepath){
+  const response = await fetch(filepath);
+  const xmlText = await response.text();
+  const data = parseTreeBankXML(xmlText);
+  return data;
+}
+
 /**
  * This function takes in a sentenceId, and returns a d3
  * hierarchy that contains a synthetic root with all nodes
@@ -153,35 +138,28 @@ document.addEventListener("mouseup", () => {
  * contain the word's <id> and <head>.
  * @param {*} sentenceId 
  */
-function createNodeHierarchy(sentenceId) {
-  fetch('../../assets/treebank.xml')
-    .then(response => response.text())
-    .then(xmlText => {
-      const data = parseTreeBankXML(xmlText);
-      const sentence = data.find(sentence => sentence.id === `${sentenceId}`);
+async function createNodeHierarchy(sentenceId) {
+  const data = await loadTreebankData('../../assets/treebank.xml');
+  const sentence = data.find(sentence => sentence.id === `${sentenceId}`);
 
-      const idParentPairs = sentence.words.map(wordNode => ({
-        id: String(wordNode.id),
-        //change root nodes to have their parent point to a synthetic root
-        parentId: (wordNode.head === 0 || wordNode.head === '0' || wordNode.head === null) ? 'root' : String(wordNode.head)
-      }));
+  const idParentPairs = sentence.words.map(wordNode => ({
+    id: String(wordNode.id),
+    //change root nodes to have their parent point to a synthetic root
+    parentId: (wordNode.head === 0 || wordNode.head === '0' || wordNode.head === null) ? 'root' : String(wordNode.head)
+  }));
 
-      // Add synthetic root
-      idParentPairs.push({
-        id: 'root',
-        parentId: null
-      });
+  // Add synthetic root
+  idParentPairs.push({
+    id: 'root',
+    parentId: null
+  });
 
-      console.table(idParentPairs);
+  console.table(idParentPairs);
 
-      const root = d3.stratify()
-        .id(d => d.id)
-        .parentId(d => d.parentId)
-        (idParentPairs);
+  const root = d3.stratify()
+    .id(d => d.id)
+    .parentId(d => d.parentId)
+    (idParentPairs);
 
-      return root;
-    });
+  return root;
 }
-
-
-createNodeHierarchy(1);
