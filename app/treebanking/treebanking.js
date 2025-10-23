@@ -272,6 +272,9 @@ function createNodeHierarchy(sentenceId) {
   // Generate a hierarchical layout from the flat data
   const rootHierarchy = buildHierarchy(idParentPairs);
 
+  // Make the current D3 root hierarchy globally accessible
+  window.root = rootHierarchy;
+
   // Select and reset the SVG container
   const svg = d3.select('#sandbox svg');
   svg.selectAll('*').remove();
