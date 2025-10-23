@@ -304,9 +304,15 @@ function createNodeHierarchy(sentenceId) {
         .text(d => d.data.form);
 
       // Enable zoom/pan
-      const zoom = d3.zoom().on("zoom", (event) => {
-        g.attr("transform", `translate(${margin.left},${margin.top}) ${event.transform.toString()}`);
-      });
+      const zoom = d3.zoom()
+        // Restrict how far users can zoom in or out (min = 0.5x, max = 3x)
+        .scaleExtent([0.1, 3])
+        .on("zoom", (event) => {
+          // Apply the zoom and pan transformation to the main group
+          g.attr("transform", `translate(${margin.left},${margin.top}) ${event.transform.toString()}`);
+        });
+
+      // Apply zoom behavior to the SVG canvas
       svg.call(zoom);
 
       // Fit entire tree and center horizontally (shift upward)
