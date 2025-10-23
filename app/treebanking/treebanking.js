@@ -148,51 +148,45 @@ function updateSentenceSelector(index) {
    SECTION 2: BUTTONS AND INTERFACE BEHAVIOR
    ============================================================================ */
 
-/**
- * --------------------------------------------------------------------------
- * FUNCTION: setupDownloadButton
- * --------------------------------------------------------------------------
- * Adds functionality to the "Download" button to save the XML file locally.
- *
- * @returns {void} 
- */
-function setupDownloadButton() {
-  const button = document.getElementById('download');
-  if (!button) return;
+/*
+*   This event is used to save the file from parseTreeBankXML
+*   to the local system of the user. As of now, it fetches the file
+*   specified location and saves the .xml file to the downloads folder
+*   of the user system. Eventually it should save the xml file that is
+*   currently being worked on.
+*/
+document.addEventListener("DOMContentLoaded", () => {
+  const button = document.getElementById("download");
 
-  button.addEventListener('click', async () => {
+  button.addEventListener("click", async () => {
+    // Fetch the XML file only when button is clicked
     const response = await fetch('../../assets/treebank.xml');
     const xmlText = await response.text();
 
-    // Create a blob and temporary download link
-    const blob = new Blob([xmlText], { type: 'application/xml' });
+    // Create a Blob with XML content
+    const blob = new Blob([xmlText], { type: "application/xml" });
+    const fileName = "Treebank.xml";
+
+    // Create temporary download link and click it
     const el = document.createElement('a');
     el.href = URL.createObjectURL(blob);
-    el.download = 'Treebank.xml';
+    el.download = fileName;
 
     document.body.appendChild(el);
     el.click();
     document.body.removeChild(el);
     URL.revokeObjectURL(el.href);
   });
-}
+});
 
-/**
- * --------------------------------------------------------------------------
- * FUNCTION: setupSaveButton
- * --------------------------------------------------------------------------
- * Placeholder for a future save/persistence mechanism.
- *
- * @returns {void}
- */
-function setupSaveButton() {
-  const button = document.getElementById('save');
-  if (!button) return;
+document.addEventListener("DOMContentLoaded", () => {
+  const button = document.getElementById("save");
 
-  button.addEventListener('click', () => {
-    alert('Save functionality coming soon!');
+  button.addEventListener("click", async () => {
+    alert("Oops! This functionality is still under construction. Please check back soon!");
   });
-}
+});
+
 
 /**
  * --------------------------------------------------------------------------
@@ -557,6 +551,9 @@ function fitTreeToView(svg, gx, container, zoom, margin) {
    SECTION 4: INITIALIZATION
    ============================================================================ */
 
+// Make displaySentence globally accessible for HTML buttons
+window.displaySentence = displaySentence;
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: DOMContentLoaded (entry point)
@@ -569,7 +566,5 @@ function fitTreeToView(svg, gx, container, zoom, margin) {
 document.addEventListener('DOMContentLoaded', async () => {
   await displaySentence(1);  // show first sentence by default
   setupSentenceSelector();   // populate dropdown and link it
-  setupDownloadButton();     // enable XML download
-  setupSaveButton();         // placeholder save
   setupResizeHandle();       // enable interactive resizing
 });
