@@ -32,6 +32,7 @@ window.displaySentence = function(index) {
       .then(response => response.text())
       .then(xmlText => {
         window.treebankData = parseTreeBankXML(xmlText);
+        setupSentenceSelector(); // mPopulate dropdown once XML is loaded
         renderSentence(index);
       })
       .catch(err => console.error("Error loading XML:", err));
@@ -70,8 +71,11 @@ window.displaySentence = function(index) {
 
     // Generate the dependency tree for this sentence
     createNodeHierarchy(index);
+
+    updateSentenceSelector(index); // Keep dropdown synced
   }
 }
+
 document.addEventListener("DOMContentLoaded", () => {
   displaySentence(1);
 });
@@ -345,5 +349,44 @@ function createNodeHierarchy(sentenceId) {
     .catch(err => console.error("Error loading XML:", err));
 }
 
+/**
+ * Populates the sentence selector dropdown and wires up its change handler.
+ * This is called once after the XML is loaded.
+ */
+function setupSentenceSelector() {
+  const select = document.getElementById("sentence-select");
+  if (!select) return;
 
-createNodeHierarchy(1);
+  // Clear any existing options
+  select.innerHTML = "";
+
+  // Ensure treebank data is loaded
+  if (!window.treebankData || !window.treebankData.length) return;
+
+  // Populate options (IDs as numbers)
+  window.treebankData.forEach(sentence => {
+    const opt = document.createElement("option");
+    opt.value = sentence.id;
+    opt.textContent = `${sentence.id}`;
+    select.appendChild(opt);
+  });
+
+  // Set default selected value
+  select.value = window.currentIndex || 1;
+
+  // On change, update the sentence
+  select.addEventListener("change", (e) => {
+    const selectedId = parseInt(e.target.value);
+    window.displaySentence(selectedId);
+  });
+}
+
+/**
+ * Keeps dropdown selection in sync with displayed sentence
+ */
+function updateSentenceSelector(index) {
+  const select = document.getElementById("sentence-select");
+  if (select) {
+    select.value = index;
+  }
+}
