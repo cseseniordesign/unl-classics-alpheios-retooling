@@ -14,14 +14,41 @@
 <body>
     <div id="header">
         <img src="../../assets/arethusa-small.png" alt="Arethusa Logo">
-        <input type="text" id="doc-search" placeholder="Search for documents..." />
-        <button type="submit">Search</button>
+        <div id="search-group">
+        <input type="text" id="doc-search" placeholder="Search for documents...">
+        <button id="search-btn" type="submit" aria-label="Search">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 
+            6.5 6.5 0 109.5 16a6.471 6.471 0 004.23-1.57l.27.28v.79l5 
+            5L20.5 19l-5-5zm-6 0C8.01 14 6 11.99 6 9.5S8.01 5 10.5 5 
+            15 7.01 15 9.5 12.99 14 10.5 14z"/>
+            </svg>
+        </button>
+        </div>
         <p>Treebank</p>
-        <button onclick="displaySentence(1)" id="first" type="button">first</button>
-        <button onclick="displaySentence(window.currentIndex-1)" id="back" type="button">back</button>
-        <select id="sentence-select" class="select"></select>
-        <button onclick="displaySentence(window.currentIndex+1)" id="next" type="button">next</button>
-        <button onclick="displaySentence(window.totalSentences)" id="last" type="button">last</button>
+
+        <div id="nav-buttons">
+            <div class="nav-group">
+                <button id="first" class="nav-btn" title="First Sentence" onclick="displaySentence(1)">
+                <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M9 4 L3 16 L9 28 V4 M17 4 L11 16 L17 28 V4"/></svg>
+                </button>
+                <button id="back" class="nav-btn" title="Previous Sentence" onclick="displaySentence(window.currentIndex-1)">
+                <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M15 4 L7 16 L15 28 Z"/></svg>
+                </button>
+            </div>
+
+            <select id="sentence-select" class="select"></select>
+
+            <div class="nav-group">
+                <button id="next" class="nav-btn" title="Next Sentence" onclick="displaySentence(window.currentIndex+1)">
+                <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M5 4 L13 16 L5 28 Z"/></svg>
+                </button>
+                <button id="last" class="nav-btn" title="Last Sentence" onclick="displaySentence(window.totalSentences)">
+                <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M3 4 L9 16 L3 28 V4 M11 4 L17 16 L11 28 V4"/></svg>
+                </button>
+            </div>
+        </div>
+
         <div id="header-buttons">
             <button id="save" type="button">Save</button>
             <button id="download" type="button">Download</button>

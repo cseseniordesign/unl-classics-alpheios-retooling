@@ -56,6 +56,13 @@ window.displaySentence = function(index) {
 
     window.currentIndex = index;
 
+    // Disable navigation buttons at boundaries
+    document.getElementById("first").disabled = (index <= 1);
+    document.getElementById("back").disabled = (index <= 1);
+    document.getElementById("next").disabled = (index >= window.totalSentences);
+    document.getElementById("last").disabled = (index >= window.totalSentences);
+
+
     // Get the sentence with the current id
     const sentence = data.find(sentence => sentence.id === `${index}`);
 

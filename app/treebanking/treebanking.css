@@ -16,6 +16,19 @@ html, body{
     align-items: center;
 }
 
+#header p {
+  margin: 0;
+  font-weight: 200;
+  font-size: 1rem;
+  color: #dfe7ea;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 26px;
+  margin-right: 25px;
+  margin-left: 10px;
+}
+
 #header img{
     height: 70%;
     object-fit: contain;
@@ -163,4 +176,112 @@ html, body{
   fill: #666;           
   text-anchor: middle;
   pointer-events: none; 
+}
+
+#nav-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  margin-top: 1px;
+}
+
+.nav-group {
+  display: flex;
+  align-items: center;
+  gap: 0;
+}
+
+.nav-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+  height: 30px;
+}
+
+.nav-btn:hover:not(:disabled) {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+.nav-btn svg {
+  width: 22px;
+  height: 28px;
+  fill: #a8d0dc;
+  filter: drop-shadow(0 0 1px rgba(255, 255, 255, 0.4));
+}
+
+.select {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 2px 3px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  color: #000;
+  text-align: center;
+  width: 45px;
+  height: 30px;
+  line-height: 1;
+  outline-color: #2a7ae2;
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  filter: none;
+  cursor: default;
+  transform: none;
+}
+
+
+#search-group {
+  display: flex;
+  align-items: center;
+  background-color: #fff;
+  border-radius: 3px;
+  overflow: hidden;
+  height: 26px;
+  margin-left: 10px;
+  margin-right: 40px; /* adds breathing room before "Treebank" */
+}
+
+#doc-search {
+  border: none;
+  padding: 4px 8px;
+  outline: none;
+  font-size: 0.8rem;
+  color: #444;
+  width: 160px; /* narrower box */
+}
+
+#doc-search::placeholder {
+  color: #777;
+}
+
+#search-btn {
+  background-color: #e0b73e;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 26px;
+  transition: background-color 0.2s ease;
+}
+
+#search-btn:hover {
+  background-color: #d5a930;
+}
+
+#search-btn svg {
+  width: 14px;
+  height: 14px;
+  fill: #fff;
 }
