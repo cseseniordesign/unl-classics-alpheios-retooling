@@ -393,83 +393,120 @@ function buildHierarchy(idParentPairs) {
  * --------------------------------------------------------------------------
  * FUNCTION: drawLinks
  * --------------------------------------------------------------------------
- * Draws curved edges (dependencies) between parent and child words.
- * Slight offsets are applied so sibling links do not overlap.
+ * Draws dependency edges as smooth cubic Bézier curves with a small visual gap
+ * around each relation label. The curve is mathematically split so the path
+ * remains continuous and smooth — no visual loops or overlaps.
  *
  * @param {Object} gx - D3 selection of the inner SVG group.
  * @param {Object} rootHierarchy - Root node with computed coordinates.
- * @param {Array<Object>} idParentPairs - Flat list for label lookup.
- * @returns {void} Runs synchronously to draw curved dependency links and their relation labels.
+ * @param {Array<Object>} idParentPairs - Flat array of word data for label lookup.
+ * @returns {void}
  */
 function drawLinks(gx, rootHierarchy, idParentPairs) {
-  // Optional color scheme (commented out for now)
-  /*
-  const relationColors = {
-    SBJ: "#3b82f6",   // Subject
-    OBJ: "#ef4444",   // Object
-    ADV: "#10b981",   // Adverbial
-    COORD: "#f59e0b", // Coordination
-    default: "#999"   // Fallback gray
-  };
-  */
+  const tLabel = 0.8;  // Where label sits along the curve
+  const gapT = 0.08;   // Fraction of curve length to remove around label (≈ small gap)
 
-  // Draw one Bézier curve per dependency link
-  gx.selectAll('.link')
+  gx.selectAll(".link")
     .data(rootHierarchy.links())
-    .join('path')
-    .attr('class', 'link')
-    .attr('fill', 'none')
-    // .attr('stroke', d => relationColors[d.target.data.relation] || relationColors.default)
-    .attr('stroke', '#999')
-    .attr('stroke-width', 1.2)
-    .attr('d', (d) => {
-      // Compute sibling offset to spread out curves slightly
-      const siblings = d.source.children || [];
-      const index = siblings.indexOf(d.target);
-      const offset = (index - (siblings.length - 1) / 2) * 12;
-
-      // Define curve start and end positions
-      const source = { x: d.source.x + offset, y: d.source.y + 10 };
-      const target = { x: d.target.x,          y: d.target.y - 10 };
-
-      // Compute vertical midpoint to shape a soft curve
-      const midY = (source.y + target.y) / 2.05; // Adjust value to change curve of each line (lower is more flat)
-
-      // Use a cubic Bézier path for smooth connection
-      return `M${source.x},${source.y} C${source.x},${midY} ${target.x},${midY} ${target.x},${target.y}`;
-    });
-
-  // Add relation labels along the middle of each curve
-  gx.selectAll('.link-label')
-    .data(rootHierarchy.links())
-    .join('text')
-    .attr('class', 'link-label')
-    .attr('text-anchor', 'middle')
-    .attr('font-size', '12px')
-    .attr('fill', '#333')
+    .join("g")
+    .attr("class", "link-group")
     .each(function (d) {
-      // Match offsets used for link drawing
+      const group = d3.select(this);
+
+      // --- Spread siblings slightly to prevent overlap ---
       const siblings = d.source.children || [];
       const index = siblings.indexOf(d.target);
       const offset = (index - (siblings.length - 1) / 2) * 12;
 
+      // --- Define start and end positions ---
       const source = { x: d.source.x + offset, y: d.source.y + 10 };
-      const target = { x: d.target.x,          y: d.target.y - 10 };
+      const target = { x: d.target.x, y: d.target.y - 10 };
 
-      // Calculate midpoint coordinates
-      const midX = (source.x + target.x) / 2;
-      const midY = (source.y + target.y) / 2 - 6;
+      // --- Define cubic Bézier control points ---
+      const dx = (target.x - source.x) * 0.5;
+      const c1x = source.x + dx;
+      const c1y = source.y + (target.y - source.y) * 0.2;
+      const c2x = target.x;
+      const c2y = target.y - (target.y - source.y) * 0.8;
 
-      // Render text at the computed midpoint
-      d3.select(this)
-        .attr('x', midX)
-        .attr('y', midY)
+      // --- Helper: De Casteljau subdivision to split Bézier at t ---
+      function subdivideCurve(x0, y0, x1, y1, x2, y2, x3, y3, t) {
+        const x01 = x0 + (x1 - x0) * t;
+        const y01 = y0 + (y1 - y0) * t;
+        const x12 = x1 + (x2 - x1) * t;
+        const y12 = y1 + (y2 - y1) * t;
+        const x23 = x2 + (x3 - x2) * t;
+        const y23 = y2 + (y3 - y2) * t;
+        const x012 = x01 + (x12 - x01) * t;
+        const y012 = y01 + (y12 - y01) * t;
+        const x123 = x12 + (x23 - x12) * t;
+        const y123 = y12 + (y23 - y12) * t;
+        const x0123 = x012 + (x123 - x012) * t;
+        const y0123 = y012 + (y123 - y012) * t;
+        return {
+          left:  [x0, y0, x01, y01, x012, y012, x0123, y0123],
+          right: [x0123, y0123, x123, y123, x23, y23, x3, y3]
+        };
+      }
+
+      // --- Compute the three parts: before-gap, gap-center, after-gap ---
+      const beforeGap = subdivideCurve(
+        source.x, source.y, c1x, c1y, c2x, c2y, target.x, target.y,
+        tLabel - gapT
+      ).left;
+
+      const afterGap = subdivideCurve(
+        source.x, source.y, c1x, c1y, c2x, c2y, target.x, target.y,
+        tLabel + gapT
+      ).right;
+
+      // --- Draw first segment (parent → before label) ---
+      group.append("path")
+        .attr("class", "link-part1")
+        .attr("fill", "none")
+        .attr("stroke", "#999")
+        .attr("stroke-width", 1.2)
+        .attr("d",
+          `M${beforeGap[0]},${beforeGap[1]} C${beforeGap[2]},${beforeGap[3]} ${beforeGap[4]},${beforeGap[5]} ${beforeGap[6]},${beforeGap[7]}`
+        );
+
+      // --- Draw second segment (after label → child) ---
+      group.append("path")
+        .attr("class", "link-part2")
+        .attr("fill", "none")
+        .attr("stroke", "#999")
+        .attr("stroke-width", 1.2)
+        .attr("d",
+          `M${afterGap[0]},${afterGap[1]} C${afterGap[2]},${afterGap[3]} ${afterGap[4]},${afterGap[5]} ${afterGap[6]},${afterGap[7]}`
+        );
+
+      // --- Compute actual label coordinates at tLabel ---
+      const t = tLabel;
+      const x = Math.pow(1 - t, 3) * source.x +
+                3 * Math.pow(1 - t, 2) * t * c1x +
+                3 * (1 - t) * Math.pow(t, 2) * c2x +
+                Math.pow(t, 3) * target.x;
+
+      const y = Math.pow(1 - t, 3) * source.y +
+                3 * Math.pow(1 - t, 2) * t * c1y +
+                3 * (1 - t) * Math.pow(t, 2) * c2y +
+                Math.pow(t, 3) * target.y;
+
+      // --- Add relation label centered within the gap ---
+      group.append("text")
+        .attr("class", "link-label")
+        .attr("x", x)
+        .attr("y", y + 6)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .attr("fill", "#333")
         .text(() => {
           const child = idParentPairs.find(p => p.id === d.target.data.id);
-          return child && child.relation ? child.relation : '';
+          return child && child.relation ? child.relation : "";
         });
     });
 }
+
 
 /**
  * --------------------------------------------------------------------------
