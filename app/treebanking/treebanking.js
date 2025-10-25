@@ -363,8 +363,8 @@ function buildHierarchy(idParentPairs) {
   });
 
   // Define spacing logic
-  const yGap = 90;       // vertical distance between layers
-  const baseX = 40;      // minimum spacing
+  const yGap = 55;       // vertical distance between layers
+  const baseX = 40;      // width between branches
   const scaleFactor = 5; // extra spacing per character of text
 
   // Precalculate horizontal widths based on word length
@@ -403,8 +403,8 @@ function buildHierarchy(idParentPairs) {
  * @returns {void}
  */
 function drawLinks(gx, rootHierarchy, idParentPairs) {
-  const tLabel = 0.8;  // Where label sits along the curve
-  const gapT = 0.08;   // Fraction of curve length to remove around label (≈ small gap)
+  const tLabel = 0.75;  // Where label sits along the curve
+  const gapT = 0.15;   // Fraction of curve length to remove around label (≈ small gap)
 
   gx.selectAll(".link")
     .data(rootHierarchy.links())
