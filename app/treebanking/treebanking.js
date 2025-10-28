@@ -71,8 +71,20 @@ async function displaySentence(index) {
     return;
   }
 
-  // Render tokens inline above the tree
-  sentence.words.forEach(w => tokenizedSentence.append(`${w.form} `));
+  // Render tokens inline above the tree 
+    sentence.words.forEach((word) => {
+    const button = document.createElement("button");
+    button.textContent = word.form + " ";
+    button.classList.add("token");
+    button.dataset.wordId = word.id;
+
+    // Add click interaction for reassigning heads
+    button.addEventListener("click", (event) => {
+      handleWordClick(word.id, event);
+    });
+
+  tokenizedSentence.appendChild(button);
+});
 
   // Generate and display the D3 dependency tree
   createNodeHierarchy(index);
@@ -127,6 +139,49 @@ function setupSentenceSelector() {
   select.addEventListener('change', (e) => {
     const selectedId = parseInt(e.target.value);
     displaySentence(selectedId);
+  });
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: setupWordHoverSync
+ * --------------------------------------------------------------------------
+ * highlights corresponding words and nodes that are moused over.
+ */
+function setupWordHoverSync() {
+  const words = document.querySelectorAll(".token");
+  const nodes = document.querySelectorAll(".node");
+  //align ids between words and nodes 
+  //whenever hovering over a word it highlights corresponding node
+  words.forEach(word => {
+    const id = word.dataset.wordId;
+    word.addEventListener("mouseover", () => {
+      word.classList.add("highlight");
+      const node = document.querySelector(`.node[id="${id}"]`);
+      if (node) node.classList.add("highlight");
+    });
+    //unhighlights when mouse is moved
+    word.addEventListener("mouseleave", () => {
+      word.classList.remove("highlight");
+      const node = document.querySelector(`.node[id="${id}"]`);
+      if (node) node.classList.remove("highlight");
+    });
+  });
+
+  //whenever hovering over a node it highlights corresponding word
+  nodes.forEach(node => {
+    const id = node.id;
+    node.addEventListener("mouseover", () => {
+      node.classList.add("highlight");
+      const word = document.querySelector(`.token[data-word-id="${id}"]`);
+      if (word) word.classList.add("highlight");
+    });
+    //unhighlights when mouse is moved
+    node.addEventListener("mouseleave", () => {
+      node.classList.remove("highlight");
+      const word = document.querySelector(`.token[data-word-id="${id}"]`);
+      if (word) word.classList.remove("highlight");
+    });
   });
 }
 
@@ -523,6 +578,7 @@ function drawNodes(gx, rootHierarchy) {
     .data(rootHierarchy.descendants())
     .join('g')
     .attr('class', 'node')
+    .attr("id", d=> d.data.n || d.data.id || d.data.word_id)
     .attr('transform', d => `translate(${d.x},${d.y})`)
     .append('text')
     .attr('dy', 4)
@@ -585,6 +641,9 @@ function fitTreeToView(svg, gx, container, zoom, margin) {
   // Keep fitting responsive to window resizing
   window.removeEventListener('resize', fitTreeToView);
   window.addEventListener('resize', () => fitTreeToView(svg, gx, container, zoom, margin));
+
+  //after nodes have been drawn, sync highlights
+  setupWordHoverSync();
 }
 
 /* ============================================================================
