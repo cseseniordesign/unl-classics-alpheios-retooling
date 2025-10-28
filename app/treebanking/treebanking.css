@@ -16,6 +16,55 @@ html, body{
     align-items: center;
 }
 
+#header-buttons button {
+  fill: white;
+  width: 35px;
+  height: 90%;
+  appearance: none;
+  backface-visibility: hidden;
+  background-color: #52bb7e;
+  border-radius: 8px;
+  border-style: none;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: Inter, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.5;
+  outline: none;
+  overflow: hidden;
+  padding: 1%;
+  margin-right: 1%;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  transform: translate3d(0, 0, 0);
+  transition: all .3s;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+
+#header-buttons button:hover {
+  background-color: #82878b;
+  opacity: 1;
+  transform: translateY(0);
+  transition-duration: .35s;
+}
+
+#header-buttons button:active {
+  transform: translateY(2px);
+  transition-duration: .35s;
+}
+
 #header p {
   margin: 0;
   font-weight: 200;
@@ -39,6 +88,7 @@ html, body{
     display: flex;
     margin-left: auto;
     margin-right: 1%;
+    height: 70%;
 }
 
 #body {
@@ -58,18 +108,6 @@ html, body{
   height: 100%;
   display: flex;              
   flex-direction: column;     
-}
-
-#tools {
-    width: 38%;
-    height: 96%;
-    justify-self: right;
-    border: slategray, solid, 1px;
-    box-sizing: border-box;
-    border-radius: 1%;
-    margin-right: 1%;
-    margin-top: 1%;
-    margin-bottom: 1%;
 }
 
 #sentence {
@@ -97,9 +135,63 @@ html, body{
 #tree-bank {
   flex: 1;                   
   overflow: hidden;
-  border: 2px solid slategray;
+  border: 1px solid #4e6476;
   box-sizing: border-box;
   border-radius: 4px;
+  margin-bottom: 1%;
+  margin-left: 1%;
+}
+
+#tree-bar {
+  width: 100%;
+  height: auto;                
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 4px 6px;            
+  box-sizing: border-box;
+}
+
+#tree-options button {
+  fill: white;
+  width: 35px;
+  appearance: none;
+  backface-visibility: hidden;
+  background-color: #bb8a21;
+  border-radius: 8px;
+  border-style: none;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  overflow: hidden;
+  margin-right: 1%;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  transform: translate3d(0, 0, 0);
+  transition: all .3s;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+
+#tree-options button:hover {
+  background-color: #82878b;
+  opacity: 1;
+  transform: translateY(0);
+  transition-duration: .35s;
+}
+
+#tree-options button:active {
+  transform: translateY(2px);
+  transition-duration: .35s;
 }
 
 #resize-handle {
@@ -114,16 +206,6 @@ html, body{
 
 #resize-handle:hover {
   background: #666;
-}
-
-#tree-bar {
-  width: 100%;
-  height: auto;                
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px 6px;            
-  box-sizing: border-box;
 }
 
 
@@ -143,13 +225,73 @@ html, body{
     height: 97%;
 }
 
+#tools {
+  width: 38%;
+  height: 96%;
+  justify-self: right;
+  margin-right: 0.5%;
+  padding-top: 0.5%;
+}
+
 #toolbar {
-    height: 4%;
-    display: flex;
+  height: 5%;
+  display: flex;
+  padding-bottom: 1%;
+}
+
+#toolbar button {
+  height: 100%;
+  appearance: none;
+  backface-visibility: hidden;
+  background-color: #4e6476;
+  border-radius: 8px;
+  border-style: none;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: flex; /* centers text horizontally and vertically */
+  align-items: center; /* vertical centering */
+  justify-content: center; /* horizontal centering */
+  font-family: Inter, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.5;
+  outline: none;
+  overflow: hidden;
+  padding: 1%;
+  margin-right: 1%;
+  position: relative;
+  text-align: center;
+  text-decoration: none;
+  transform: translate3d(0, 0, 0);
+  transition: all .3s;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+
+#toolbar button:hover {
+  background-color: #82878b;
+  opacity: 1;
+  transform: translateY(0);
+  transition-duration: .35s;
+}
+
+#toolbar button:active {
+  transform: translateY(2px);
+  transition-duration: .35s;
 }
 
 #tool-body {
-    height: 96%;
+  height: 96%;
+  padding-left: 1%;
+  border: #4e6476, solid, 1px;
+  box-sizing: border-box;
+  border-radius: 1%;
 }
 
 .link {
