@@ -248,7 +248,7 @@ html, body{
   overflow: hidden;
   height: 26px;
   margin-left: 10px;
-  margin-right: 40px; /* adds breathing room before "Treebank" */
+  margin-right: 40px; 
 }
 
 #doc-search {
@@ -257,7 +257,7 @@ html, body{
   outline: none;
   font-size: 0.8rem;
   color: #444;
-  width: 160px; /* narrower box */
+  width: 160px;
 }
 
 #doc-search::placeholder {
@@ -301,4 +301,36 @@ html, body{
 
 .node.highlight {
   stroke: #30bfbf;
+}
+
+#tool-body {
+  background-color: lightgrey;  
+  color: #333;
+  padding: 8px;
+  overflow-y: auto;            
+  overflow-x: hidden;        
+  max-height: 100%;            
+}
+
+.xml-display {
+  background-color: transparent; 
+  padding: 8px;
+  border: none;
+  font-family: "Courier New", monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  color: #333;
+}
+
+.xml-display .xml-tag {
+  color: #1a75d2; 
+  font-weight: bold;
+}
+.xml-display .xml-attr {
+  color: #a64d00;  
+}
+.xml-display .xml-value {
+  color: #008000;  
 }
