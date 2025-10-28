@@ -427,3 +427,20 @@ html, body{
   height: 14px;
   fill: #fff;
 }
+
+.token {
+  border: none;
+  background: none;
+  padding: 0;
+  margin: 0 2px;
+  cursor: pointer;
+}
+
+
+.token.highlight {
+  background-color: #30bfbf;
+}
+
+.node.highlight {
+  stroke: #30bfbf;
+}
