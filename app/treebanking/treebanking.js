@@ -331,7 +331,7 @@ function createNodeHierarchy(sentenceId) {
   window.root = rootHierarchy;
 
   // Select and reset the SVG container
-  const svg = d3.select('#sandbox svg');
+  window.svg = d3.select('#sandbox svg');
   svg.selectAll('*').remove();
 
   // Configure SVG to match container size and aspect ratio
@@ -347,7 +347,7 @@ function createNodeHierarchy(sentenceId) {
   const margin = { top: 40, right: 40, bottom: 40, left: 40 };
 
   // Create main group (g) which supports zoom/pan transformations
-  const g = svg.append('g')
+  window.g = svg.append('g')
                .attr('transform', `translate(${margin.left},${margin.top})`);
 
   // gx is the inner drawing group containing links and nodes
@@ -358,7 +358,7 @@ function createNodeHierarchy(sentenceId) {
   drawNodes(gx, rootHierarchy);
 
   // Enable zooming and panning with safe scale limits
-  const zoom = d3.zoom()
+  window.zoom = d3.zoom()
     .scaleExtent([0.1, 3]) // prevent over-zooming or infinite scroll
     .on('zoom', (event) => {
       g.attr('transform', `translate(${margin.left},${margin.top}) ${event.transform.toString()}`);
