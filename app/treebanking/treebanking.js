@@ -247,6 +247,19 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// focus on root button (treebank view)
+document.getElementById("focus-root").addEventListener("click", () => {
+  if (window.root) {
+    focusOnNode(window.root);
+  } else {
+    console.warn("Root not found");
+  }
+});
+
+// center button (treebank view)
+document.getElementById("center").addEventListener("click", () => {
+  fitTreeToView(window.svg, window.gx, window.container, window.zoom, window.margin);
+})
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: setupXMLTool
@@ -530,11 +543,11 @@ function createNodeHierarchy(sentenceId) {
   window.root = rootHierarchy;
 
   // Select and reset the SVG container
-  const svg = d3.select('#sandbox svg');
+  window.svg = d3.select('#sandbox svg');
   svg.selectAll('*').remove();
 
   // Configure SVG to match container size and aspect ratio
-  const container = document.getElementById('tree-bank');
+  window.container = document.getElementById('tree-bank');
   const width = container.clientWidth;
   const height = container.clientHeight;
   svg.attr('width', width)
@@ -543,21 +556,21 @@ function createNodeHierarchy(sentenceId) {
      .attr('preserveAspectRatio', 'xMidYMid meet');
 
   // Margins prevent content from touching the edges
-  const margin = { top: 40, right: 40, bottom: 40, left: 40 };
+  window.margin = { top: 40, right: 40, bottom: 40, left: 40 };
 
   // Create main group (g) which supports zoom/pan transformations
-  const g = svg.append('g')
+  window.g = svg.append('g')
                .attr('transform', `translate(${margin.left},${margin.top})`);
 
   // gx is the inner drawing group containing links and nodes
-  const gx = g.append('g');
+  window.gx = g.append('g');
 
   // Draw visual elements (edges and nodes)
   drawLinks(gx, rootHierarchy, idParentPairs);
   drawNodes(gx, rootHierarchy);
 
   // Enable zooming and panning with safe scale limits
-  const zoom = d3.zoom()
+  window.zoom = d3.zoom()
     .scaleExtent([0.1, 3]) // prevent over-zooming or infinite scroll
     .on('zoom', (event) => {
       g.attr('transform', `translate(${margin.left},${margin.top}) ${event.transform.toString()}`);
@@ -761,31 +774,45 @@ function drawLinks(gx, rootHierarchy, idParentPairs) {
     });
 }
 
-
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: drawNodes
  * --------------------------------------------------------------------------
  * Renders the words as text-only nodes positioned along the D3 layout.
- *
+ * Adds a rectangle behind text for background highlighting
  * @param {Object} gx - D3 selection of inner SVG group.
  * @param {Object} rootHierarchy - Root node with x/y layout data.
  * @returns {void} Runs synchronously to render all node text labels on the tree.
  */
 function drawNodes(gx, rootHierarchy) {
-  gx.selectAll('.node')
+  const nodes = gx.selectAll('.node')
     .data(rootHierarchy.descendants())
     .join('g')
     .attr('class', 'node')
-    .attr("id", d=> d.data.n || d.data.id || d.data.word_id)
-    .attr('transform', d => `translate(${d.x},${d.y})`)
-    .append('text')
+    .attr("id", d => d.data.n || d.data.id || d.data.word_id)
+    .attr('transform', d => `translate(${d.x},${d.y})`);
+  // First add the text (so we can measure it)
+  nodes.append('text')
     .attr('dy', 4)
     .attr('text-anchor', 'middle')
     .style('font-family', 'sans-serif')
     .style('font-size', '14px')
     .style('fill', '#1c1c1c')
-    .text(d => d.data.form);
+    .text(d => d.data.form)
+    .each(function() {
+      // Measure the text and insert a rect *behind* it
+      const text = d3.select(this);
+      const bbox = this.getBBox();
+      d3.select(this.parentNode)
+        .insert('rect', 'text')  // insert before text so it’s behind
+        .attr('x', bbox.x - 3)
+        .attr('y', bbox.y - 2)
+        .attr('width', bbox.width + 6)
+        .attr('height', bbox.height + 4)
+        .attr('rx', 3)
+        .attr('ry', 3)
+        .attr('class', 'text-bg');
+    });
 }
 
 /**
@@ -843,6 +870,55 @@ function fitTreeToView(svg, gx, container, zoom, margin) {
 
   //after nodes have been drawn, sync highlights
   setupWordHoverSync();
+}
+
+/**  
+ *
+ * ------------------------------------------------------------------------
+ * FUNCTION: focusOnNode
+ * ------------------------------------------------------------------------
+ * Focuses D3 tree view on specific node root with smooth panning and zooming 
+ * of the svg. For the root node, it keeps it near the top and for regular
+ * nodes it centers the node in the svg
+ * 
+ * Global dependencies: window.svg, window.zoom, window.root
+ * 
+ * @param {Object} node - D3 hierarchal node object to focus on
+ */
+function focusOnNode(node) {
+  if (!node || !window.svg || !window.zoom) return;
+
+  const svg = window.svg;
+  const zoom = window.zoom;
+
+  // svg container width and height
+  const svgWidth = +svg.attr("width");
+  const svgHeight = +svg.attr("height");
+
+  // horizontal and vertical node posiitons 
+  const x = node.x;
+  const y = node.y;
+  const scale = 1.5;
+
+  // compute translation so node is centered
+  let translateX = svgWidth / 2 - x * scale
+  let translateY = svgHeight / 2 - y * scale
+
+  // if root, shift upward so it remains near the top of svg
+  if (node == window.root) {
+    const topMargin = 50;
+    translateY = topMargin;
+  }
+
+  // compute zoom and pan transform for smooth focus
+  const transform = d3.zoomIdentity
+    .translate(translateX, translateY)
+    .scale(scale);
+  
+  // animate transition to new view
+  svg.transition()
+    .duration(750)
+    .call(zoom.transform, transform);
 }
 
 /* ============================================================================
