@@ -242,7 +242,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// focus on root button 
+// focus on root button (treebank view)
 document.getElementById("focus-root").addEventListener("click", () => {
   if (window.root) {
     focusOnNode(window.root);
@@ -250,6 +250,11 @@ document.getElementById("focus-root").addEventListener("click", () => {
     console.warn("Root not found");
   }
 });
+
+// center button (treebank view)
+document.getElementById("center").addEventListener("click", () => {
+  fitTreeToView(window.svg, window.gx, window.container, window.zoom, window.margin);
+})
 
 /**
  * --------------------------------------------------------------------------
@@ -343,7 +348,7 @@ function createNodeHierarchy(sentenceId) {
   svg.selectAll('*').remove();
 
   // Configure SVG to match container size and aspect ratio
-  const container = document.getElementById('tree-bank');
+  window.container = document.getElementById('tree-bank');
   const width = container.clientWidth;
   const height = container.clientHeight;
   svg.attr('width', width)
@@ -352,14 +357,14 @@ function createNodeHierarchy(sentenceId) {
      .attr('preserveAspectRatio', 'xMidYMid meet');
 
   // Margins prevent content from touching the edges
-  const margin = { top: 40, right: 40, bottom: 40, left: 40 };
+  window.margin = { top: 40, right: 40, bottom: 40, left: 40 };
 
   // Create main group (g) which supports zoom/pan transformations
   window.g = svg.append('g')
                .attr('transform', `translate(${margin.left},${margin.top})`);
 
   // gx is the inner drawing group containing links and nodes
-  const gx = g.append('g');
+  window.gx = g.append('g');
 
   // Draw visual elements (edges and nodes)
   drawLinks(gx, rootHierarchy, idParentPairs);
@@ -569,7 +574,6 @@ function drawLinks(gx, rootHierarchy, idParentPairs) {
         });
     });
 }
-
 
 /**
  * --------------------------------------------------------------------------
