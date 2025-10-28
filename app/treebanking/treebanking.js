@@ -331,7 +331,7 @@ function createNodeHierarchy(sentenceId) {
   window.root = rootHierarchy;
 
   // Select and reset the SVG container
-  const svg = d3.select('#sandbox svg');
+  window.svg = d3.select('#sandbox svg');
   svg.selectAll('*').remove();
 
   // Configure SVG to match container size and aspect ratio
@@ -347,7 +347,7 @@ function createNodeHierarchy(sentenceId) {
   const margin = { top: 40, right: 40, bottom: 40, left: 40 };
 
   // Create main group (g) which supports zoom/pan transformations
-  const g = svg.append('g')
+  window.g = svg.append('g')
                .attr('transform', `translate(${margin.left},${margin.top})`);
 
   // gx is the inner drawing group containing links and nodes
@@ -358,7 +358,7 @@ function createNodeHierarchy(sentenceId) {
   drawNodes(gx, rootHierarchy);
 
   // Enable zooming and panning with safe scale limits
-  const zoom = d3.zoom()
+  window.zoom = d3.zoom()
     .scaleExtent([0.1, 3]) // prevent over-zooming or infinite scroll
     .on('zoom', (event) => {
       g.attr('transform', `translate(${margin.left},${margin.top}) ${event.transform.toString()}`);
@@ -568,25 +568,40 @@ function drawLinks(gx, rootHierarchy, idParentPairs) {
  * FUNCTION: drawNodes
  * --------------------------------------------------------------------------
  * Renders the words as text-only nodes positioned along the D3 layout.
- *
+ * Adds a rectangle behind text for background highlighting
  * @param {Object} gx - D3 selection of inner SVG group.
  * @param {Object} rootHierarchy - Root node with x/y layout data.
  * @returns {void} Runs synchronously to render all node text labels on the tree.
  */
 function drawNodes(gx, rootHierarchy) {
-  gx.selectAll('.node')
+  const nodes = gx.selectAll('.node')
     .data(rootHierarchy.descendants())
     .join('g')
     .attr('class', 'node')
-    .attr("id", d=> d.data.n || d.data.id || d.data.word_id)
-    .attr('transform', d => `translate(${d.x},${d.y})`)
-    .append('text')
+    .attr("id", d => d.data.n || d.data.id || d.data.word_id)
+    .attr('transform', d => `translate(${d.x},${d.y})`);
+  // First add the text (so we can measure it)
+  nodes.append('text')
     .attr('dy', 4)
     .attr('text-anchor', 'middle')
     .style('font-family', 'sans-serif')
     .style('font-size', '14px')
     .style('fill', '#1c1c1c')
-    .text(d => d.data.form);
+    .text(d => d.data.form)
+    .each(function() {
+      // Measure the text and insert a rect *behind* it
+      const text = d3.select(this);
+      const bbox = this.getBBox();
+      d3.select(this.parentNode)
+        .insert('rect', 'text')  // insert before text so it’s behind
+        .attr('x', bbox.x - 3)
+        .attr('y', bbox.y - 2)
+        .attr('width', bbox.width + 6)
+        .attr('height', bbox.height + 4)
+        .attr('rx', 3)
+        .attr('ry', 3)
+        .attr('class', 'text-bg');
+    });
 }
 
 /**

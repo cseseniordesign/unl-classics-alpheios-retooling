@@ -441,6 +441,15 @@ html, body{
   background-color: #30bfbf;
 }
 
-.node.highlight {
-  stroke: #30bfbf;
+.text-bg {
+  fill: transparent;
+  transition: fill 0.2s ease;
+}
+
+.node.highlight .text-bg {
+  fill: #30bfbf;
+}
+
+.node text {
+  cursor: pointer; 
 }
