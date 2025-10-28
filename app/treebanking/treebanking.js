@@ -242,6 +242,14 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
+// focus on root button 
+document.getElementById("focus-root").addEventListener("click", () => {
+  if (window.root) {
+    focusOnNode(window.root);
+  } else {
+    console.warn("Root not found");
+  }
+});
 
 /**
  * --------------------------------------------------------------------------
@@ -659,6 +667,55 @@ function fitTreeToView(svg, gx, container, zoom, margin) {
 
   //after nodes have been drawn, sync highlights
   setupWordHoverSync();
+}
+
+/**  
+ *
+ * ------------------------------------------------------------------------
+ * FUNCTION: focusOnNode
+ * ------------------------------------------------------------------------
+ * Focuses D3 tree view on specific node root with smooth panning and zooming 
+ * of the svg. For the root node, it keeps it near the top and for regular
+ * nodes it centers the node in the svg
+ * 
+ * Global dependencies: window.svg, window.zoom, window.root
+ * 
+ * @param {Object} node - D3 hierarchal node object to focus on
+ */
+function focusOnNode(node) {
+  if (!node || !window.svg || !window.zoom) return;
+
+  const svg = window.svg;
+  const zoom = window.zoom;
+
+  // svg container width and height
+  const svgWidth = +svg.attr("width");
+  const svgHeight = +svg.attr("height");
+
+  // horizontal and vertical node posiitons 
+  const x = node.x;
+  const y = node.y;
+  const scale = 1.5;
+
+  // compute translation so node is centered
+  let translateX = svgWidth / 2 - x * scale
+  let translateY = svgHeight / 2 - y * scale
+
+  // if root, shift upward so it remains near the top of svg
+  if (node == window.root) {
+    const topMargin = 50;
+    translateY = topMargin;
+  }
+
+  // compute zoom and pan transform for smooth focus
+  const transform = d3.zoomIdentity
+    .translate(translateX, translateY)
+    .scale(scale);
+  
+  // animate transition to new view
+  svg.transition()
+    .duration(750)
+    .call(zoom.transform, transform);
 }
 
 /* ============================================================================
