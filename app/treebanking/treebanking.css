@@ -485,3 +485,7 @@ html, body{
 .xml-display .xml-value {
   color: #008000;  
 }
+
+.selected {
+  background-color: yellow;
+}
