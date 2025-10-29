@@ -93,7 +93,82 @@ async function displaySentence(index) {
   if (typeof window.updateXMLIfActive === 'function') {
     window.updateXMLIfActive();
   }
+} 
+
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: handleWordClick
+ * --------------------------------------------------------------------------
+ * handles changing head when two nodes are selected
+ */
+
+let selectedWordId = null; // keeps track of the first click(dependent word)
+
+function handleWordClick(wordId, event) {
+  if(!selectedWordId) {
+    selectedWordId = wordId;
+    //add visual confirmation
+    const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
+    if (btn) btn.classList.remove("highlight"), btn.classList.add("selected");
+    return;
+  }
+  //remove highlight if same word clicked twice and reset selection
+  const newHeadId = wordId;
+  if(selectedWordId === newHeadId) {
+    const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
+    btn.classList.add("highlight"), btn.classList.remove("selected");
+    resetSelection();
+  }
+
+  const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+  //gets dependent node (first selected node)
+  const dependent = currentSentence.words.find(word => word.id === selectedWordId);
+  //gets indepenent node (second selected node)
+  const independent = currentSentence.words.find(word => word.id === newHeadId);
+
+  if (createsCycle(currentSentence.words, selectedWordId, newHeadId)) {
+    // Flip logic — make the old head now depend on the selected word
+    independent.head = dependent.head;
+  } else if(dependent) {
+    // Normal assignment
+    dependent.head = newHeadId;
+  }
+ 
+  createNodeHierarchy(window.currentIndex);
+
+  resetSelection();
 }
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: resetSelection
+ * --------------------------------------------------------------------------
+ * resets the first selected word 
+ */
+function resetSelection() {
+  selectedWordId === null;
+  const prev = document.querySelector(".token.selected");
+  if (prev) prev.classList.remove("selected");
+  selectedWordId = null
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: createsCycle
+ * --------------------------------------------------------------------------
+ * checks to see if a cycle is created
+ */
+function createsCycle(words, dependentId, newHeadId) {
+  let current = newHeadId;
+  while (current && current !== "0" && current !== "root") {
+    if (current === dependentId) return true;
+    const parent = words.find(w => w.id === current);
+    current = parent ? parent.head : null;
+  }
+  return false;
+}
+
 
 /**
  * --------------------------------------------------------------------------
@@ -354,7 +429,7 @@ function setupXMLTool() {
 
     const xml = `&lt;sentence id="${data.id}"&gt;\n${words}\n&lt;/sentence&gt;`;
     return xml;
-  }
+  }  
 
   /**
    * --------------------------------------------------------------------------
