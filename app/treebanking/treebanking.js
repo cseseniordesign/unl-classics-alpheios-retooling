@@ -256,10 +256,24 @@ document.getElementById("focus-root").addEventListener("click", () => {
   }
 });
 
+// compact and expand tree buttons (treebank view)
+document.addEventListener("DOMContentLoaded", () => {
+  const compactBtn = document.getElementById("compact");
+  const expandBtn = document.getElementById("expand");
+
+  if (compactBtn && expandBtn) {
+    compactBtn.addEventListener("click", compactTree);
+    expandBtn.addEventListener("click", expandTree);
+  } else {
+    console.warn("Buttons not found in DOM.");
+  }
+});
+
 // center button (treebank view)
 document.getElementById("center").addEventListener("click", () => {
   fitTreeToView(window.svg, window.gx, window.container, window.zoom, window.margin);
-})
+});
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: setupXMLTool
@@ -511,6 +525,13 @@ function setupResizeHandle() {
    SECTION 3: TREE RENDERING PIPELINE (D3)
    ============================================================================ */
 
+// GLOBAL VARIABLES 
+window.root = null;
+window.svg = null;
+window.gx = null;
+window.idParentPairs = null;
+window.verticalSpacing = 1; // controls vertical link length 
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: createNodeHierarchy
@@ -535,6 +556,7 @@ function createNodeHierarchy(sentenceId) {
 
   // Transform the sentence into a flat array of {id, parentId, form, relation}
   const idParentPairs = prepareSentenceData(sentence);
+  window.idParentPairs = idParentPairs; // global variable for idParentPairs
 
   // Generate a hierarchical layout from the flat data
   const rootHierarchy = buildHierarchy(idParentPairs);
@@ -642,7 +664,7 @@ function buildHierarchy(idParentPairs) {
 
   // Configure a D3 tree layout that uses spacing proportional to word size
   const treeLayout = d3.tree()
-    .nodeSize([1, yGap])
+    .nodeSize([window.verticalSpacing, yGap * window.verticalSpacing]) // vertical spacing mutlipled by scale factor 
     .separation((a, b) => {
       const avg = (a.wordWidth + b.wordWidth) / 2;
       return a.parent === b.parent ? avg / 60 : avg / 40;
@@ -884,6 +906,7 @@ function fitTreeToView(svg, gx, container, zoom, margin) {
  * Global dependencies: window.svg, window.zoom, window.root
  * 
  * @param {Object} node - D3 hierarchal node object to focus on
+ * @returns {void} focuses on tree in svg passed in as a parameter 
  */
 function focusOnNode(node) {
   if (!node || !window.svg || !window.zoom) return;
@@ -919,6 +942,69 @@ function focusOnNode(node) {
   svg.transition()
     .duration(750)
     .call(zoom.transform, transform);
+}
+
+/**  
+ *
+ * ------------------------------------------------------------------------
+ * FUNCTION: updateTreeLayout
+ * ------------------------------------------------------------------------
+ * Redraws the tree whenever window.verticalSpacing changes and used by
+ * compactTree() and expandTree() functions to support buttons thereof
+ * 
+ * Global dependencies: window.idParentPairs, window.root, window.gx, 
+ * 
+ * @returns {void} updates tree layout
+ */
+function updateTreeLayout() {
+  if (!window.idParentPairs) {
+    console.warn("No tree data loaded yet.");
+    return;
+  }
+
+  // updates the root
+  window.root = buildHierarchy(window.idParentPairs);
+
+  // removes previous nodes and links
+  if (window.gx) {
+    window.gx.selectAll("*").remove();
+  }
+
+  // redraw links and nodes
+  drawLinks(window.gx, window.root, window.idParentPairs);
+  drawNodes(window.gx, window.root);
+}
+
+/**  
+ *
+ * ------------------------------------------------------------------------
+ * FUNCTION: compactTree
+ * ------------------------------------------------------------------------
+ * Decreases vertical spacing between nodes and used to support compact button
+ * 
+ * Global dependencies: window.verticalSpacing
+ * 
+ * @returns {void} compacts the tree
+ */
+function compactTree() {
+  window.verticalSpacing = Math.max(0.2, window.verticalSpacing - 0.2);
+  updateTreeLayout();
+}
+
+/**  
+ *
+ * ------------------------------------------------------------------------
+ * FUNCTION: expandTree
+ * ------------------------------------------------------------------------
+ * Increases vertical spacing between nodes and used to support expand button
+ * 
+ * Global dependencies: window.verticalSpacing
+ * 
+ * @returns {void} expands the tree
+ */
+function expandTree() {
+  window.verticalSpacing += 0.2;
+  updateTreeLayout();
 }
 
 /* ============================================================================
