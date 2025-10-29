@@ -88,6 +88,11 @@ async function displaySentence(index) {
 
   // Generate and display the D3 dependency tree
   createNodeHierarchy(index);
+
+  // Refresh XML panel if open
+  if (typeof window.updateXMLIfActive === 'function') {
+    window.updateXMLIfActive();
+  }
 }
 
 /**
@@ -242,7 +247,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-// focus on root button 
+// focus on root button (treebank view)
 document.getElementById("focus-root").addEventListener("click", () => {
   if (window.root) {
     focusOnNode(window.root);
@@ -250,6 +255,205 @@ document.getElementById("focus-root").addEventListener("click", () => {
     console.warn("Root not found");
   }
 });
+
+// center button (treebank view)
+document.getElementById("center").addEventListener("click", () => {
+  fitTreeToView(window.svg, window.gx, window.container, window.zoom, window.margin);
+})
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: setupXMLTool
+ * --------------------------------------------------------------------------
+ * Adds an "XML" tool to the right-side toolbar.
+ * When clicked, this tab displays a pretty-formatted, syntax-highlighted
+ * XML view of the currently displayed sentence (only one sentence at a time).
+ *
+ * While this XML panel is open:
+ *   - The dependency tree enters read-only mode (dimmed, non-interactive).
+ *   - All pointer events are disabled on the SVG.
+ *
+ * Clicking the button again closes the XML view and restores interactivity.
+ *
+ * @returns {void} Runs synchronously to initialize event listeners and view logic.
+ */
+function setupXMLTool() {
+  const xmlBtn = document.getElementById('xml');
+  const toolBody = document.getElementById('tool-body');
+  const allToolButtons = document.querySelectorAll('#toolbar button');
+
+  // --- Defensive guard: ensure required DOM elements exist ---
+  if (!xmlBtn || !toolBody) return;
+
+  let isXMLActive = false; // Tracks whether the XML view is currently open
+
+  /**
+   * --------------------------------------------------------------------------
+   * FUNCTION: formatXML
+   * --------------------------------------------------------------------------
+   * Properly indents nested XML elements for readability.
+   * Adds two spaces per nesting level.
+   *
+   * @param {string} xmlString - Raw, escaped XML string (e.g., with &lt; and &gt;).
+   * @returns {string} Indented version of the XML string with line breaks preserved.
+   */
+  function formatXML(xmlString) {
+    const lines = xmlString.split('\n');
+    let indentLevel = 0;
+
+    const formatted = lines.map(line => {
+      let trimmed = line.trim();
+      if (!trimmed) return ''; // skip empty lines
+
+      // Decrease indent after closing tag
+      if (trimmed.match(/^&lt;\/[^>]+&gt;$/)) indentLevel--;
+
+      // Apply indentation
+      const spaces = '&nbsp;'.repeat(indentLevel * 2);
+      const indentedLine = spaces + trimmed;
+
+      // Increase indent after opening tag that’s not self-closing
+      if (trimmed.match(/^&lt;[^/!?][^>]*[^/]&gt;$/)) indentLevel++;
+
+      return indentedLine;
+    });
+
+    return formatted.join('<br>');
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * FUNCTION: getCurrentSentenceXML
+   * --------------------------------------------------------------------------
+   * Retrieves the XML representation of the currently displayed sentence.
+   * Only includes the current sentence and its <word> elements.
+   *
+   * @returns {string} Escaped and formatted XML markup.
+   */
+  function getCurrentSentenceXML() {
+    const data = window.treebankData?.find(s => s.id === `${window.currentIndex}`);
+    if (!data) return '&lt;!-- No sentence loaded --&gt;';
+
+    // Construct XML with line breaks
+    const words = data.words.map(w =>
+      `  &lt;word id="${w.id}" form="${w.form}" lemma="${w.lemma}" postag="${w.postag}" relation="${w.relation}" head="${w.head}" /&gt;`
+    ).join('\n');
+
+    const xml = `&lt;sentence id="${data.id}"&gt;\n${words}\n&lt;/sentence&gt;`;
+    return xml;
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * FUNCTION: highlightXML
+   * --------------------------------------------------------------------------
+   * Adds color syntax highlighting to XML tags, attributes, and values.
+   * Lightweight and dependency-free (uses <span> wrappers).
+   *
+   * @param {string} xmlString - Escaped XML markup string.
+   * @returns {string} Highlighted HTML string.
+   */
+  function highlightXML(xmlString) {
+    return xmlString
+      // Highlight tags and attributes
+      .replace(/(&lt;\/?)([a-zA-Z0-9_-]+)([^&]*?)(&gt;)/g, (match, lt, tag, attrs, gt) => {
+        const coloredAttrs = attrs.replace(
+          /([a-zA-Z0-9_-]+)="(.*?)"/g,
+          `<span class="xml-attr">$1</span>=<span class="xml-value">"$2"</span>`
+        );
+        return `${lt}<span class="xml-tag">${tag}</span>${coloredAttrs}${gt}`;
+      });
+  }
+
+  window.updateXMLIfActive = updateXMLIfActive;
+
+    /**
+   * --------------------------------------------------------------------------
+   * FUNCTION: updateXMLIfActive
+   * --------------------------------------------------------------------------
+   * Refreshes the XML panel automatically when navigating between sentences.
+   * Does nothing if XML view is not active.
+   *
+   * @returns {void}
+   */
+  function updateXMLIfActive() {
+    if (!isXMLActive) return;  // Only update if XML view is currently visible
+
+    const rawXML = getCurrentSentenceXML();
+    const formatted = formatXML(rawXML);
+    const highlighted = highlightXML(formatted);
+    toolBody.innerHTML = `<pre class="xml-display">${highlighted}</pre>`;
+    toolBody.scrollTop = 0; // resets scroll if sentence is changed
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * FUNCTION: enterReadOnly
+   * --------------------------------------------------------------------------
+   * Disables all interactivity on the dependency tree.
+   * Called when the XML panel is active.
+   *
+   * @returns {void} Sets read-only flag and dims the SVG display.
+   */
+  function enterReadOnly() {
+    window.isReadOnly = true;
+    d3.select('#sandbox svg')
+      .style('pointer-events', 'none') // disable user input
+      .style('opacity', 0.85);         // visually indicate locked state
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * FUNCTION: exitReadOnly
+   * --------------------------------------------------------------------------
+   * Restores interactivity to the dependency tree when XML mode is closed.
+   *
+   * @returns {void} Clears read-only flag and restores normal appearance.
+   */
+  function exitReadOnly() {
+    window.isReadOnly = false;
+    d3.select('#sandbox svg')
+      .style('pointer-events', 'all')
+      .style('opacity', 1);
+  }
+
+  /**
+   * --------------------------------------------------------------------------
+   * EVENT LISTENER: XML Button Click
+   * --------------------------------------------------------------------------
+   * Toggles the XML panel on and off. When enabled:
+   *  - Shows indented, syntax-highlighted XML for the current sentence.
+   *  - Locks the tree for read-only viewing.
+   *
+   * @returns {void}
+   */
+  xmlBtn.addEventListener('click', () => {
+    const wasActive = isXMLActive;
+
+    // Reset all toolbar button states
+    allToolButtons.forEach(btn => btn.classList.remove('active'));
+    isXMLActive = !wasActive; // toggle
+
+    if (isXMLActive) {
+      // --- Activate XML mode ---
+      xmlBtn.classList.add('active');
+
+      // Get and process current XML
+      const rawXML = getCurrentSentenceXML();
+      const formatted = formatXML(rawXML);
+      const highlighted = highlightXML(formatted);
+
+      // Display inside the right-side panel
+      toolBody.innerHTML = `<pre class="xml-display">${highlighted}</pre>`;
+
+      // Lock tree
+      enterReadOnly();
+    } else {
+      // --- Exit XML mode ---
+      toolBody.innerHTML = '<p>this is the body of each tool option</p>';
+      exitReadOnly();
+    }
+  });
+}
 
 /**
  * --------------------------------------------------------------------------
@@ -343,7 +547,7 @@ function createNodeHierarchy(sentenceId) {
   svg.selectAll('*').remove();
 
   // Configure SVG to match container size and aspect ratio
-  const container = document.getElementById('tree-bank');
+  window.container = document.getElementById('tree-bank');
   const width = container.clientWidth;
   const height = container.clientHeight;
   svg.attr('width', width)
@@ -352,14 +556,14 @@ function createNodeHierarchy(sentenceId) {
      .attr('preserveAspectRatio', 'xMidYMid meet');
 
   // Margins prevent content from touching the edges
-  const margin = { top: 40, right: 40, bottom: 40, left: 40 };
+  window.margin = { top: 40, right: 40, bottom: 40, left: 40 };
 
   // Create main group (g) which supports zoom/pan transformations
   window.g = svg.append('g')
                .attr('transform', `translate(${margin.left},${margin.top})`);
 
   // gx is the inner drawing group containing links and nodes
-  const gx = g.append('g');
+  window.gx = g.append('g');
 
   // Draw visual elements (edges and nodes)
   drawLinks(gx, rootHierarchy, idParentPairs);
@@ -570,7 +774,6 @@ function drawLinks(gx, rootHierarchy, idParentPairs) {
     });
 }
 
-
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: drawNodes
@@ -738,4 +941,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   await displaySentence(1);  // show first sentence by default
   setupSentenceSelector();   // populate dropdown and link it
   setupResizeHandle();       // enable interactive resizing
+  setupXMLTool();            // enable XML view
 });
