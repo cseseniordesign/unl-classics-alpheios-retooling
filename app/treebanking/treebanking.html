@@ -16,7 +16,7 @@
         <img src="../../assets/arethusa-small.png" alt="Arethusa Logo">
         <div id="search-group">
         <input type="text" id="doc-search" placeholder="Search for documents...">
-        <button id="search-btn" type="submit" aria-label="Search">
+        <button id="search-btn" type="submit" title="Search" aria-label="Search">
             <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 
             6.5 6.5 0 109.5 16a6.471 6.471 0 004.23-1.57l.27.28v.79l5 
@@ -37,7 +37,7 @@
                 </button>
             </div>
 
-            <select id="sentence-select" class="select"></select>
+            <select id="sentence-select" title="Select Sentence" class="select"></select>
 
             <div class="nav-group">
                 <button id="next" class="nav-btn" title="Next Sentence" onclick="displaySentence(window.currentIndex+1)">
@@ -50,48 +50,48 @@
         </div>
 
         <div id="header-buttons">
-            <button id="save" type="button">
+            <button id="save" title="Save" type="button">
                 <svg viewBox="0 0 24 24">
                     <path d="M17 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7l-4-4zM12 19a2 2 0 1 1 0-4 2 2 0 0 1 0 4zm3-10H5V5h10v4z"/>
                 </svg>
             </button>
-            <button id="download" type="button">
+            <button id="download" title="Download" type="button">
                 <svg viewBox="0 0 24 24">
                     <path d="M5 20h14a1 1 0 0 0 1-1v-3h-2v2H6v-2H4v3a1 1 0 0 0 1 1zm7-3l5-5h-3V4h-4v8H7l5 5z"/>
                 </svg>
             </button>
-            <button id="undo" type="button">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 5V2L6 7l6 5V9c3.31 0 6 2.69 6 6a6 6 0 0 1-6 6H8v2h4a8 8 0 0 0 0-16z"/>
+            <button id="undo" title="Undo" type="button">
+                <svg viewBox="0 0 525 448">
+                    <path d="M448 384Q389 336 335 312 280 288 224 288L224 380 60 216 224 52 224 144Q320 166 374 222 428 277 448 384Z" />
                 </svg>
             </button>
-            <button id="redo" type="button">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12 5V2L6 7l6 5V9c3.31 0 6 2.69 6 6a6 6 0 0 1-6 6H8v2h4a8 8 0 0 0 0-16z"
-                        transform="scale(-1,1) translate(-24,0)"/>
+            <button id="redo" title="Redo" type="button">
+                <svg viewBox="0 0 525 448">
+                    <path d="M448 384Q389 336 335 312 280 288 224 288L224 380 60 216 224 52 224 144Q320 166 374 222 428 277 448 384Z"
+                        transform="scale(-1,1) translate(-525,0)"/>
                 </svg>
             </button>
-            <button id="comment" type="button">
-                <svg viewBox="0 0 24 24">
+            <button id="comment" title="Comment" type="button">
+                <svg viewBox="0 0 24 22">
                     <path d="M20 2H4c-1.1 0-2 .9-2 2v16l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 10h12v2H6v-2zm0-3h12v2H6V7z"/>
                 </svg>
             </button>
-            <button id="settings" type="button">
-                <svg viewBox="0 0 24 24">
+            <button id="settings" title="Settings" type="button">
+                <svg viewBox="-1 -1 26 26">
                     <path d="M19.43 12.98c.04-.32.07-.66.07-1s-.03-.68-.07-1l2.11-1.65a.5.5 0 0 0 .12-.64l-2-3.46a.5.5 0 0 0-.61-.21l-2.49 1a6.992 6.992 0 0 0-1.7-.99l-.38-2.65A.5.5 0 0 0 14 2h-4a.5.5 0 0 0-.49.42l-.38 2.65c-.63.25-1.22.6-1.7.99l-2.49-1a.5.5 0 0 0-.61.21l-2 3.46a.5.5 0 0 0 .12.64L4.57 11c-.04.32-.07.66-.07 1s.03.68.07 1L2.46 14.65a.5.5 0 0 0-.12.64l2 3.46c.14.24.44.34.61.21l2.49-1c.48.39 1.07.74 1.7.99l.38 2.65c.05.27.27.42.49.42h4c.22 0 .44-.15.49-.42l.38-2.65c.63-.25 1.22-.6 1.7-.99l2.49 1c.17.12.47.03.61-.21l2-3.46a.5.5 0 0 0-.12-.64l-2.11-1.65zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/>
                 </svg>
             </button>
-            <button id="questions" type="button">
+            <button id="questions" title="Questions" type="button">
                 <svg viewBox="0 0 24 24">
                     <path d="M12 4C9.243 4 7 6.243 7 9h2c0-1.654 1.346-3 3-3s3 1.346 3 3c0 1.069-.454 1.465-1.481 2.255-.382.294-.813.626-1.226 1.038C10.981 13.604 10.995 14.897 11 15v2h2v-2.009c0-.024.023-.601.707-1.284.32-.32.682-.598 1.031-.867C15.798 12.024 17 11.1 17 9c0-2.757-2.243-5-5-5zm-1 14h2v2h-2z"/>
                 </svg>
             </button>
-            <button id="language" type="button">
-                <svg viewBox="0 0 24 24">
-                    <path d="M12,24C5.4,24,0,18.6,0,12S5.4,0,12,0s12,5.4,12,12S18.6,24,12,24z M9.5,17c0.6,3.1,1.7,5,2.5,5s1.9-1.9,2.5-5H9.5zM16.6,17c-0.3,1.7-0.8,3.3-1.4,4.5c2.3-0.8,4.3-2.4,5.5-4.5H16.6z M3.3,17c1.2,2.1,3.2,3.7,5.5,4.5c-0.6-1.2-1.1-2.8-1.4-4.5H3.3z M16.9,15h4.7c0.2-0.9,0.4-2,0.4-3s-0.2-2.1-0.5-3h-4.7c0.2,1,0.2,2,0.2,3S17,14,16.9,15z M9.2,15h5.7c0.1-0.9,0.2-1.9,0.2-3S15,9.9,14.9,9H9.2C9.1,9.9,9,10.9,9,12C9,13.1,9.1,14.1,9.2,15z M2.5,15h4.7c-0.1-1-0.1-2-0.1-3s0-2,0.1-3H2.5C2.2,9.9,2,11,2,12S2.2,14.1,2.5,15z M16.6,7h4.1c-1.2-2.1-3.2-3.7-5.5-4.5C15.8,3.7,16.3,5.3,16.6,7z M9.5,7h5.1c-0.6-3.1-1.7-5-2.5-5C11.3,2,10.1,3.9,9.5,7z M3.3,7h4.1c0.3-1.7,0.8-3.3,1.4-4.5C6.5,3.3,4.6,4.9,3.3,7z"/>
+            <button id="language" title="Language" type="button">
+                <svg viewBox="0 0 36 33">
+                    <polygon points="11,16.5 10,19.6 12,19.6 11,16.5 	" class="clr-i-solid clr-i-solid-path-1"></polygon><path d="M30.3,3h-16v5h4v2h-13c-1.7,0-3,1.3-3,3v11c0,1.7,1.3,3,3,3h1v5.1l6.3-5.1h6.7v-7h11c1.7,0,3-1.3,3-3V6C33.3,4.3,32,3,30.3,3z M13.1,22.9l-0.5-1.6H9.5l-0.6,1.6H6.5L9.8,14h2.4l3.3,8.9L13.1,22.9z M28.3,15v2c-1.3,0-2.7-0.4-3.9-1c-1.2,0.6-2.6,0.9-4,1l-0.1-2c0.7,0,1.4-0.1,2.1-0.3c-0.9-0.9-1.5-2-1.8-3.2h2.1c0.3,0.9,0.9,1.6,1.6,2.2c1.1-0.9,1.8-2.2,1.9-3.7h-6V8h3V6h2v2h3.3l0.1,1c0.1,2.1-0.7,4.2-2.2,5.7C27.1,14.9,27.7,15,28.3,15z" class="clr-i-solid clr-i-solid-path-2"></path><rect x="0" y="0" width="36" height="36" fill-opacity="0"/>
                 </svg>
             </button>
-            <button id="exit" type="button">
+            <button id="exit" title="Exit" type="button">
                 <svg viewBox="0 0 24 24">
                     <path d="M4,12a1,1,0,0,0,1,1h7.59l-2.3,2.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0l4-4a1,1,0,0,0,.21-.33,1,1,0,0,0,0-.76,1,1,0,0,0-.21-.33l-4-4a1,1,0,1,0-1.42,1.42L12.59,11H5A1,1,0,0,0,4,12ZM17,2H7A3,3,0,0,0,4,5V8A1,1,0,0,0,6,8V5A1,1,0,0,1,7,4H17a1,1,0,0,1,1,1V19a1,1,0,0,1-1,1H7a1,1,0,0,1-1-1V16a1,1,0,0,0-2,0v3a3,3,0,0,0,3,3H17a3,3,0,0,0,3-3V5A3,3,0,0,0,17,2Z"/>                
                 </svg>
@@ -113,30 +113,31 @@
                         <button id="highlight" type="button">highlight</button>
                     </div> 
                     <div id="tree-options"> 
-                        <button id="compact" type="button">
+                        <button id="compact" title="Condense view" type="button">
                             <svg viewBox="0 0 24 24">
                                 <path d="M10.38,13.08A1,1,0,0,0,10,13H6a1,1,0,0,0,0,2H7.59l-5.3,5.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0L9,16.41V18a1,1,0,0,0,2,0V14a1,1,0,0,0-.08-.38A1,1,0,0,0,10.38,13.08ZM10,5A1,1,0,0,0,9,6V7.59L3.71,2.29A1,1,0,0,0,2.29,3.71L7.59,9H6a1,1,0,0,0,0,2h4a1,1,0,0,0,.38-.08,1,1,0,0,0,.54-.54A1,1,0,0,0,11,10V6A1,1,0,0,0,10,5Zm3.62,5.92A1,1,0,0,0,14,11h4a1,1,0,0,0,0-2H16.41l5.3-5.29a1,1,0,1,0-1.42-1.42L15,7.59V6a1,1,0,0,0-2,0v4a1,1,0,0,0,.08.38A1,1,0,0,0,13.62,10.92ZM16.41,15H18a1,1,0,0,0,0-2H14a1,1,0,0,0-.38.08,1,1,0,0,0-.54.54A1,1,0,0,0,13,14v4a1,1,0,0,0,2,0V16.41l5.29,5.3a1,1,0,0,0,1.42,0,1,1,0,0,0,0-1.42Z"/>
                             </svg>
                         </button> 
-                        <button id="expand" type="button">
+                        <button id="expand" title="Expand view" type="button">
                             <svg viewBox="0 0 24 24">
                                 <path d="M9.29,13.29,4,18.59V17a1,1,0,0,0-2,0v4a1,1,0,0,0,.08.38,1,1,0,0,0,.54.54A1,1,0,0,0,3,22H7a1,1,0,0,0,0-2H5.41l5.3-5.29a1,1,0,0,0-1.42-1.42ZM5.41,4H7A1,1,0,0,0,7,2H3a1,1,0,0,0-.38.08,1,1,0,0,0-.54.54A1,1,0,0,0,2,3V7A1,1,0,0,0,4,7V5.41l5.29,5.3a1,1,0,0,0,1.42,0,1,1,0,0,0,0-1.42ZM21,16a1,1,0,0,0-1,1v1.59l-5.29-5.3a1,1,0,0,0-1.42,1.42L18.59,20H17a1,1,0,0,0,0,2h4a1,1,0,0,0,.38-.08,1,1,0,0,0,.54-.54A1,1,0,0,0,22,21V17A1,1,0,0,0,21,16Zm.92-13.38a1,1,0,0,0-.54-.54A1,1,0,0,0,21,2H17a1,1,0,0,0,0,2h1.59l-5.3,5.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0L20,5.41V7a1,1,0,0,0,2,0V3A1,1,0,0,0,21.92,2.62Z"/>                            
                             </svg>
                         </button> 
-                        <button id="focus-root" type="button">
+                        <button id="focus-root" title="Focus view on root" type="button">
                             <svg viewBox="0 0 24 24">
                                 <path d="M8,2H3A1,1,0,0,0,2,3V8A1,1,0,0,0,4,8V4H8A1,1,0,0,0,8,2ZM8,20H4V16a1,1,0,0,0-2,0v5a1,1,0,0,0,1,1H8a1,1,0,0,0,0-2ZM21,2H16a1,1,0,0,0,0,2h4V8a1,1,0,0,0,2,0V3A1,1,0,0,0,21,2Zm0,13a1,1,0,0,0-1,1v4H16a1,1,0,0,0,0,2h5a1,1,0,0,0,1-1V16A1,1,0,0,0,21,15Z"/>
                             </svg>
                         </button> 
-                        <button id="focus-selection" type="button">
+                        <button id="focus-selection" title="Focus view on selection" type="button">
                             <svg viewBox="0 0 24 24">
                                 <path d="M8,2H3A1,1,0,0,0,2,3V8A1,1,0,0,0,4,8V4H8A1,1,0,0,0,8,2ZM8,20H4V16a1,1,0,0,0-2,0v5a1,1,0,0,0,1,1H8a1,1,0,0,0,0-2ZM21,2H16a1,1,0,0,0,0,2h4V8a1,1,0,0,0,2,0V3A1,1,0,0,0,21,2Zm0,13a1,1,0,0,0-1,1v4H16a1,1,0,0,0,0,2h5a1,1,0,0,0,1-1V16A1,1,0,0,0,21,15Z"/>
                                 <circle cx="12" cy="12" r="2" fill="none" stroke="currentColor" stroke-width="1.5"/>
                             </svg>
                         </button> 
-                        <button id="center" type="button">
-                            <svg viewBox="0 0 1024 1024">
-                                <path d="M992 480h-97.44C879.168 293.472 730.512 144.96 544 129.536V32c0-17.664-14.336-32-32-32s-32 14.336-32 32v97.536C293.504 144.96 144.832 293.472 129.424 480H32c-17.664 0-32 14.336-32 32s14.336 32 32 32h97.424C144.832 730.512 293.504 879.04 480 894.464V992c0 17.664 14.336 32 32 32s32-14.336 32-32v-97.536C730.512 879.04 879.168 730.512 894.56 544H992c17.664 0 32-14.336 32-32s-14.336-32-32-32zM480 193.584V480H193.552C208.56 328.8 328.8 208.592 480 193.584zM193.552 544H480v286.416C328.8 815.408 208.56 695.2 193.552 544zM544 830.416V544h286.448C815.44 695.2 695.2 815.408 544 830.416zM544 480V193.584C695.2 208.592 815.44 328.8 830.448 480z"/>                            </svg>                        
+                        <button id="center" title="Center view" type="button">
+                            <svg viewBox="0 0 24 24">
+                                <path d="M12,5a7,7,0,1,0,7,7A7,7,0,0,0,12,5Zm0,12a5,5,0,1,1,5-5A5,5,0,0,1,12,17Zm0-8a3,3,0,1,0,3,3A3,3,0,0,0,12,9Zm0,4a1,1,0,1,1,1-1A1,1,0,0,1,12,13ZM12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,20a9,9,0,1,1,9-9A9,9,0,0,1,12,21Z"/>
+                            </svg>
                         </button> 
                     </div> 
                 </div>
@@ -153,9 +154,10 @@
                 <button id="selector" type="button">selector</button> 
                 <button id="history" type="button">history</button> 
                 <button id="comments" type="button">comments</button> 
+                <button id="xml" type="button">xml</button>
             </div>
             <div id="tool-body">
-                <p>this is the body of each tool option</p>
+                <div id="morph-container"></div>
             </div>
         </div>
     </div>
