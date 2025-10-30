@@ -1,5 +1,24 @@
 import parseTreeBankXML from './parser.js';
 
+// ===== POS color utilities (muted palette) =====
+const POS_COLORS = {
+  v: '#c65a5a', // verb
+  c: '#c77d9b', // conjunction
+  d: '#e69109', // adverb
+  i: '#b29100', // interjection
+  n: '#4aa7b7', // noun
+  a: '#5a78c6', // adjective
+  r: '#5a9b6b', // adposition
+  l: '#6aa7d6', // article
+  p: '#7a5aa9', // pronoun
+  u: '#444',    // punctuation
+  m: '#888',    // numeral
+  '': '#444' // unknown/other
+};
+const getPOSChar = w => (w?.postag && w.postag[0]) ? w.postag[0].toLowerCase() : '';
+const colorForPOS = w => POS_COLORS[getPOSChar(w)] || POS_COLORS[''];
+
+
 /* ============================================================================
    SECTION 1: XML LOADING AND SENTENCE MANAGEMENT
    ============================================================================ */
@@ -51,6 +70,11 @@ async function displaySentence(index) {
     return;
   }
 
+  // If Morph tool is open, close it when changing sentences
+  if (window.isMorphActive && typeof window.closeMorphTool === 'function') {
+    window.closeMorphTool();
+  }
+
   // Clear previously displayed sentence text
   tokenizedSentence.textContent = '';
 
@@ -77,6 +101,8 @@ async function displaySentence(index) {
     button.textContent = word.form + " ";
     button.classList.add("token");
     button.dataset.wordId = word.id;
+    button.dataset.pos = getPOSChar(word);
+    button.style.color = colorForPOS(word);   // sentence token font color
 
     // Add click interaction for reassigning heads
     button.addEventListener("click", (event) => {
@@ -100,12 +126,39 @@ async function displaySentence(index) {
  * --------------------------------------------------------------------------
  * FUNCTION: handleWordClick
  * --------------------------------------------------------------------------
- * handles changing head when two nodes are selected
+ * handles changing head when two nodes are selected or displays morph info
+ * if morph tab is active
  */
 
 let selectedWordId = null; // keeps track of the first click(dependent word)
 
 function handleWordClick(wordId, event) {
+
+  // If Morph tool is active → just show morph info, don’t alter tree
+ if (window.isMorphActive) {
+  // Clear all previous selections
+  document.querySelectorAll(".token").forEach(t => t.classList.remove("selected"));
+  d3.selectAll(".node").classed("selected", false);
+
+  // Select the clicked token and its corresponding tree node
+  const token = document.querySelector(`.token[data-word-id='${wordId}']`);
+  const node = d3.select(`.node[id='${wordId}']`);
+
+  if (token) token.classList.add("selected");
+  if (!node.empty()) {
+    node.classed("selected", true);
+  }
+
+  // Render the morph info in the tool panel
+  const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+  const word = currentSentence.words.find(w => w.id === wordId);
+  if (word && typeof window.renderMorphInfo === 'function') {
+    window.renderMorphInfo(word);
+  }
+
+  return;
+}
+  // Otherwise, normal dependency reassignment mode
   if(!selectedWordId) {
     selectedWordId = wordId;
     //add visual confirmation
@@ -119,6 +172,7 @@ function handleWordClick(wordId, event) {
     const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
     btn.classList.add("highlight"), btn.classList.remove("selected");
     resetSelection();
+    return;
   }
 
   const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
@@ -147,7 +201,6 @@ function handleWordClick(wordId, event) {
  * resets the first selected word 
  */
 function resetSelection() {
-  selectedWordId === null;
   const prev = document.querySelector(".token.selected");
   if (prev) prev.classList.remove("selected");
   selectedWordId = null
@@ -409,6 +462,7 @@ function setupXMLTool() {
     return formatted.join('<br>');
   }
 
+  
   /**
    * --------------------------------------------------------------------------
    * FUNCTION: getCurrentSentenceXML
@@ -536,12 +590,220 @@ function setupXMLTool() {
 
       // Lock tree
       enterReadOnly();
+
+      document.body.classList.remove('mode-morph');
     } else {
       // --- Exit XML mode ---
       toolBody.innerHTML = '<p>this is the body of each tool option</p>';
       exitReadOnly();
     }
   });
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: setupMorphTool
+ * --------------------------------------------------------------------------
+ * Enables the "Morph" tab on the right-hand toolbar.
+ * When the Morph button is active, clicking a word displays its morph info.
+ * --------------------------------------------------------------------------
+ */
+function setupMorphTool() {
+  const morphBtn = document.getElementById('morph');
+  const toolBody = document.getElementById('tool-body');
+  const allToolButtons = document.querySelectorAll('#toolbar button');
+
+  if (!morphBtn || !toolBody) return;
+
+  // Expose a closer so other code (like displaySentence) can shut Morph off
+  window.closeMorphTool = function () {
+    if (!window.isMorphActive) return;
+    window.isMorphActive = false;
+    morphBtn.classList.remove('active');
+    toolBody.innerHTML = `<p>this is the body of each tool option</p>`;
+    // clear any highlights
+    document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
+    d3.selectAll(".node").classed("selected", false);
+  };
+
+  window.isMorphActive = false;
+
+  // Expose globally so displaySentence() and clicks can use it
+  window.renderMorphInfo = renderMorphInfo;
+
+  morphBtn.addEventListener('click', () => {
+    const wasActive = window.isMorphActive;
+    allToolButtons.forEach(btn => btn.classList.remove('active'));
+    window.isMorphActive = !wasActive;
+
+    if (window.isMorphActive) {
+      document.body.classList.add('mode-morph');
+    } else {
+      document.body.classList.remove('mode-morph');
+      // clear any morph selections when leaving morph mode
+      d3.selectAll(".node").classed("selected", false);
+      document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
+    }
+    if (window.isMorphActive) {
+      morphBtn.classList.add('active');
+      toolBody.innerHTML = `<p style="padding:8px;">Click a word to view morphological info.</p>`;
+    } else {
+      toolBody.innerHTML = `<p>this is the body of each tool option</p>`;
+    }
+  });
+
+  /**
+   * Displays morphological info for the selected word in the right-hand tool pane.
+   *
+   * @param {{ id: string, form: string, lemma?: string, postag?: string }} word
+   *        The word object from the current sentence. Must include `id` and `form`.
+   * @returns {void} Renders into the #tool-body container; no return value.
+   */
+  function renderMorphInfo(word) {
+    // 1) Guard rails: Morph must be active; target pane must exist; word must exist.
+    if (!window.isMorphActive) return;
+    const toolBody = document.getElementById('tool-body');
+    if (!toolBody || !word) return;
+
+    // 2) Normalize fields early so later code never reads undefined.
+    const lemma  = (word.lemma  || "").trim();
+    const postag = (word.postag || "").trim();
+    const src = "document"; 
+    
+    // 3) Treat blanks or strings starting with "(unknown" as missing values.
+    const looksUnknown = (s) => !s || /^\(unknown/i.test(s);
+    const noMorphData = looksUnknown(lemma) && looksUnknown(postag);
+
+    // 4) EMPTY STATE: Show only form + id + “Create new form” button.
+    if (noMorphData) {
+      toolBody.innerHTML = `
+        <div class="morph-container morph-container--empty">
+          <p class="morph-form">
+            ${word.form}
+            <span class="morph-id" style="color:#9aa3ad">${window.currentIndex}-${word.id}</span>
+          </p>
+          <button class="morph-create">Create new form</button>
+        </div>
+      `;
+      return; // Stop here — nothing else to show for unknown data.
+    }
+
+    // 5) Parse Alpheios-style POSTAG into a small, useful feature set.
+    /**
+     * Parses a compact morph tag into a human-readable dictionary.
+     *
+     * @param {string} tag - Compact POS/morph tag (e.g., "v3slie---", "n-s---mn-").
+     * @returns {Object<string,string>} Map of fields to readable values.
+     */
+    function parseMorphTag(tag) {
+      if (!tag) return {};
+
+      // Maps for codes → labels
+      const posMap = {
+        v:"verb", n:"noun", a:"adjective", d:"adverb", p:"pronoun",
+        c:"conjunction", r:"adposition", l:"article", m:"numeral",
+        i:"interjection", u:"punctuation"
+      };
+      const tenseMap  = { p:"present", i:"imperfect", r:"perfect", l:"plusquamperfect", f:"future", a:"aorist" };
+      const moodMap   = { i:"indicative", s:"subjunctive", o:"optative", n:"infinitive", m:"imperative", p:"participle" };
+      const voiceMap  = { a:"active", e:"medio-passive", p:"passive" };
+      const numberMap = { s:"singular", p:"plural", d:"dual" };
+      const personMap = { "1":"first person", "2":"second person", "3":"third person" };
+      const genderMap = { m:"masculine", f:"feminine", n:"neuter", c:"common" };
+      const caseMap   = { n:"nominative", g:"genitive", d:"dative", a:"accusative", v:"vocative" };
+
+      const parsed = {};
+      const pos = tag[0];
+      parsed["Part of Speech"] = posMap[pos] || "";
+
+      // Verb-like pattern (e.g., v3slie---)
+      if (pos === "v") {
+        parsed["Person"] = personMap[tag[1]] || "";
+        parsed["Number"] = numberMap[tag[2]] || "";
+        parsed["Tense"]  = tenseMap[tag[3]]  || "";
+        parsed["Mood"]   = moodMap[tag[4]]   || "";
+        parsed["Voice"]  = voiceMap[tag[5]]  || "";
+      }
+      // Noun/adj/pron/article pattern (e.g., n-s---mn-)
+      else if (pos === "n" || pos === "a" || pos === "p" || pos === "l") {
+        parsed["Number"] = numberMap[tag[2]] || "";
+        parsed["Gender"] = genderMap[tag[6]] || "";
+        parsed["Casus"]  = caseMap[tag[7]]   || "";
+      }
+      return parsed;
+    }
+
+    // 6) Build the short “readable” line (e.g., noun.sg.masc.nom).
+    const parsed = parseMorphTag(postag);
+    const readable = Object.values(parsed)
+      .filter(Boolean)
+      .map(v => v.replace(" person", "").replace(" ", "."))
+      .join(".");
+
+    // 7) POS color for the lemma line (matches your token/node palette).
+    const posColor = colorForPOS(word);
+
+    // 8) Main card HTML (full state).
+    toolBody.innerHTML = `
+      <div class="morph-container">
+        <p class="morph-form">
+          ${word.form}
+          <span class="morph-id" style="color:#9aa3ad">${window.currentIndex}-${word.id}</span>
+        </p>
+
+        <div class="morph-entry" data-expanded="false">
+          <input type="checkbox" checked />
+          <div class="morph-content">
+            <p class="morph-lemma">${lemma}</p>
+            <p class="morph-tag">${postag}</p>
+            <p class="morph-source">${src}</p>
+            <p class="morph-readout">${readable}</p>
+          </div>
+        </div>
+
+        <button class="morph-create">Create new form</button>
+      </div>
+    `;
+
+    // 9) Post-render styling hooks: apply colors after insertion.
+    const lemmaEl = toolBody.querySelector('.morph-lemma');
+    const tagEl   = toolBody.querySelector('.morph-tag');
+    const readEl  = toolBody.querySelector('.morph-readout');
+    if (lemmaEl) lemmaEl.style.color = posColor;  // lemma uses POS color
+    if (tagEl)   tagEl.style.color   = '#4a4a4a'; // keep tag/readout neutral gray
+    if (readEl)  readEl.style.color  = '#4a4a4a';
+
+    // 10) Expand/collapse: clicking card (except the checkbox) toggles details grid.
+    const entry = toolBody.querySelector('.morph-entry');
+    entry.addEventListener('click', (e) => {
+      if (e.target.tagName.toLowerCase() === 'input') return;
+
+      const expanded = entry.dataset.expanded === 'true';
+      if (!expanded) {
+        // Build details grid from parsed fields
+        let details = '<div class="morph-divider"></div><div class="morph-details">';
+        for (const [k, v] of Object.entries(parsed)) {
+          if (v) {
+            details += `
+              <div class="morph-label">${k}</div>
+              <div class="morph-colon">:</div>
+              <div class="morph-value">${v}</div>
+            `;
+          }
+        }
+        details += '</div>';
+
+        entry.insertAdjacentHTML('beforeend', details);
+        entry.dataset.expanded = 'true';
+        entry.classList.add('expanded');
+      } else {
+        entry.querySelector('.morph-details')?.remove();
+        entry.querySelector('.morph-divider')?.remove();
+        entry.dataset.expanded = 'false';
+        entry.classList.remove('expanded');
+      }
+    });
+  }
 }
 
 /**
@@ -676,6 +938,8 @@ function createNodeHierarchy(sentenceId) {
 
   // Adjust zoom level and centering to fit tree neatly in view
   fitTreeToView(svg, gx, container, zoom, margin);
+
+  setupWordHoverSync();
 }
 
 /**
@@ -694,7 +958,8 @@ function prepareSentenceData(sentence) {
     id: String(w.id),
     parentId: (w.head === 0 || w.head === '0' || w.head === null) ? 'root' : String(w.head),
     form: w.form || w.word || '(blank)',
-    relation: w.relation || ''
+    relation: w.relation || '',
+    postag: w.postag || ''
   }));
 
   // Add a synthetic root node that acts as a parent for headless nodes
@@ -723,6 +988,7 @@ function buildHierarchy(idParentPairs) {
     if (row) {
       d.data.form = row.form;
       d.data.relation = row.relation;
+      d.data.postag = row.postag || ''
     }
   });
 
@@ -864,10 +1130,7 @@ function drawLinks(gx, rootHierarchy, idParentPairs) {
         .attr("text-anchor", "middle")
         .attr("font-size", "12px")
         .attr("fill", "#333")
-        .text(() => {
-          const child = idParentPairs.find(p => p.id === d.target.data.id);
-          return child && child.relation ? child.relation : "";
-        });
+        .text(d => d.target?.data?.relation || "");
     });
 }
 
@@ -887,14 +1150,16 @@ function drawNodes(gx, rootHierarchy) {
     .join('g')
     .attr('class', 'node')
     .attr("id", d => d.data.n || d.data.id || d.data.word_id)
+    .attr('data-pos', d => (d.data.postag && d.data.postag[0]) ? d.data.postag[0] : '')
     .attr('transform', d => `translate(${d.x},${d.y})`);
+
   // First add the text (so we can measure it)
   nodes.append('text')
     .attr('dy', 4)
     .attr('text-anchor', 'middle')
     .style('font-family', 'sans-serif')
     .style('font-size', '14px')
-    .style('fill', '#1c1c1c')
+    .style('fill', d => colorForPOS({ postag: d.data.postag }))
     .text(d => d.data.form)
     .each(function() {
       // Measure the text and insert a rect *behind* it
@@ -910,6 +1175,30 @@ function drawNodes(gx, rootHierarchy) {
         .attr('ry', 3)
         .attr('class', 'text-bg');
     });
+
+  // --- Enable clicking nodes to show morphological info ---
+  nodes.on("click", function (event, d) {
+    if (!window.isMorphActive) return;
+
+    // Clear all previous highlights first
+    d3.selectAll(".node").classed("selected", false);
+    document.querySelectorAll(".token").forEach(t => t.classList.remove("selected"));
+
+    // Highlight this node and its corresponding token
+    d3.select(this).classed("selected", true);
+    const token = document.querySelector(`.token[data-word-id='${d.data.id}']`);
+    if (token) token.classList.add("selected");
+
+    // Show morphological info
+    const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+    const word = currentSentence?.words?.find(w => w.id === d.data.id);
+
+    if (word && typeof window.renderMorphInfo === 'function') {
+      const toolBody = document.getElementById("tool-body");
+      toolBody.innerHTML = "";
+      window.renderMorphInfo(word);
+    }
+  });
 }
 
 /**
@@ -919,16 +1208,26 @@ function drawNodes(gx, rootHierarchy) {
  * Automatically scales and centers the rendered tree inside the SVG viewport.
  * Keeps the tree visible and balanced regardless of size or depth.
  *
+ * Includes:
+ *  - Safety guards for missing/invalid DOM
+ *  - Smooth CSS-based visual scaling during live resize
+ *  - Debounced D3 recalculation after resizing stops
+ *  - Animated ease-in refit
+ *
  * @param {Object} svg - D3 selection of SVG element.
  * @param {Object} gx - D3 selection of the inner group (tree content).
  * @param {HTMLElement} container - DOM element containing the SVG.
  * @param {Object} zoom - D3 zoom behavior object.
  * @param {Object} margin - Margins for positioning.
- * @returns {void} Adjusts tree scale and position so it fits neatly within the SVG viewport.
+ * @returns {void}
  */
 function fitTreeToView(svg, gx, container, zoom, margin) {
-  const newWidth  = container.clientWidth;
-  const newHeight = container.clientHeight;
+  // --- SAFETY GUARDS ---
+  if (!svg || !gx || !container || !zoom || !margin) return;
+  if (!gx.node()) return; // prevent crash if gx cleared or detached
+
+  const newWidth  = container?.clientWidth || 800;
+  const newHeight = container?.clientHeight || 600;
 
   // Update SVG dimensions and viewport
   svg.attr('width', newWidth).attr('height', newHeight);
@@ -936,7 +1235,14 @@ function fitTreeToView(svg, gx, container, zoom, margin) {
 
   // Get bounding box of all drawn content
   const pad = 10;
-  const bbox = gx.node().getBBox();
+  let bbox;
+  try {
+    bbox = gx.node().getBBox();
+  } catch (err) {
+    console.warn("fitTreeToView skipped: invalid or empty bbox", err);
+    return;
+  }
+
   const innerW = newWidth  - margin.left - margin.right - pad * 2;
   const innerH = newHeight - margin.top  - margin.bottom - pad * 2;
 
@@ -956,16 +1262,54 @@ function fitTreeToView(svg, gx, container, zoom, margin) {
   const tx = (targetX - margin.left) - scale * bboxCenterX;
   const ty = (targetY - margin.top)  - scale * bbox.y;
 
-  // Apply the transform via zoom for smooth fit animation
+  // Apply the transform via zoom with smooth easing
   svg.transition()
-    .duration(500)
+    .duration(600)
+    .ease(d3.easeCubicOut)
     .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
 
-  // Keep fitting responsive to window resizing
+  // --- SMOOTH + EFFICIENT RESIZE HANDLER ---
   window.removeEventListener('resize', fitTreeToView);
-  window.addEventListener('resize', () => fitTreeToView(svg, gx, container, zoom, margin));
+  let resizeTimeout;
+  let lastWidth = container?.clientWidth || 800;
+  let lastHeight = container?.clientHeight || 600;
 
-  //after nodes have been drawn, sync highlights
+  window.addEventListener('resize', () => {
+    const treeVisible = document.getElementById('tree-view')?.offsetParent !== null;
+    if (!treeVisible || !window.svg) return;
+
+    const currentWidth = container?.clientWidth || 800;
+    const currentHeight = container?.clientHeight || 600;
+
+    // Apply lightweight CSS scaling for instant visual response
+    const scaleX = currentWidth / lastWidth;
+    const scaleY = currentHeight / lastHeight;
+    const liveScale = Math.min(scaleX, scaleY);
+
+    window.svg
+      .style('transform-origin', 'center top')
+      .style('transition', 'transform 0.05s linear')
+      .style('transform', `scale(${liveScale})`);
+
+    // Debounce the expensive D3 recomputation
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      // Reset temporary CSS scale
+      window.svg.style('transform', '');
+      window.svg.style('transition', '');
+
+      if (window.svg && window.gx && window.container && window.zoom && window.margin) {
+        // Recompute and animate back into perfect position
+        fitTreeToView(window.svg, window.gx, window.container, window.zoom, window.margin);
+      }
+
+      // Update baseline size for next resize
+      lastWidth = currentWidth;
+      lastHeight = currentHeight;
+    }, 250); // wait until resizing stops
+  });
+
+  // Re-sync highlights after nodes are redrawn
   setupWordHoverSync();
 }
 
@@ -1103,4 +1447,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupSentenceSelector();   // populate dropdown and link it
   setupResizeHandle();       // enable interactive resizing
   setupXMLTool();            // enable XML view
+  setupMorphTool();          // enable morph toolbar view
 });
