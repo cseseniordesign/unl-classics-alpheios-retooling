@@ -108,16 +108,16 @@ async function displaySentence(index) {
     button.style.color = colorForPOS(word);   // sentence token font color
 
     // Add click interaction for reassigning heads
-    button.addEventListener("click", (event) => {
-      handleWordClick(word.id, event);
+    button.addEventListener("click", () => {
+      handleWordClick(word.id);
     });
 
   tokenizedSentence.appendChild(button);
 });
 
+
   // Generate and display the D3 dependency tree
   createNodeHierarchy(index);
-
   // Refresh XML panel if open
   if (typeof window.updateXMLIfActive === 'function') {
     window.updateXMLIfActive();
@@ -134,8 +134,9 @@ async function displaySentence(index) {
  */
 
 let selectedWordId = null; // keeps track of the first click(dependent word)
+//let selectedNodeId = null;
 
-function handleWordClick(wordId, event) {
+function handleWordClick(wordId) {
 
   // If Morph tool is active → just show morph info, don’t alter tree
  if (window.isMorphActive) {
@@ -161,19 +162,24 @@ function handleWordClick(wordId, event) {
 
   return;
 }
+
   // Otherwise, normal dependency reassignment mode
+  //if there hasn't already been a selected word
   if(!selectedWordId) {
     selectedWordId = wordId;
+    //selectedNodeId = wordId;
     //add visual confirmation
     const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
-    if (btn) btn.classList.remove("highlight"), btn.classList.add("selected");
+    const node = document.querySelector(`.node[id="${wordId}"]`);
+    if (btn) btn.classList.remove("highlight"), node.classList.add("selected"), btn.classList.add("selected");
     return;
   }
   //remove highlight if same word clicked twice and reset selection
   const newHeadId = wordId;
   if(selectedWordId === newHeadId) {
     const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
-    btn.classList.add("highlight"), btn.classList.remove("selected");
+    const node = document.querySelector(`.node[id="${wordId}"]`);
+    node.classList.remove("selected"),btn.classList.remove("selected");
     resetSelection();
     return;
   }
@@ -183,6 +189,10 @@ function handleWordClick(wordId, event) {
   const dependent = currentSentence.words.find(word => word.id === selectedWordId);
   //gets indepenent node (second selected node)
   const independent = currentSentence.words.find(word => word.id === newHeadId);
+
+  //remove highlight when second word is selected
+  const btnNewHead = document.querySelector(`button[data-word-id="${newHeadId}"]`);
+  if (btnNewHead) btnNewHead.classList.remove("highlight");
 
   if (createsCycle(currentSentence.words, selectedWordId, newHeadId)) {
     // Flip logic — make the old head now depend on the selected word
@@ -287,6 +297,14 @@ function setupSentenceSelector() {
 function setupWordHoverSync() {
   const words = document.querySelectorAll(".token");
   const nodes = document.querySelectorAll(".node");
+
+  /*go through all the nodes 
+  nodes.forEach(node =>{
+    node.addEventListener("click", () => {
+      handleWordClick(node.id);
+    });
+  })*/
+
   //align ids between words and nodes 
   //whenever hovering over a word it highlights corresponding node
   words.forEach(word => {
@@ -396,6 +414,15 @@ document.getElementById("focus-root").addEventListener("click", () => {
     focusOnNode(window.root);
   } else {
     console.warn("Root not found");
+  }
+});
+
+// focus select button (treebank view) 
+document.getElementById("focus-selection").addEventListener("click", () => {
+  if (selectedNode) {
+    focusOnNode(selectedNode);
+  } else {
+    alert("Please select a node to focus on.");
   }
 });
 
@@ -1444,6 +1471,14 @@ function createNodeHierarchy(sentenceId) {
   drawLinks(gx, rootHierarchy, idParentPairs);
   drawNodes(gx, rootHierarchy);
 
+  //check if nodes are clicked to change heads
+  const nodes = document.querySelectorAll(".node");
+  nodes.forEach(node =>{
+    node.addEventListener("click", () => {
+      handleWordClick(node.id);
+    });
+  })
+
   // Enable zooming and panning with safe scale limits
   window.zoom = d3.zoom()
     .scaleExtent([0.1, 3]) // prevent over-zooming or infinite scroll
@@ -1660,6 +1695,9 @@ function drawLinks(gx, rootHierarchy, idParentPairs) {
  * @param {Object} rootHierarchy - Root node with x/y layout data.
  * @returns {void} Runs synchronously to render all node text labels on the tree.
  */
+
+let selectedNode = null; // keep track of selected node
+
 function drawNodes(gx, rootHierarchy) {
   const nodes = gx.selectAll('.node')
     .data(rootHierarchy.descendants())
@@ -1694,6 +1732,8 @@ function drawNodes(gx, rootHierarchy) {
 
   // --- Enable clicking nodes to show morphological info ---
   nodes.on("click", function (event, d) {
+    selectedNode = d;
+
     if (!window.isMorphActive) return;
 
     // Clear all previous highlights first
