@@ -690,3 +690,104 @@ html, body{
 .morph-entry.empty .morph-content {
   background-color: #eef4ee;  
 }
+
+.field.invalid select,
+.field.invalid input {
+  border: 1px solid #d9534f;  
+  background-color: #fff5f5;  
+}
+
+.morph-editor-inline {
+  background-color: #f5f5f5;
+  border: 1px solid #cdd6cd;
+  border-radius: 6px;
+  padding: 14px 16px;
+  margin-top: 12px;
+  width: 95%;
+  max-width: 520px;
+  font-family: -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.morph-editor-inline .field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.morph-editor-inline label {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #333;
+  flex: 1;
+  margin-right: 8px;
+}
+
+.morph-editor-inline input,
+.morph-editor-inline select {
+  flex: 2;
+  padding: 5px 8px;
+  font-size: 0.9rem;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  outline-color: #2a7ae2;
+}
+
+.morph-editor-inline input:focus,
+.morph-editor-inline select:focus {
+  border-color: #2a7ae2;
+}
+
+.morph-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.morph-actions .btn {
+  padding: 5px 12px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.2s ease, opacity 0.2s ease;
+}
+
+.morph-actions .btn-reset {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.morph-actions .btn-reset:hover {
+  background-color: #d6d6d6;
+}
+
+.morph-actions .btn-save {
+  background-color: #4e6476;
+  color: #fff;
+}
+
+.morph-actions .btn-save:hover {
+  background-color: #6c8294;
+}
+
+.delete-form {
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  border: none;
+  background: transparent;
+  color: #2f2fd1;
+  cursor: pointer;
+  font-size: 10px;
+}
+
+.delete-form:hover {
+  color: #551A8B;
+}
+
