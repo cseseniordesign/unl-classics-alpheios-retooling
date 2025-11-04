@@ -15,10 +15,7 @@ const POS_COLORS = {
   m: '#888',    // numeral
   '': '#444' // unknown/other
 };
-const getPOSChar = w => {
-   const tag = (w?._displayPostag || w?.postag || '');
-   return tag[0] ? tag[0].toLowerCase() : '';
-};
+const getPOSChar = w => (w?.postag && w.postag[0]) ? w.postag[0].toLowerCase() : '';
 const colorForPOS = w => POS_COLORS[getPOSChar(w)] || POS_COLORS[''];
 
 
@@ -357,24 +354,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const button = document.getElementById("download");
 
   button.addEventListener("click", async () => {
-    // Regenerate XML dynamically from in-memory data
-    const data = window.treebankData || [];
-    let xmlOut = '<?xml version="1.0" encoding="UTF-8"?>\n<treebank>\n';
+    // Fetch the XML file only when button is clicked
+    const response = await fetch('../../assets/treebank.xml');
+    const xmlText = await response.text();
 
-    for (const s of data) {
-      xmlOut += `  <sentence id="${s.id}">\n`;
-      for (const w of s.words) {
-        // Use active form values
-        const lemma = (w._displayLemma || w.lemma || '').replace(/"/g, '&quot;');
-        const postag = (w._displayPostag || w.postag || '').replace(/"/g, '&quot;');
-        xmlOut += `    <word id="${w.id}" form="${w.form}" lemma="${lemma}" postag="${postag}" relation="${w.relation}" head="${w.head}" />\n`;
-      }
-      xmlOut += '  </sentence>\n';
-    }
-    xmlOut += '</treebank>';
-
-    // Create a Blob with the generated XML
-    const blob = new Blob([xmlOut], { type: "application/xml" });
+    // Create a Blob with XML content
+    const blob = new Blob([xmlText], { type: "application/xml" });
     const fileName = "Treebank.xml";
 
     // Create temporary download link and click it
@@ -616,7 +601,7 @@ function setupXMLTool() {
       document.body.classList.remove('mode-morph');
     } else {
       // --- Exit XML mode ---
-      toolBody.innerHTML = '<p>this is the body of each tool option</p>';
+      toolBody.innerHTML = '<p>Please select a tool from the bar above that you would like to use.</p>';
       exitReadOnly();
     }
   });
@@ -634,21 +619,24 @@ function setupMorphTool() {
   const morphBtn = document.getElementById('morph');
   const toolBody = document.getElementById('tool-body');
   const allToolButtons = document.querySelectorAll('#toolbar button');
+
   if (!morphBtn || !toolBody) return;
 
-  // Track on/off state from the toolbar button
-  window.isMorphActive = false;
-
-  // Allow other code to close Morph (e.g., when sentence changes)
+  // Expose a closer so other code (like displaySentence) can shut Morph off
   window.closeMorphTool = function () {
     if (!window.isMorphActive) return;
     window.isMorphActive = false;
     morphBtn.classList.remove('active');
-    toolBody.innerHTML = `<p>this is the body of each tool option</p>`;
-    // clear highlights
+    toolBody.innerHTML = `<p>Please select a tool from the bar above that you would like to use.</p>`;
+    // clear any highlights
     document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
     d3.selectAll(".node").classed("selected", false);
   };
+
+  window.isMorphActive = false;
+
+  // Expose globally so displaySentence() and clicks can use it
+  window.renderMorphInfo = renderMorphInfo;
 
   morphBtn.addEventListener('click', () => {
     const wasActive = window.isMorphActive;
@@ -657,677 +645,172 @@ function setupMorphTool() {
 
     if (window.isMorphActive) {
       document.body.classList.add('mode-morph');
+    } else {
+      document.body.classList.remove('mode-morph');
+      // clear any morph selections when leaving morph mode
+      d3.selectAll(".node").classed("selected", false);
+      document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
+    }
+    if (window.isMorphActive) {
       morphBtn.classList.add('active');
       toolBody.innerHTML = `<p style="padding:8px;">Click a word to view morphological info.</p>`;
     } else {
-      document.body.classList.remove('mode-morph');
-      d3.selectAll(".node").classed("selected", false);
-      document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
-      toolBody.innerHTML = `<p>this is the body of each tool option</p>`;
+      toolBody.innerHTML = `<p>Please select a tool from the bar above that you would like to use.</p>`;
     }
   });
 
-  // ---------------------------------------------
-  // Utilities for colors/labels in the morph pane
-  // ---------------------------------------------
-  const POS_COLORS = {
-    v:'#c65a5a', c:'#c77d9b', d:'#e69109', i:'#b29100', n:'#4aa7b7', a:'#5a78c6',
-    r:'#5a9b6b', l:'#6aa7d6', p:'#7a5aa9', u:'#444', m:'#888', '':'#444'
-  };
-
-  const getPOSChar = w => {
-    const tag = (w?._displayPostag || w?.postag || '');
-    return tag[0] ? tag[0].toLowerCase() : '';
-  };
-  const colorForPOS = (w) => colorForTag(w?._displayPostag || w?.postag || '');
-
-  // Color directly from a compact tag, without looking at the active display tag
-  function colorForTag(tag) {
-    const ch = (tag && tag[0]) ? tag[0].toLowerCase() : '';
-    return POS_COLORS[ch] || POS_COLORS[''];
-  }
-
-  const POS_SHORT = { v:'verb', n:'noun', a:'adj', d:'adv', p:'pron', c:'conj', r:'adp', l:'art', m:'num', i:'intj', u:'punc' };
-  function shortPOS(tag){ const ch=(tag&&tag[0])?tag[0].toLowerCase():''; return POS_SHORT[ch]||''; }
-
-  // Parse compact POSTAG → readable fields (kept from your version)
-  function parseMorphTag(tag) {
-    if (!tag) return {};
-    const posMap = {v:"verb",n:"noun",a:"adjective",d:"adverb",p:"pronoun",
-      c:"conjunction",r:"adposition",l:"article",m:"numeral",i:"interjection",u:"punctuation"};
-    const tenseMap  = { p:"present", i:"imperfect", r:"perfect", l:"plusquamperfect", f:"future", a:"aorist" };
-    const moodMap   = { i:"indicative", s:"subjunctive", o:"optative", n:"infinitive", m:"imperative", p:"participle" };
-    const voiceMap  = { a:"active", e:"medio-passive", p:"passive" };
-    const numberMap = { s:"singular", p:"plural", d:"dual" };
-    const personMap = { "1":"first person","2":"second person","3":"third person" };
-    const genderMap = { m:"masculine", f:"feminine", n:"neuter", c:"common" };
-    const caseMap   = { n:"nominative", g:"genitive", d:"dative", a:"accusative", v:"vocative" };
-
-    const parsed = {};
-    const pos = tag[0];
-    parsed["Part of Speech"] = posMap[pos] || "";
-
-    if (pos === "v") {
-      parsed["Person"] = personMap[tag[1]] || "";
-      parsed["Number"] = numberMap[tag[2]] || "";
-      parsed["Tense"]  = tenseMap[tag[3]]  || "";
-      parsed["Mood"]   = moodMap[tag[4]]   || "";
-      parsed["Voice"]  = voiceMap[tag[5]]  || "";
-    } else if (pos === "n" || pos === "a" || pos === "p" || pos === "l") {
-      parsed["Number"] = numberMap[tag[2]] || "";
-      parsed["Gender"] = genderMap[tag[6]] || "";
-      parsed["Casus"]  = caseMap[tag[7]]   || "";
-    }
-    return parsed;
-  }
-
-  // Keep original XML values safe and use shadow fields for rendering
-  function ensureDocumentSnapshot(word) {
-    if (!word) return;
-    if (!word._doc) {
-      word._doc = {
-        lemma:  (word.lemma  || '').trim(),
-        postag: (word.postag || '').trim()
-      };
-    }
-    // default display = document
-    if (word._displayLemma === undefined)  word._displayLemma  = word._doc.lemma;
-    if (word._displayPostag === undefined) word._displayPostag = word._doc.postag;
-    word.source = 'document';
-  }
-
-  function enableMorphEntryExpansion(scopeEl) {
-    // Prevent attaching this listener multiple times to the same container
-    if (scopeEl._expansionBound) return;
-    scopeEl._expansionBound = true;
-
-    scopeEl.addEventListener('click', (e) => {
-      const entry = e.target.closest('.morph-entry');
-      if (!entry || !scopeEl.contains(entry)) return;
-
-      // Ignore clicks that originate on the checkbox itself
-      if (e.target.matches('input[type="checkbox"]')) return;
-
-      // Toggle
-      const isExpanded = entry.classList.contains('expanded');
-
-      if (isExpanded) {
-        // Collapse
-        entry.classList.remove('expanded');
-        entry.setAttribute('data-expanded', 'false');
-        entry.querySelector('.morph-details')?.remove();
-        entry.querySelector('.morph-divider')?.remove();
-        return;
-      }
-
-      // Expand
-      entry.classList.add('expanded');
-      entry.setAttribute('data-expanded', 'true');
-
-      const tagEl = entry.querySelector('.morph-tag');
-      const tag = tagEl ? tagEl.textContent.trim() : '';
-      const parsed = parseMorphTag(tag);
-      if (!parsed || Object.keys(parsed).length === 0) return;
-
-      const divider = document.createElement('hr');
-      divider.className = 'morph-divider';
-      entry.appendChild(divider);
-
-      const detailsHTML = Object.entries(parsed)
-        .map(([label, val]) => `
-          <div class="morph-row">
-            <div class="morph-label">${label}</div>
-            <div class="morph-colon">:</div>
-            <div class="morph-value">${val}</div>
-          </div>
-        `)
-        .join('');
-
-      const detailsDiv = document.createElement('div');
-      detailsDiv.className = 'morph-details';
-      detailsDiv.innerHTML = detailsHTML;
-      entry.appendChild(detailsDiv);
-    });
-  }
-
-  function removeForm(word, index) {
-    if (!Array.isArray(word.forms)) return;
-
-    // If index < 0, it's the document form
-    if (index < 0) {
-      // Clear both display and XML-level values
-      word._doc = { lemma: '', postag: '' };
-      word._displayLemma = '';
-      word._displayPostag = '';
-      word.lemma = '';     // clear from actual XML-bound field
-      word.postag = '';    // clear from actual XML-bound field
-      word.source = 'document';
-
-      // Update token color + tree
-      applyActiveSelectionToWord(word);
-
-      // Re-render XML view if open
-      if (typeof window.updateXMLIfActive === 'function') {
-        window.updateXMLIfActive();
-      }
-      return;
-    }
-
-    // Otherwise delete user/morpheus form
-    word.forms.splice(index, 1);
-    if (word.activeForm === index) word.activeForm = -1;
-    else if (word.activeForm > index) word.activeForm -= 1;
-    applyActiveSelectionToWord(word);
-  }
-
-
-  // ---------------------------------------------------------
-  // PUBLIC: renderMorphInfo(word) — keep your top card intact,
-  // then append "Create new form" + user-forms list underneath
-  // ---------------------------------------------------------
+  /**
+   * Displays morphological info for the selected word in the right-hand tool pane.
+   *
+   * @param {{ id: string, form: string, lemma?: string, postag?: string }} word
+   *        The word object from the current sentence. Must include `id` and `form`.
+   * @returns {void} Renders into the #tool-body container; no return value.
+   */
   function renderMorphInfo(word) {
+    // 1) Guard rails: Morph must be active; target pane must exist; word must exist.
     if (!window.isMorphActive) return;
+    const toolBody = document.getElementById('tool-body');
     if (!toolBody || !word) return;
 
-    // ensure we have original XML snapshot
-    ensureDocumentSnapshot(word);
+    // 2) Normalize fields early so later code never reads undefined.
+    const lemma  = (word.lemma  || "").trim();
+    const postag = (word.postag || "").trim();
+    const src = "document"; 
+    
+    // 3) Treat blanks or strings starting with "(unknown" as missing values.
+    const looksUnknown = (s) => !s || /^\(unknown/i.test(s);
+    const noMorphData = looksUnknown(lemma) && looksUnknown(postag);
 
-    // --- Render top "document" card using the same card builder ---
-    const lemma  = word._doc.lemma;
-    const postag = word._doc.postag;
-    const posColor = colorForTag(postag);
+    // 4) EMPTY STATE: Show only form + id + “Create new form” button.
+    if (noMorphData) {
+      toolBody.innerHTML = `
+        <div class="morph-container morph-container--empty">
+          <p class="morph-form">
+            ${word.form}
+            <span class="morph-id" style="color:#9aa3ad">${window.currentIndex}-${word.id}</span>
+          </p>
+          <button class="morph-create">Create new form</button>
+        </div>
+      `;
+      return; // Stop here — nothing else to show for unknown data.
+    }
 
-    // Construct the document form object
-    const documentForm = {
-      lemma: lemma,
-      postag: postag,
-      source: 'document'
-    };
+    // 5) Parse Alpheios-style POSTAG into a small, useful feature set.
+    /**
+     * Parses a compact morph tag into a human-readable dictionary.
+     *
+     * @param {string} tag - Compact POS/morph tag (e.g., "v3slie---", "n-s---mn-").
+     * @returns {Object<string,string>} Map of fields to readable values.
+     */
+    function parseMorphTag(tag) {
+      if (!tag) return {};
 
-    // Replace old hardcoded HTML with unified helper call
+      // Maps for codes → labels
+      const posMap = {
+        v:"verb", n:"noun", a:"adjective", d:"adverb", p:"pronoun",
+        c:"conjunction", r:"adposition", l:"article", m:"numeral",
+        i:"interjection", u:"punctuation"
+      };
+      const tenseMap  = { p:"present", i:"imperfect", r:"perfect", l:"plusquamperfect", f:"future", a:"aorist" };
+      const moodMap   = { i:"indicative", s:"subjunctive", o:"optative", n:"infinitive", m:"imperative", p:"participle" };
+      const voiceMap  = { a:"active", e:"medio-passive", p:"passive" };
+      const numberMap = { s:"singular", p:"plural", d:"dual" };
+      const personMap = { "1":"first person", "2":"second person", "3":"third person" };
+      const genderMap = { m:"masculine", f:"feminine", n:"neuter", c:"common" };
+      const caseMap   = { n:"nominative", g:"genitive", d:"dative", a:"accusative", v:"vocative" };
+
+      const parsed = {};
+      const pos = tag[0];
+      parsed["Part of Speech"] = posMap[pos] || "";
+
+      // Verb-like pattern (e.g., v3slie---)
+      if (pos === "v") {
+        parsed["Person"] = personMap[tag[1]] || "";
+        parsed["Number"] = numberMap[tag[2]] || "";
+        parsed["Tense"]  = tenseMap[tag[3]]  || "";
+        parsed["Mood"]   = moodMap[tag[4]]   || "";
+        parsed["Voice"]  = voiceMap[tag[5]]  || "";
+      }
+      // Noun/adj/pron/article pattern (e.g., n-s---mn-)
+      else if (pos === "n" || pos === "a" || pos === "p" || pos === "l") {
+        parsed["Number"] = numberMap[tag[2]] || "";
+        parsed["Gender"] = genderMap[tag[6]] || "";
+        parsed["Casus"]  = caseMap[tag[7]]   || "";
+      }
+      return parsed;
+    }
+
+    // 6) Build the short “readable” line (e.g., noun.sg.masc.nom).
+    const parsed = parseMorphTag(postag);
+    const readable = Object.values(parsed)
+      .filter(Boolean)
+      .map(v => v.replace(" person", "").replace(" ", "."))
+      .join(".");
+
+    // 7) POS color for the lemma line (matches your token/node palette).
+    const posColor = colorForPOS(word);
+
+    // 8) Main card HTML (full state).
     toolBody.innerHTML = `
       <div class="morph-container">
         <p class="morph-form">
           ${word.form}
           <span class="morph-id" style="color:#9aa3ad">${window.currentIndex}-${word.id}</span>
         </p>
-        ${(word._doc.lemma || word._doc.postag)
-          ? userFormCardHTML(documentForm, -1, word.activeForm === -1)
-          : ''}
-      </div>
-    `;
 
-    // Style tweaks after insertion
-    const lemmaEl = toolBody.querySelector('.morph-lemma');
-    if (lemmaEl) lemmaEl.style.color = posColor;
-
-    const mc = toolBody.querySelector('.morph-container');
-    if (mc) enableMorphEntryExpansion(mc);
-
-    // Append creation/editor + list BELOW the top card 
-    appendCreateAndUserForms(word, toolBody);
-
-    // Force all morph entries to start collapsed after forms are rebuilt
-    document.querySelectorAll('.morph-entry').forEach(entry => {
-      entry.classList.remove('expanded');
-      entry.dataset.expanded = 'false';
-      entry.querySelector('.morph-details')?.remove();
-      entry.querySelector('.morph-divider')?.remove();
-    });
-
-    // === Restore expanded states if re-rendered ===
-    document.querySelectorAll('.morph-entry').forEach(entry => {
-      if (entry.dataset.expanded === 'true') {
-        const tagEl = entry.querySelector('.morph-tag');
-        const tag = tagEl ? tagEl.textContent.trim() : '';
-        const parsed = parseMorphTag(tag);
-        if (parsed && Object.keys(parsed).length > 0) {
-          const divider = document.createElement('hr');
-          divider.className = 'morph-divider';
-          entry.appendChild(divider);
-
-          const detailsHTML = Object.entries(parsed)
-            .map(([label, val]) => `
-              <div class="morph-row">
-                <div class="morph-label">${label}</div>
-                <div class="morph-colon">:</div>
-                <div class="morph-value">${val}</div>
-              </div>
-            `)
-            .join('');
-          const detailsDiv = document.createElement('div');
-          detailsDiv.className = 'morph-details';
-          detailsDiv.innerHTML = detailsHTML;
-          entry.appendChild(detailsDiv);
-        }
-      }
-    });
-  }
-  window.renderMorphInfo = renderMorphInfo;
-
-  // =========================
-  // Forms management helpers
-  // =========================
-
-  function ensureFormsArray(word) {
-    if (!Array.isArray(word.forms)) {
-      word.forms = [];
-    }
-
-    if (typeof word.activeForm !== 'number') {
-      word.activeForm = -1; // default to the XML/document form
-    }
-  }
-
-  function composeUserPostag(posChar, fields) {
-    const tag = Array(9).fill('-');
-    tag[0] = posChar || '-';
-
-    if (posChar === 'v') {
-      // v[1]=person, [2]=number, [3]=tense, [4]=mood, [5]=voice
-      if (fields.person) tag[1] = fields.person;
-      if (fields.number) tag[2] = fields.number;
-      if (fields.tense)  tag[3] = fields.tense;
-      if (fields.mood)   tag[4] = fields.mood;
-      if (fields.voice)  tag[5] = fields.voice;
-    } else if (['n','p','l'].includes(posChar)) {
-      // noun/pron/article: [2]=number, [6]=gender, [7]=case
-      if (fields.number) tag[2] = fields.number;
-      if (fields.gender) tag[6] = fields.gender;
-      if (fields.case)   tag[7] = fields.case;
-    } else if (posChar === 'a') {
-      // adjective
-      if (fields.number) tag[2] = fields.number;
-      if (fields.gender) tag[6] = fields.gender;
-      if (fields.case)   tag[7] = fields.case;
-      if (fields.degree) tag[5] = fields.degree; // harmless if not used
-    }
-    // other POS (c, d, r, u, m, i): POS only at [0] is fine
-    return tag.join('');
-  }
-
-  function userFormCardHTML(form, index, isActive) {
-    const readable = Object.values(parseMorphTag(form.postag || ''))
-      .filter(Boolean)
-      .map(v => v.replace(' person','').replace(' ', '.'))
-      .join('.');
-    const col = colorForTag(form.postag || '');
-
-    const expandedClass = isActive ? ' expanded' : '';
-    const expandedAttr  = isActive ? 'true' : 'false';
-    const cbId = `uf-check-${index}`;
-    const src = form.source || 'you';
-
-    // Only allow delete button for "you" and "document" forms
-    const deleteBtn = (src === 'you' || src === 'document')
-      ? `<button class="delete-form" title="Delete this form">Delete Form</button>`
-      : '';
-
-    return `
-      <div class="morph-entry user-form${expandedClass}" 
-          data-index="${index}" 
-          data-expanded="${expandedAttr}" 
-          aria-expanded="${expandedAttr}">
-        <input id="${cbId}" type="checkbox" ${isActive ? 'checked' : ''} />
-        <div class="morph-content">
-          <span class="morph-lemma" style="color:${col}">
-            ${form.lemma || ''}
-          </span>
-          <p class="morph-tag">${form.postag || ''}</p>
-          <p class="morph-source">${src}</p>
-          <p class="morph-readout">${readable || shortPOS(form.postag)}</p>
+        <div class="morph-entry" data-expanded="false">
+          <input type="checkbox" checked />
+          <div class="morph-content">
+            <p class="morph-lemma">${lemma}</p>
+            <p class="morph-tag">${postag}</p>
+            <p class="morph-source">${src}</p>
+            <p class="morph-readout">${readable}</p>
+          </div>
         </div>
-        ${deleteBtn}
+
+        <button class="morph-create">Create new form</button>
       </div>
     `;
-  }
 
+    // 9) Post-render styling hooks: apply colors after insertion.
+    const lemmaEl = toolBody.querySelector('.morph-lemma');
+    const tagEl   = toolBody.querySelector('.morph-tag');
+    const readEl  = toolBody.querySelector('.morph-readout');
+    if (lemmaEl) lemmaEl.style.color = posColor;  // lemma uses POS color
+    if (tagEl)   tagEl.style.color   = '#4a4a4a'; // keep tag/readout neutral gray
+    if (readEl)  readEl.style.color  = '#4a4a4a';
 
+    // 10) Expand/collapse: clicking card (except the checkbox) toggles details grid.
+    const entry = toolBody.querySelector('.morph-entry');
+    entry.addEventListener('click', (e) => {
+      if (e.target.tagName.toLowerCase() === 'input') return;
 
-  function appendCreateAndUserForms(word, toolBody) {
-    ensureFormsArray(word);
-
-    // Render user forms list
-    renderUserFormsList(word, toolBody);
-
-    // Make top card checkbox reflect whether XML/doc is the active one
-    const topCheckbox = toolBody.querySelector('.morph-entry > input[type="checkbox"]');
-    if (topCheckbox) topCheckbox.checked = (word.activeForm === -1);
-
-    // Clicking the top checkbox activates the XML/doc form
-    topCheckbox?.addEventListener('change', (e) => {
-      if (e.target.checked) {
-        word.activeForm = -1;
-        applyActiveSelectionToWord(word);
-        window.renderMorphInfo(word);
-      }
-    });
-
-    // Create button (under top card)
-    if (!toolBody.querySelector('.morph-create')) {
-      const btn = document.createElement('button');
-      btn.className = 'morph-create';
-      btn.textContent = 'Create new form';
-      toolBody.querySelector('.morph-container')?.appendChild(btn);
-      btn.addEventListener('click', () => renderCreateEditorBelow(word, toolBody));
-    }
-
-    // --- Enable delete for the top (document) card ---
-    const docDeleteBtn = toolBody.querySelector('.morph-container > .user-form .delete-form');
-    if (docDeleteBtn) {
-      docDeleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const confirmDelete = confirm('Delete the document form?');
-        if (!confirmDelete) return;
-
-        removeForm(word, -1);       // triggers document clear
-        window.renderMorphInfo(word); // re-render UI
-      });
-    }
-  }
-
-  function renderUserFormsList(word, toolBody) {
-    ensureFormsArray(word);
-    let list = toolBody.querySelector('.user-forms-list');
-    if (!list) {
-      list = document.createElement('div');
-      list.className = 'user-forms-list';
-      toolBody.querySelector('.morph-container')?.appendChild(list);
-    }
-    list.innerHTML = word.forms.map((f, i) =>
-      userFormCardHTML(f, i, word.activeForm === i)
-    ).join('');
-
-    const mc = toolBody.querySelector('.morph-container');
-    if (mc) enableMorphEntryExpansion(mc);
-
-    // When a checkbox is toggled, make that form active
-    list.querySelectorAll('.morph-entry input[type="checkbox"]').forEach(cb => {
-      cb.addEventListener('change', (e) => {
-        if (!e.target.checked) return; // only handle when checked
-
-        // uncheck all other boxes
-        list.querySelectorAll('input[type="checkbox"]').forEach(x => {
-          if (x !== e.target) x.checked = false;
-        });
-
-        // determine which form this belongs to
-        const card = e.target.closest('.user-form');
-        const idx = Number(card.dataset.index);
-
-        // update active form and apply globally
-        word.activeForm = idx;
-        applyActiveSelectionToWord(word);
-
-        // re-render Morph panel and update XML tab
-        window.renderMorphInfo(word);
-        if (typeof window.updateXMLIfActive === 'function') {
-          window.updateXMLIfActive();
+      const expanded = entry.dataset.expanded === 'true';
+      if (!expanded) {
+        // Build details grid from parsed fields
+        let details = '<div class="morph-divider"></div><div class="morph-details">';
+        for (const [k, v] of Object.entries(parsed)) {
+          if (v) {
+            details += `
+              <div class="morph-label">${k}</div>
+              <div class="morph-colon">:</div>
+              <div class="morph-value">${v}</div>
+            `;
+          }
         }
-      });
-    });
+        details += '</div>';
 
-
-    // Delete buttons
-    list.querySelectorAll('.delete-form').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        const card = e.target.closest('.user-form');
-        const idx = Number(card.dataset.index);
-        const confirmDelete = confirm('Delete this form?');
-        if (!confirmDelete) return;
-
-        removeForm(word, idx);
-        renderUserFormsList(word, toolBody);
-        window.renderMorphInfo(word);
-      });
-    });
-  }
-
-    function applyActiveSelectionToWord(word) {
-    ensureDocumentSnapshot(word);
-
-    if (word.activeForm === -1) {
-      // show the original XML values
-      word._displayLemma  = word._doc.lemma;
-      word._displayPostag = word._doc.postag;
-      word.source = 'document';
-    } else {
-      const f = word.forms?.[word.activeForm];
-      if (f) {
-        word._displayLemma  = (f.lemma  || word._doc.lemma);
-        word._displayPostag = (f.postag || word._doc.postag);
-        word.source = 'you';
-      }
-    }
-    const tok = document.querySelector(`.token[data-word-id="${word.id}"]`);
-    if (tok) tok.style.color = colorForPOS(word); // uses _displayPostag
-
-    // Rebuild the tree so node colors update, but keep Morph open
-    if (typeof createNodeHierarchy === 'function') {
-      createNodeHierarchy(window.currentIndex);
-    }
-    if (typeof window.updateXMLIfActive === 'function') {
-      window.updateXMLIfActive();
-    }
-  }
-
-  // Inline editor that appears under the button and closes on save
-  function renderCreateEditorBelow(word, toolBody) {
-    ensureFormsArray(word);
-
-    // Only one editor at a time
-    toolBody.querySelector('.morph-editor-inline')?.remove();
-
-    const host = document.createElement('div');
-    host.className = 'morph-editor-inline';
-    host.style.marginTop = '12px';
-    host.innerHTML = `
-      <div class="field">
-        <label>Lemma</label>
-        <input id="nf-lemma" type="text" value="${(word.lemma || '').trim()}" />
-      </div>
-
-      <div class="field">
-        <label>Part of Speech</label>
-        <select id="nf-pos">
-          <option value="">— choose —</option>
-          <option value="n">noun</option>
-          <option value="a">adjective</option>
-          <option value="v">verb</option>
-          <option value="p">pronoun</option>
-          <option value="l">article</option>
-          <option value="d">adverb</option>
-          <option value="c">conjunction</option>
-          <option value="r">adposition</option>
-          <option value="m">numeral</option>
-          <option value="i">interjection</option>
-          <option value="u">punctuation</option>
-        </select>
-      </div>
-
-      <div id="nf-dynamic"></div>
-
-      <div class="morph-actions">
-        <button id="nf-reset" class="btn btn-reset" type="button">Reset</button>
-        <button id="nf-cancel" class="btn btn-cancel" type="button">Cancel</button>
-        <button id="nf-save"  class="btn btn-save"  type="button">Save</button>
-      </div>
-    `;
-    toolBody.querySelector('.morph-container')?.appendChild(host);
-
-    const nfLemma = host.querySelector('#nf-lemma');
-    const nfPos   = host.querySelector('#nf-pos');
-    const nfDyn   = host.querySelector('#nf-dynamic');
-
-    // Option maps
-    const TENSE  = { "": "---", p:"present", i:"imperfect", r:"perfect", l:"plusquamperfect", f:"future", a:"aorist" };
-    const MOOD   = { "": "---", i:"indicative", s:"subjunctive", o:"optative", n:"infinitive", m:"imperative", p:"participle" };
-    const VOICE  = { "": "---", a:"active", e:"medio-passive", p:"passive" };
-    const NUMBER = { "": "---", s:"singular", p:"plural", d:"dual" };
-    const GENDER = { "": "---", m:"masculine", f:"feminine", n:"neuter", c:"common" };
-    const CASES  = { "": "---", n:"nominative", g:"genitive", d:"dative", a:"accusative", v:"vocative" };
-    const DEGREE = { "": "---", p:"positive", c:"comparative", s:"superlative" };
-
-    const buildSelect = (id, map) => {
-      const sel = document.createElement('select'); sel.id = id;
-      Object.entries(map).forEach(([v,l]) => {
-        const o = document.createElement('option'); o.value = v; o.textContent = l; sel.appendChild(o);
-      });
-      sel.className = 'cf-select';
-      sel.style.width = '100%';
-      return sel;
-    };
-
-    function renderDynamicForPOS(pos) {
-      nfDyn.innerHTML = '';
-      const add = (label, el) => {
-        const wrap = document.createElement('div');
-        wrap.className = 'field';
-        const lab = document.createElement('label'); lab.textContent = label;
-        wrap.append(lab, el); nfDyn.appendChild(wrap);
-      };
-      if (pos === 'v') {
-        add('Tense',  buildSelect('nf-tense',  TENSE));
-        add('Mood',   buildSelect('nf-mood',   MOOD));
-        add('Voice',  buildSelect('nf-voice',  VOICE));
-      } else if (pos === 'a') {
-        add('Number', buildSelect('nf-num',    NUMBER));
-        add('Gender', buildSelect('nf-g',      GENDER));
-        add('Casus',  buildSelect('nf-case',   CASES));
-        add('Degree', buildSelect('nf-deg',    DEGREE));
-      } else if (['n','p','l'].includes(pos)) {
-        add('Number', buildSelect('nf-num',    NUMBER));
-        add('Gender', buildSelect('nf-g',      GENDER));
-        add('Casus',  buildSelect('nf-case',   CASES));
-      }
-    }
-
-    nfPos.addEventListener('change', e => renderDynamicForPOS(e.target.value));
-
-    host.querySelector('#nf-reset').addEventListener('click', () => {
-      nfLemma.value = (word.lemma || '').trim();
-      nfPos.value = '';
-      nfDyn.innerHTML = '';
-    });
-
-    // Cancel button: close the inline form editor
-    host.querySelector('#nf-cancel').addEventListener('click', () => {
-      host.remove();
-    });
-
-    host.querySelector('#nf-save').addEventListener('click', () => {
-      // Guardrail: POS is required
-      if (!nfPos.value) {
-        alert('Please choose a Part of Speech.');
-        return;
-      }
-
-      const posChar = nfPos.value;
-
-      // Collect dynamic fields if present
-      const fields = {
-        tense:  nfDyn.querySelector('#nf-tense')?.value || '',
-        mood:   nfDyn.querySelector('#nf-mood')?.value  || '',
-        voice:  nfDyn.querySelector('#nf-voice')?.value || '',
-        number: nfDyn.querySelector('#nf-num')?.value   || '',
-        gender: nfDyn.querySelector('#nf-g')?.value     || '',
-        case:   nfDyn.querySelector('#nf-case')?.value  || '',
-        degree: nfDyn.querySelector('#nf-deg')?.value   || ''
-      };
-
-      // --- Require all visible fields to be filled in ---
-      const missingFields = [];
-
-      // Clear old highlights first
-      nfDyn.querySelectorAll('.field').forEach(f => f.classList.remove('invalid'));
-      nfLemma.closest('.field')?.classList.remove('invalid');
-
-      const markInvalid = (el) => el?.closest('.field')?.classList.add('invalid');
-
-      // Lemma required
-      if (!nfLemma.value.trim()) {
-        missingFields.push('Lemma');
-        markInvalid(nfLemma);
-      }
-
-      // For verbs
-      if (posChar === 'v') {
-        const tenseEl = nfDyn.querySelector('#nf-tense');
-        const moodEl  = nfDyn.querySelector('#nf-mood');
-        const voiceEl = nfDyn.querySelector('#nf-voice');
-        if (!fields.tense) { missingFields.push('Tense'); markInvalid(tenseEl); }
-        if (!fields.mood)  { missingFields.push('Mood');  markInvalid(moodEl); }
-        if (!fields.voice) { missingFields.push('Voice'); markInvalid(voiceEl); }
-      }
-
-      // For nouns, pronouns, articles
-      if (['n', 'p', 'l'].includes(posChar)) {
-        const numEl = nfDyn.querySelector('#nf-num');
-        const gEl   = nfDyn.querySelector('#nf-g');
-        const cEl   = nfDyn.querySelector('#nf-case');
-        if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
-        if (!fields.gender) { missingFields.push('Gender'); markInvalid(gEl); }
-        if (!fields.case)   { missingFields.push('Case');   markInvalid(cEl); }
-      }
-
-      // For adjectives
-      if (posChar === 'a') {
-        const numEl = nfDyn.querySelector('#nf-num');
-        const gEl   = nfDyn.querySelector('#nf-g');
-        const cEl   = nfDyn.querySelector('#nf-case');
-        const dEl   = nfDyn.querySelector('#nf-deg');
-        if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
-        if (!fields.gender) { missingFields.push('Gender'); markInvalid(gEl); }
-        if (!fields.case)   { missingFields.push('Case');   markInvalid(cEl); }
-        if (!fields.degree) { missingFields.push('Degree'); markInvalid(dEl); }
-      }
-
-      if (missingFields.length > 0) {
-        alert(`Please fill in all required fields:\n${missingFields.join(', ')}`);
-        return;
-      }
-
-      // Remove red outline when user fixes a field
-      host.querySelectorAll('select, input').forEach(el => {
-        el.addEventListener('input', () => el.closest('.field')?.classList.remove('invalid'));
-        el.addEventListener('change', () => el.closest('.field')?.classList.remove('invalid'));
-      });
-
-      // Compose a compact tag using your helper already in this file
-      const postag = composeUserPostag(posChar, fields);
-      const normalizedLemma = (nfLemma.value || '').trim() || word.form;
-
-      // Save the new form and activate it
-      word.forms.push({ lemma: normalizedLemma, postag, source: 'you' });
-      word.activeForm = word.forms.length - 1;
-
-      // Apply to the token/tree and refresh list, then close editor
-      applyActiveSelectionToWord(word);
-      renderUserFormsList(word, toolBody);
-      host.remove();
-
-      // Ensure the top (document) checkbox is unticked when user form is active
-      const topCheckbox = toolBody.querySelector('.morph-entry > input[type="checkbox"]');
-      if (topCheckbox) topCheckbox.checked = false;
-
-      // Re-render header card so colors/tags mirror the active form
-      if (typeof window.renderMorphInfo === 'function') {
-        window.renderMorphInfo(word);
+        entry.insertAdjacentHTML('beforeend', details);
+        entry.dataset.expanded = 'true';
+        entry.classList.add('expanded');
+      } else {
+        entry.querySelector('.morph-details')?.remove();
+        entry.querySelector('.morph-divider')?.remove();
+        entry.dataset.expanded = 'false';
+        entry.classList.remove('expanded');
       }
     });
   }
-
-  // When any form checkbox changes, collapse all expanded morph entries
-  document.addEventListener('change', (e) => {
-    if (!e.target.matches('.morph-entry input[type="checkbox"]')) return;
-    document.querySelectorAll('.morph-entry.expanded').forEach(entry => {
-      entry.classList.remove('expanded');
-      entry.dataset.expanded = 'false';
-      entry.querySelector('.morph-details')?.remove();
-      entry.querySelector('.morph-divider')?.remove();
-    });
-  });
 }
 
 /**
@@ -1491,7 +974,7 @@ function prepareSentenceData(sentence) {
     parentId: (w.head === 0 || w.head === '0' || w.head === null) ? 'root' : String(w.head),
     form: w.form || w.word || '(blank)',
     relation: w.relation || '',
-    postag: w._displayPostag || w.postag || ''  
+    postag: w.postag || ''
   }));
 
   // Add a synthetic root node that acts as a parent for headless nodes
@@ -1980,4 +1463,76 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupResizeHandle();       // enable interactive resizing
   setupXMLTool();            // enable XML view
   setupMorphTool();          // enable morph toolbar view
+});
+
+
+/*
+*
+* The following code block implements undo and redo functionality
+* for the treebanking application. It maintains two stacks to track
+* changes to the tree structure, allowing users to revert or reapply
+* modifications as needed. In order for the stacks to be properly mantained,
+* there needs to be calls to saveState() function whenever a change is made to the tree.
+*
+* Samuel DuBois 2025 10 28
+*/
+let undoStack = [];
+let redoStack = [];
+let treeState = getInitialTree();
+
+// This function will copy the curret state of the tree.
+function saveState() {
+  undoStack.push(structuredClone(treeState));
+  redoStack = [];
+}
+
+// This function will revert the tree to its previous state.
+function undoButton(){
+  if (undoStack.length === 0) return;
+
+  redoStack.push(structuredClone(treeState));
+  treeState = undoStack.pop();
+  renderTree(treeState);
+  return;
+}
+
+// This is the event for the undo button.
+document.addEventListener("DOMContentLoaded", () => {
+  // Specify the button you are going to listen for
+  const button = document.getElementById("undo");
+
+  // Add the event listener to the button you are listening for.
+  button.addEventListener("click", async () => {
+    undoButton();
+  });
+});
+
+// This function will revert the tree to its previous change.
+function redoButton(){
+  if (redoStack.length === 0) return;
+
+  undoStack.push(structuredClone(treeState));
+  treeState = redoStack.pop();
+  renderTree(treeState);
+}
+
+// This is the event for the redo button.
+document.addEventListener("DOMContentLoaded", () => {
+  // Specify the button you are going to listen for
+  const button = document.getElementById("redo");
+
+  // Add the event listener to the button you are listening for.
+  button.addEventListener("click", async () => {
+    alert("Oops! This functionality is still under construction. Please check back soon!");
+    redoButton()
+  });
+});
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  const button = document.getElementById("save");
+
+  button.addEventListener("click", async () => {
+    alert("Oops! This functionality is still under construction. Please check back soon!");
+  });
 });
