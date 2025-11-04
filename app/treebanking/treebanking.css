@@ -767,6 +767,15 @@ html, body{
   background-color: #d6d6d6;
 }
 
+.btn-cancel {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.morph-actions .btn-cancel:hover {
+  background-color: #d6d6d6;
+}
+
 .morph-actions .btn-save {
   background-color: #4e6476;
   color: #fff;
