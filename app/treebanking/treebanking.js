@@ -391,6 +391,15 @@ document.getElementById("focus-root").addEventListener("click", () => {
   }
 });
 
+// focus on select button (treebank view)
+document.getElementById("focus-selection").addEventListener("click", () => {
+  if (selectedNode) {
+    focusOnNode(selectedNode);
+  } else {
+    console.alert("Please select a node to focus on.");
+  }
+})
+
 // compact and expand tree buttons (treebank view)
 document.addEventListener("DOMContentLoaded", () => {
   const compactBtn = document.getElementById("compact");
@@ -1159,6 +1168,9 @@ function drawLinks(gx, rootHierarchy, idParentPairs) {
  * @param {Object} rootHierarchy - Root node with x/y layout data.
  * @returns {void} Runs synchronously to render all node text labels on the tree.
  */
+
+let selectedNode = null; // keeps track of selected node
+
 function drawNodes(gx, rootHierarchy) {
   const nodes = gx.selectAll('.node')
     .data(rootHierarchy.descendants())
@@ -1193,6 +1205,7 @@ function drawNodes(gx, rootHierarchy) {
 
   // --- Enable clicking nodes to show morphological info ---
   nodes.on("click", function (event, d) {
+    selectedNode = d;
     if (!window.isMorphActive) return;
 
     // Clear all previous highlights first
