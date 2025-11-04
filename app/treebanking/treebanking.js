@@ -594,7 +594,7 @@ function setupXMLTool() {
       document.body.classList.remove('mode-morph');
     } else {
       // --- Exit XML mode ---
-      toolBody.innerHTML = '<p>this is the body of each tool option</p>';
+      toolBody.innerHTML = '<p>Please select a tool from the bar above that you would like to use.</p>';
       exitReadOnly();
     }
   });
@@ -620,7 +620,7 @@ function setupMorphTool() {
     if (!window.isMorphActive) return;
     window.isMorphActive = false;
     morphBtn.classList.remove('active');
-    toolBody.innerHTML = `<p>this is the body of each tool option</p>`;
+    toolBody.innerHTML = `<p>Please select a tool from the bar above that you would like to use.</p>`;
     // clear any highlights
     document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
     d3.selectAll(".node").classed("selected", false);
@@ -648,7 +648,7 @@ function setupMorphTool() {
       morphBtn.classList.add('active');
       toolBody.innerHTML = `<p style="padding:8px;">Click a word to view morphological info.</p>`;
     } else {
-      toolBody.innerHTML = `<p>this is the body of each tool option</p>`;
+      toolBody.innerHTML = `<p>Please select a tool from the bar above that you would like to use.</p>`;
     }
   });
 
