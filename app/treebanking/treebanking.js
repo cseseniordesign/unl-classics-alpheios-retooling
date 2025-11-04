@@ -1381,37 +1381,6 @@ function focusOnNode(node) {
 /**  
  *
  * ------------------------------------------------------------------------
- * FUNCTION: updateTreeLayout
- * ------------------------------------------------------------------------
- * Redraws the tree whenever window.verticalSpacing changes and used by
- * compactTree() and expandTree() functions to support buttons thereof
- * 
- * Global dependencies: window.idParentPairs, window.root, window.gx, 
- * 
- * @returns {void} updates tree layout
- */
-function updateTreeLayout() {
-  if (!window.idParentPairs) {
-    console.warn("No tree data loaded yet.");
-    return;
-  }
-
-  // updates the root
-  window.root = buildHierarchy(window.idParentPairs);
-
-  // removes previous nodes and links
-  if (window.gx) {
-    window.gx.selectAll("*").remove();
-  }
-
-  // redraw links and nodes
-  drawLinks(window.gx, window.root, window.idParentPairs);
-  drawNodes(window.gx, window.root);
-}
-
-/**  
- *
- * ------------------------------------------------------------------------
  * FUNCTION: compactTree
  * ------------------------------------------------------------------------
  * Decreases vertical spacing between nodes and used to support compact button
@@ -1421,8 +1390,17 @@ function updateTreeLayout() {
  * @returns {void} compacts the tree
  */
 function compactTree() {
+  // save current zoom transform before redrawing the tree
+  const prevTransform = window.svg ? d3.zoomTransform(window.svg.node()) : null;
+
+  // decrease vertical spacing between nodes
   window.verticalSpacing = Math.max(0.2, window.verticalSpacing - 0.2);
-  updateTreeLayout();
+  createNodeHierarchy(window.currentIndex); // redraw the tree
+
+  // restore the previous zoom transform after redrawing the tree
+  if (window.svg && window.zoom && prevTransform) {
+    window.svg.call(window.zoom.transform, prevTransform);
+  }
 }
 
 /**  
@@ -1437,8 +1415,17 @@ function compactTree() {
  * @returns {void} expands the tree
  */
 function expandTree() {
+  // save current zoom transform before redrawing the tree
+  const prevTransform = window.svg ? d3.zoomTransform(window.svg.node()) : null;
+
+  // increase vertical spacing between nodes 
   window.verticalSpacing += 0.2;
-  updateTreeLayout();
+  createNodeHierarchy(window.currentIndex); // redraw the tree
+
+  // restore the previous zoom transform after redrawing the tree
+  if (window.svg && window.zoom && prevTransform) {
+    window.svg.call(window.zoom.transform, prevTransform);
+  }
 }
 
 /* ============================================================================
