@@ -108,8 +108,8 @@ async function displaySentence(index) {
     button.style.color = colorForPOS(word);   // sentence token font color
 
     // Add click interaction for reassigning heads
-    button.addEventListener("click", (event) => {
-      handleWordClick(word.id, event);
+    button.addEventListener("click", () => {
+      handleWordClick(word.id);
     });
 
   tokenizedSentence.appendChild(button);
@@ -134,8 +134,9 @@ async function displaySentence(index) {
  */
 
 let selectedWordId = null; // keeps track of the first click(dependent word)
+let selectedNodeId = null;
 
-function handleWordClick(wordId, event) {
+function handleWordClick(wordId) {
 
   // If Morph tool is active → just show morph info, don’t alter tree
  if (window.isMorphActive) {
@@ -166,14 +167,16 @@ function handleWordClick(wordId, event) {
     selectedWordId = wordId;
     //add visual confirmation
     const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
-    if (btn) btn.classList.remove("highlight"), btn.classList.add("selected");
+    const node = document.querySelector(`.node[id="${wordId}"]`);
+    if (btn) btn.classList.remove("highlight"), node.classList.add("selected"), btn.classList.add("selected");
     return;
   }
   //remove highlight if same word clicked twice and reset selection
   const newHeadId = wordId;
   if(selectedWordId === newHeadId) {
     const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
-    btn.classList.add("highlight"), btn.classList.remove("selected");
+    const node = document.querySelector(`.node[id="${wordId}"]`);
+    node.classList.remove("selected"),btn.classList.remove("selected");
     resetSelection();
     return;
   }
@@ -183,6 +186,10 @@ function handleWordClick(wordId, event) {
   const dependent = currentSentence.words.find(word => word.id === selectedWordId);
   //gets indepenent node (second selected node)
   const independent = currentSentence.words.find(word => word.id === newHeadId);
+
+  //remove highlight when second word is selected
+  const btnNewHead = document.querySelector(`button[data-word-id="${newHeadId}"]`);
+  if (btnNewHead) btnNewHead.classList.remove("highlight");
 
   if (createsCycle(currentSentence.words, selectedWordId, newHeadId)) {
     // Flip logic — make the old head now depend on the selected word
@@ -1445,6 +1452,14 @@ function createNodeHierarchy(sentenceId) {
   drawLinks(gx, rootHierarchy, idParentPairs);
   drawNodes(gx, rootHierarchy);
 
+  //check if nodes are clicked to change heads
+  const nodes = document.querySelectorAll(".node");
+  nodes.forEach(node =>{
+    node.addEventListener("click", () => {
+      handleWordClick(node.id);
+    });
+  })
+  
   // Enable zooming and panning with safe scale limits
   window.zoom = d3.zoom()
     .scaleExtent([0.1, 3]) // prevent over-zooming or infinite scroll
