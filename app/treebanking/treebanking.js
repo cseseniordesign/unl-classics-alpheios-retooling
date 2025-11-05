@@ -195,7 +195,7 @@ function handleWordClick(wordId) {
     // Normal assignment
     dependent.head = newHeadId;
   }
- 
+
   createNodeHierarchy(window.currentIndex);
 
   resetSelection();
@@ -396,7 +396,7 @@ document.getElementById("focus-selection").addEventListener("click", () => {
   if (selectedNode) {
     focusOnNode(selectedNode);
   } else {
-    console.alert("Please select a node to focus on.");
+    showToast("Please select a node to focus on.");
   }
 })
 
@@ -948,10 +948,14 @@ function createNodeHierarchy(sentenceId) {
   const nodes = document.querySelectorAll(".node");
   nodes.forEach(node =>{
     node.addEventListener("click", () => {
+      const prevTransform = window.svg ? d3.zoomTransform(window.svg.node()) : null;
       handleWordClick(node.id);
+      if (window.svg && window.zoom && prevTransform) {
+        window.svg.call(window.zoom.transform, prevTransform);
+      }
     });
   })
-  
+
   // Enable zooming and panning with safe scale limits
   window.zoom = d3.zoom()
     .scaleExtent([0.1, 3]) // prevent over-zooming or infinite scroll
@@ -1439,6 +1443,23 @@ function expandTree() {
   if (window.svg && window.zoom && prevTransform) {
     window.svg.call(window.zoom.transform, prevTransform);
   }
+}
+
+/**  
+ *
+ * ------------------------------------------------------------------------
+ * FUNCTION: showToast
+ * ------------------------------------------------------------------------
+ * 
+ * Handles display of floating message 
+ * 
+ * @returns {void} shows toast message on UI
+ */
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  setTimeout(() => (toast.style.opacity = "0"), 2000);
+  toast.style.opacity = "1";
 }
 
 /* ============================================================================
