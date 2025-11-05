@@ -64,7 +64,13 @@ export function createNodeHierarchy(sentenceId) {
   const nodes = document.querySelectorAll(".node");
   nodes.forEach(node =>{
     node.addEventListener("click", () => {
+      // save current zoom transform before changing heads
+      const prevTransform = window.svg ? d3.zoomTransform(window.svg.node()) : null;
       handleWordClick(node.id);
+      // restore the previous zoom transform after changing heads
+      if (window.svg && window.zoom && prevTransform) {
+        window.svg.call(window.zoom.transform, prevTransform);
+      }
     });
   })
 
@@ -223,8 +229,6 @@ export function drawNodes(gx, rootHierarchy) {
   });
 }
 
-
-
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: drawLinks
@@ -338,20 +342,4 @@ export function drawLinks(gx, rootHierarchy, idParentPairs) {
         .attr("fill", "#333")
         .text(d => d.target?.data?.relation || "");
     });
-}
-
-/**  
- *
- * ------------------------------------------------------------------------
- * FUNCTION: expandTree
- * ------------------------------------------------------------------------
- * Increases vertical spacing between nodes and used to support expand button
- * 
- * Global dependencies: window.verticalSpacing
- * 
- * @returns {void} expands the tree
- */
-function expandTree() {
-  window.verticalSpacing += 0.2;
-  updateTreeLayout();
 }

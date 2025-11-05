@@ -59,6 +59,23 @@ function setupSaveButton() {
   }
 }
 
+/**  
+ *
+ * ------------------------------------------------------------------------
+ * FUNCTION: showToast
+ * ------------------------------------------------------------------------
+ * 
+ * Handles display of floating message 
+ * 
+ * @returns {void} shows toast message on UI
+ */
+function showToast(message) {
+  const toast = document.getElementById("toast");
+  toast.textContent = message;
+  setTimeout(() => (toast.style.opacity = "0"), 2300);
+  toast.style.opacity = "1";
+}
+
 function setupTreeButtons() {
   const compactBtn = document.getElementById("compact");
   const expandBtn  = document.getElementById("expand");
@@ -105,12 +122,10 @@ function setupTreeButtons() {
     if (targetNode && typeof focusOnNode === "function") {
       focusOnNode(targetNode);
     } else {
-      console.warn("Please select a node in the tree or a word in the sentence.");
+      showToast("Please select a node in the tree or a word in the sentence.");
     }
   });
 }
-
-
 
 /* ============================================================================
     INITIALIZATION ENTRY POINT

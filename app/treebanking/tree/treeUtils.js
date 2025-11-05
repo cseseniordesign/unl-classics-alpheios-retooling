@@ -134,41 +134,12 @@ export function fitTreeToView(svg, gx, container, zoom, margin) {
 /**  
  *
  * ------------------------------------------------------------------------
- * FUNCTION: updateTreeLayout
- * ------------------------------------------------------------------------
- * Redraws the tree whenever window.verticalSpacing changes and used by
- * compactTree() and expandTree() functions to support buttons thereof
- * 
- * Global dependencies: window.idParentPairs, window.root, window.gx, 
- * 
- * @returns {void} updates tree layout
- */
-function updateTreeLayout() {
-  if (!window.idParentPairs) {
-    console.warn("No tree data loaded yet.");
-    return;
-  }
-
-  // updates the root
-  window.root = buildHierarchy(window.idParentPairs);
-
-  // removes previous nodes and links
-  if (window.gx) {
-    window.gx.selectAll("*").remove();
-  }
-
-  // redraw links and nodes
-  drawLinks(window.gx, window.root, window.idParentPairs);
-  drawNodes(window.gx, window.root);
-}
-
-/**  
- *
- * ------------------------------------------------------------------------
  * FUNCTION: compactTree
  * ------------------------------------------------------------------------
  * Decreases vertical spacing between nodes and used to support compact button
  * Preserves zoom state during redraw
+ * 
+ * @returns {void} compacts the tree
  */
 export function compactTree() {
   // Save current zoom transform before redrawing the tree
@@ -178,7 +149,6 @@ export function compactTree() {
   window.verticalSpacing = Math.max(0.2, window.verticalSpacing - 0.2);
   
   // Redraw the tree
-  updateTreeLayout();
   createNodeHierarchy(window.currentIndex);
 
   // Restore previous zoom transform after redraw
@@ -194,6 +164,8 @@ export function compactTree() {
  * ------------------------------------------------------------------------
  * Increases vertical spacing between nodes and used to support expand button
  * Preserves zoom state during redraw
+ * 
+ * @returns {void} expands the tree
  */
 export function expandTree() {
   // Save current zoom transform before redrawing the tree
@@ -203,7 +175,6 @@ export function expandTree() {
   window.verticalSpacing += 0.2;
 
   // Redraw the tree
-  updateTreeLayout();
   createNodeHierarchy(window.currentIndex);
 
   // Restore previous zoom transform after redraw
@@ -220,8 +191,6 @@ export function expandTree() {
  * Focuses D3 tree view on specific node root with smooth panning and zooming 
  * of the svg. For the root node, it keeps it near the top and for regular
  * nodes it centers the node in the svg
- * 
- * Global dependencies: window.svg, window.zoom, window.root
  * 
  * @param {Object} node - D3 hierarchal node object to focus on
  * @returns {void} focuses on tree in svg passed in as a parameter 
