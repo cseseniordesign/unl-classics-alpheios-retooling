@@ -590,11 +590,13 @@ function setupXMLTool() {
 
     // Reset all toolbar button states
     allToolButtons.forEach(btn => btn.classList.remove('active'));
+    allToolButtons.forEach(btn => btn.style.backgroundColor = '#4e6476');
     isXMLActive = !wasActive; // toggle
 
     if (isXMLActive) {
       // --- Activate XML mode ---
       xmlBtn.classList.add('active');
+      xmlBtn.style.backgroundColor = 'green';
 
       // Get and process current XML
       const rawXML = getCurrentSentenceXML();
@@ -610,6 +612,7 @@ function setupXMLTool() {
       document.body.classList.remove('mode-morph');
     } else {
       // --- Exit XML mode ---
+      xmlBtn.style.backgroundColor = '#4e6476';
       toolBody.innerHTML = '<p>Please select a tool from the bar above that you would like to use.</p>';
       exitReadOnly();
     }
@@ -663,7 +666,10 @@ function setupMorphTool() {
     if (window.isMorphActive) {
       morphBtn.classList.add('active');
       toolBody.innerHTML = `<p style="padding:8px;">Click a word to view morphological info.</p>`;
+      allToolButtons.forEach(btn => btn.style.backgroundColor = '#4e6476');
+      morphBtn.style.backgroundColor = 'green';
     } else {
+      morphBtn.style.backgroundColor = '#4e6476';
       toolBody.innerHTML = `<p>Please select a tool from the bar above that you would like to use.</p>`;
     }
   });
