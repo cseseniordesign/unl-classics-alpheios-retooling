@@ -1,6 +1,7 @@
 import { colorForTag, parseMorphTag, ensureDocumentSnapshot } from './morphHelpers.js';
 import { renderCreateEditorBelow } from './morphEditor.js';
 import { colorForPOS } from '../tree/treeUtils.js';
+import { triggerAutoSave } from '../xml/saveXML.js';
 
 /**
  * --------------------------------------------------------------------------
@@ -121,6 +122,7 @@ export function renderUserFormsList(word, toolBody) {
       // update active form and apply globally
       word.activeForm = idx;
       applyActiveSelectionToWord(word);
+      triggerAutoSave(); // autosave after switching active form
 
       // re-render Morph panel and update XML tab
       window.renderMorphInfo(word);
@@ -143,6 +145,7 @@ export function renderUserFormsList(word, toolBody) {
       removeForm(word, idx);
       renderUserFormsList(word, toolBody);
       window.renderMorphInfo(word);
+      triggerAutoSave(); // autosave after deleting a form
     });
   });
 }
@@ -304,6 +307,7 @@ function appendCreateAndUserForms(word, toolBody) {
       word.activeForm = -1;
       applyActiveSelectionToWord(word);
       window.renderMorphInfo(word);
+      triggerAutoSave(); // autosave after reactivating document form
     }
   });
 
@@ -326,6 +330,7 @@ function appendCreateAndUserForms(word, toolBody) {
 
       removeForm(word, -1);       // triggers document clear
       window.renderMorphInfo(word); // re-render UI
+      triggerAutoSave(); // autosave after clearing document form
     });
   }
 }
@@ -426,6 +431,7 @@ function removeForm(word, index) {
   if (word.activeForm === index) word.activeForm = -1;
   else if (word.activeForm > index) word.activeForm -= 1;
   applyActiveSelectionToWord(word);
+  triggerAutoSave(); // autosave after deletion
 }
 
 // ---------------------------------------------------------

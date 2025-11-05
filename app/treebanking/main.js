@@ -1,5 +1,5 @@
 /* ============================================================================
-   SECTION 1: IMPORTS
+    IMPORTS
    ============================================================================ */
 import parseTreeBankXML from './xml/parser.js';
 import { loadTreebankData } from './xml/xmlLoader.js';
@@ -8,15 +8,8 @@ import { setupMorphTool } from './morph/morphTool.js';
 import { setupSentenceSelector } from './ui/navigation.js';
 import { setupResizeHandle, displaySentence } from './ui/sentenceDisplay.js';
 import { compactTree, expandTree, fitTreeToView, focusOnNode } from './tree/treeUtils.js';
+import { saveCurrentTreebank } from './xml/saveXML.js';
 
-/* ============================================================================
-   SECTION 2: GLOBAL HELPERS & CONSTANTS
-   ============================================================================ */
-
-
-/* ============================================================================
-   SECTION 3: GLOBAL STATE (Tree + Sentence)
-   ============================================================================ */
 window.root = null;
 window.svg = null;
 window.gx = null;
@@ -25,7 +18,7 @@ window.verticalSpacing = 1;
 window.displaySentence = displaySentence;
 
 /* ============================================================================
-   SECTION 4: BUTTON & INTERFACE EVENTS
+    BUTTON & INTERFACE EVENTS
    ============================================================================ */
 
 // Download XML file
@@ -59,13 +52,10 @@ function setupDownloadButton() {
   });
 }
 
-// Save (placeholder)
 function setupSaveButton() {
   const button = document.getElementById("save");
   if (button) {
-    button.addEventListener("click", () => {
-      alert("Oops! This functionality is still under construction. Please check back soon!");
-    });
+    button.addEventListener("click", saveCurrentTreebank);
   }
 }
 
@@ -123,7 +113,7 @@ function setupTreeButtons() {
 
 
 /* ============================================================================
-   SECTION 5: INITIALIZATION ENTRY POINT
+    INITIALIZATION ENTRY POINT
    ============================================================================ */
 document.addEventListener('DOMContentLoaded', async () => {
   // --- Load and render ---

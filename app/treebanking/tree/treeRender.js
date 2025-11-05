@@ -1,5 +1,5 @@
 import { colorForPOS, fitTreeToView } from './treeUtils.js';
-import { setupWordHoverSync } from './hoverSync.js';
+window.selectedWordId = null; // keeps track of first clicked node
 
 /**
  * --------------------------------------------------------------------------
@@ -177,11 +177,10 @@ export function drawNodes(gx, rootHierarchy) {
     .style('fill', d => colorForPOS({ postag: d.data.postag }))
     .text(d => d.data.form)
     .each(function () {
-      // Measure the text and insert a rect *behind* it
       const text = d3.select(this);
       const bbox = this.getBBox();
       d3.select(this.parentNode)
-        .insert('rect', 'text')  // insert before text so it’s behind
+        .insert('rect', 'text')
         .attr('x', bbox.x - 3)
         .attr('y', bbox.y - 2)
         .attr('width', bbox.width + 6)
@@ -200,35 +199,89 @@ export function drawNodes(gx, rootHierarchy) {
     //  CASE 1: Morph tool open
     // =======================
     if (window.isMorphActive) {
-      // Clear previous highlights
       d3.selectAll(".node").classed("selected", false);
       document.querySelectorAll(".token").forEach(t => t.classList.remove("selected"));
-
-      // Highlight this node and its corresponding token
       d3.select(this).classed("selected", true);
       const token = document.querySelector(`.token[data-word-id='${d.data.id}']`);
       if (token) token.classList.add("selected");
 
-      // Show morph info
       const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
       const word = currentSentence?.words?.find(w => w.id === d.data.id);
-
       if (word && typeof window.renderMorphInfo === 'function') {
         const toolBody = document.getElementById("tool-body");
         toolBody.innerHTML = "";
         window.renderMorphInfo(word);
       }
-      return; // stop here, don’t trigger focus logic
+      return;
     }
 
     // =======================
-    //  CASE 2: Normal tree mode — select node for focus
+    //  CASE 2: Normal tree mode — head reassignment
     // =======================
-    d3.selectAll('.node').classed('selected', false); // clear previous highlights
-    d3.select(this).classed('selected', true);        // visually mark as selected
-    window.selectedNode = d;                          // store for "focus-selection" button
+    if (window.isReadOnly) return;
+
+    const clickedId = d.data.id;
+
+    if (!window.selectedWordId) {
+      // First click = select dependent
+      window.selectedWordId = clickedId;
+      d3.selectAll('.node').classed('selected', false);
+      d3.select(this).classed('selected', true);
+      return;
+    }
+
+    // Second click = set new head
+    const newHeadId = clickedId;
+
+    // If same node clicked twice → cancel selection
+    if (window.selectedWordId === newHeadId) {
+      d3.selectAll('.node').classed('selected', false);
+      window.selectedWordId = null;
+      return;
+    }
+
+    // Always get a direct live reference from the same global dataset
+    const currentSentence = window.treebankData.find(s => String(s.id) === String(window.currentIndex));
+    if (!currentSentence) {
+      console.warn("Current sentence not found in treebankData.");
+      return;
+    }
+
+    const dependent = currentSentence.words.find(w => String(w.id) === String(window.selectedWordId));
+    const independent = currentSentence.words.find(w => String(w.id) === String(newHeadId));
+
+    // Prevent self or invalid cycles
+    if (dependent && independent && !window.createsCycle?.(currentSentence.words, window.selectedWordId, newHeadId)) {
+      console.log(`Reassigning head: word ${dependent.id} → new head ${newHeadId}`);
+
+      // Normalize types and update
+      dependent.head = String(newHeadId);
+
+      // Force reparse + redraw immediately
+      const newPairs = prepareSentenceData(currentSentence);
+      const newRoot = buildHierarchy(newPairs);
+      window.gx.selectAll("*").remove();
+      drawLinks(window.gx, newRoot, newPairs);
+      drawNodes(window.gx, newRoot);
+
+      if (typeof window.updateXMLIfActive === "function") {
+        window.updateXMLIfActive();
+      }
+      if (typeof window.triggerAutoSave === "function") {
+        window.triggerAutoSave();
+      }
+
+    } else {
+      console.warn("Cycle detected or invalid assignment prevented");
+    }
+
+    // Reset selection after operation
+    d3.selectAll('.node').classed('selected', false);
+    window.selectedWordId = null;
   });
 }
+
+
 
 /**
  * --------------------------------------------------------------------------

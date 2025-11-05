@@ -1,5 +1,6 @@
 import { ensureFormsArray, composeUserPostag } from './morphHelpers.js';
 import { applyActiveSelectionToWord, renderUserFormsList } from './morphTool.js';
+import { triggerAutoSave } from '../xml/saveXML.js';
 
 // Inline editor that appears under the button and closes on save
 export function renderCreateEditorBelow(word, toolBody) {
@@ -190,11 +191,15 @@ host.querySelector('#nf-save').addEventListener('click', () => {
     // Save the new form and activate it
     word.forms.push({ lemma: normalizedLemma, postag, source: 'you' });
     word.activeForm = word.forms.length - 1;
+    triggerAutoSave(); // autosave after creating new form
+
 
     // Apply to the token/tree and refresh list, then close editor
     applyActiveSelectionToWord(word);
     renderUserFormsList(word, toolBody);
     host.remove();
+
+    triggerAutoSave(); // autosave after creating new form
 
     // Ensure the top (document) checkbox is unticked when user form is active
     const topCheckbox = toolBody.querySelector('.morph-entry > input[type="checkbox"]');

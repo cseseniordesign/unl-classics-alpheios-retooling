@@ -2,6 +2,7 @@ import { loadTreebankData } from '../xml/xmlLoader.js';
 import { updateNavigationButtons, updateSentenceSelector } from './navigation.js';
 import { getPOSChar, colorForPOS, createsCycle } from '../tree/treeUtils.js';
 import { createNodeHierarchy } from '../tree/treeRender.js';
+import { triggerAutoSave } from '../xml/saveXML.js';
 
 /**
  * --------------------------------------------------------------------------
@@ -145,6 +146,7 @@ function handleWordClick(wordId, event) {
   } else if(dependent) {
     // Normal assignment
     dependent.head = newHeadId;
+    triggerAutoSave();
   }
  
   createNodeHierarchy(window.currentIndex);
