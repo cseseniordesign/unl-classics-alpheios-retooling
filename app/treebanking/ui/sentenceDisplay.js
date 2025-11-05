@@ -59,7 +59,7 @@ export async function displaySentence(index) {
     button.style.color = colorForPOS(word);   // sentence token font color
 
     // Add click interaction for Morph, Relation, and Focus modes
-    button.addEventListener("click", (event) => handleWordClick(word.id, event));
+    button.addEventListener("click", (event) => handleWordClick(word.id));
 
   tokenizedSentence.appendChild(button);
 });
@@ -87,7 +87,7 @@ export async function displaySentence(index) {
 
 let selectedWordId = null; // keeps track of the first click(dependent word)
 
-function handleWordClick(wordId, event) {
+export function handleWordClick(wordId) {
 
   // If Morph tool is active → just show morph info, don’t alter tree
   if (window.isMorphActive) {
@@ -117,19 +117,23 @@ function handleWordClick(wordId, event) {
   // If XML tab is active or tree locked, ignore clicks
   if (window.isReadOnly) return;
 
-  // Otherwise, normal dependency reassignment mode
+ // Otherwise, normal dependency reassignment mode
+  //if there hasn't already been a selected word
   if(!selectedWordId) {
     selectedWordId = wordId;
+    //selectedNodeId = wordId;
     //add visual confirmation
     const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
-    if (btn) btn.classList.remove("highlight"), btn.classList.add("selected");
+    const node = document.querySelector(`.node[id="${wordId}"]`);
+    if (btn) btn.classList.remove("highlight"), node.classList.add("selected"), btn.classList.add("selected");
     return;
   }
   //remove highlight if same word clicked twice and reset selection
   const newHeadId = wordId;
   if(selectedWordId === newHeadId) {
     const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
-    btn.classList.add("highlight"), btn.classList.remove("selected");
+    const node = document.querySelector(`.node[id="${wordId}"]`);
+    node.classList.remove("selected"),btn.classList.remove("selected");
     resetSelection();
     return;
   }
@@ -140,13 +144,16 @@ function handleWordClick(wordId, event) {
   //gets indepenent node (second selected node)
   const independent = currentSentence.words.find(word => word.id === newHeadId);
 
+  //remove highlight when second word is selected
+  const btnNewHead = document.querySelector(`button[data-word-id="${newHeadId}"]`);
+  if (btnNewHead) btnNewHead.classList.remove("highlight");
+
   if (createsCycle(currentSentence.words, selectedWordId, newHeadId)) {
     // Flip logic — make the old head now depend on the selected word
     independent.head = dependent.head;
   } else if(dependent) {
     // Normal assignment
     dependent.head = newHeadId;
-    triggerAutoSave();
   }
  
   createNodeHierarchy(window.currentIndex);
