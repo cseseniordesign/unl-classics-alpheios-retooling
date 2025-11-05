@@ -948,8 +948,10 @@ function createNodeHierarchy(sentenceId) {
   const nodes = document.querySelectorAll(".node");
   nodes.forEach(node =>{
     node.addEventListener("click", () => {
+      // save current zoom transform before changing heads
       const prevTransform = window.svg ? d3.zoomTransform(window.svg.node()) : null;
       handleWordClick(node.id);
+      // restore the previous zoom transform after changing heads
       if (window.svg && window.zoom && prevTransform) {
         window.svg.call(window.zoom.transform, prevTransform);
       }
