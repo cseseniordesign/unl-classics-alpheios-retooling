@@ -151,9 +151,11 @@ export function handleWordClick(wordId) {
   if (createsCycle(currentSentence.words, selectedWordId, newHeadId)) {
     // Flip logic — make the old head now depend on the selected word
     independent.head = dependent.head;
+    triggerAutoSave();
   } else if(dependent) {
     // Normal assignment
     dependent.head = newHeadId;
+    triggerAutoSave();
   }
  
   createNodeHierarchy(window.currentIndex);
