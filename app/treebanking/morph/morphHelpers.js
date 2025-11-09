@@ -4,10 +4,10 @@ const POS_COLORS = {
   c: '#c77d9b', // conjunction
   d: '#e69109', // adverb
   i: '#b29100', // interjection
-  n: '#4aa7b7', // noun
+  n: '#487a6f', // noun
   a: '#5a78c6', // adjective
   r: '#5a9b6b', // adposition
-  l: '#6aa7d6', // article
+  l: '#a6784d', // article
   p: '#7a5aa9', // pronoun
   u: '#444',    // punctuation
   m: '#888',    // numeral

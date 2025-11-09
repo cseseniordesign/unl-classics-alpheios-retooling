@@ -466,10 +466,10 @@ html, body{
 .node[data-pos="c"] text { fill: #c77d9b !important; }        /* conjunction */
 .node[data-pos="d"] text { fill: #e69109 !important; }      /* adverb */
 .node[data-pos="i"] text { fill: #b29100 !important; }      /* interjection */
-.node[data-pos="n"] text { fill: #4aa7b7 !important; }        /* noun */
+.node[data-pos="n"] text { fill: #487a6f !important; }        /* noun */
 .node[data-pos="a"] text { fill: #5a78c6 !important; }        /* adjective */
 .node[data-pos="r"] text { fill: #5a9b6b !important; }       /* adposition */
-.node[data-pos="l"] text { fill: #6aa7d6 !important; }   /* article */
+.node[data-pos="l"] text { fill: #a6784d !important; }   /* article */
 .node[data-pos="p"] text { fill: #7a5aa9 !important; }      /* pronoun */
 .node[data-pos="u"] text { fill: #444 !important; }       /* punctuation */
 .node[data-pos="m"] text { fill: #888 !important; }        /* numeral */
