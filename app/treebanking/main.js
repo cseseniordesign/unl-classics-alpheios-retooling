@@ -10,6 +10,7 @@ import { setupResizeHandle, displaySentence } from './ui/sentenceDisplay.js';
 import { compactTree, expandTree, fitTreeToView, focusOnNode } from './tree/treeUtils.js';
 import { saveCurrentTreebank } from './xml/saveXML.js';
 import { undoButton } from './xml/undo.js';
+import { createTable } from './table/tableRender.js';
 
 window.root = null;
 window.svg = null;
@@ -90,6 +91,7 @@ function setupTreeButtons() {
   const centerBtn  = document.getElementById("center");
   const rootBtn    = document.getElementById("focus-root");
   const selectionBtn = document.getElementById("focus-selection");
+  const tableBtn = document.getElementById("table");
 
   // Compact / Expand
   compactBtn?.addEventListener("click", compactTree);
@@ -133,6 +135,9 @@ function setupTreeButtons() {
       showToast("Please select a node in the tree or a word in the sentence.");
     }
   });
+
+  // Table Button - Puts up table view instead of tree view
+  tableBtn?.addEventListener("click", () => createTable(window.currentIndex));
 }
 
 /* ============================================================================
