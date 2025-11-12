@@ -9,6 +9,7 @@ import { setupSentenceSelector } from './ui/navigation.js';
 import { setupResizeHandle, displaySentence } from './ui/sentenceDisplay.js';
 import { compactTree, expandTree, fitTreeToView, focusOnNode } from './tree/treeUtils.js';
 import { saveCurrentTreebank } from './xml/saveXML.js';
+import { undoButton } from './xml/undo.js';
 
 window.root = null;
 window.svg = null;
@@ -57,6 +58,13 @@ function setupSaveButton() {
   if (button) {
     button.addEventListener("click", saveCurrentTreebank);
   }
+}
+
+function setupUndoButton() {
+    const button = document.getElementById("undo");
+    if (button) {
+        button.addEventListener("click", undoButton);
+    }
 }
 
 /**  
@@ -145,4 +153,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupDownloadButton();
   setupSaveButton();
   setupTreeButtons();
+  setupUndoButton();
 });
