@@ -34,7 +34,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
         with:
-          path: ./_site  # this is required
+          path: ./_site
 
   test:
     needs: build
@@ -46,7 +46,7 @@ jobs:
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
-          name: github-pages  # match this name if you want
+          name: github-pages
           path: ./_site
 
       - name: Run JavaScript tests
