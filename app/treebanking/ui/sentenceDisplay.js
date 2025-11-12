@@ -3,6 +3,7 @@ import { updateNavigationButtons, updateSentenceSelector } from './navigation.js
 import { getPOSChar, colorForPOS, createsCycle } from '../tree/treeUtils.js';
 import { createNodeHierarchy } from '../tree/treeRender.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
+import { saveState } from '../xml/undo.js';
 
 /**
  * --------------------------------------------------------------------------
@@ -157,7 +158,8 @@ export function handleWordClick(wordId) {
     dependent.head = newHeadId;
     triggerAutoSave();
   }
- 
+
+  saveState();
   createNodeHierarchy(window.currentIndex);
 
   resetSelection();
