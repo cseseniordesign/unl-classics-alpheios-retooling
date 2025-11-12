@@ -96,7 +96,7 @@ export function createNodeHierarchy(sentenceId) {
  * @param {Object} sentence - Sentence object containing word elements.
  * @returns {Array<Object>} Returns a flat list of parsed word entries with ID, parent, form, and relation.
  */
-function prepareSentenceData(sentence) {
+export function prepareSentenceData(sentence) {
   // Convert <word> nodes into simple JS objects
   const idParentPairs = sentence.words.map(w => ({
     id: String(w.id),

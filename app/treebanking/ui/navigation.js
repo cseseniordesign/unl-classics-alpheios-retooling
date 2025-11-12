@@ -1,3 +1,5 @@
+import { createTable } from "../table/tableRender.js";
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: updateNavigationButtons
