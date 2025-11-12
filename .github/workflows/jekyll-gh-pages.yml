@@ -1,16 +1,17 @@
-name: Deploy Jekyll with GitHub Pages dependencies preinstalled
+name: Deploy Webpage
 
 on:
   push:
     branches:
       - '**'
-
   workflow_dispatch:
 
 permissions:
   contents: read
   pages: write
   id-token: write
+  
+concurrency:
   group: "pages"
   cancel-in-progress: false
   
