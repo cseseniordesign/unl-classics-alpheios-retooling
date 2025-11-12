@@ -3,7 +3,7 @@ import { updateNavigationButtons, updateSentenceSelector } from './navigation.js
 import { getPOSChar, colorForPOS, createsCycle } from '../tree/treeUtils.js';
 import { createNodeHierarchy } from '../tree/treeRender.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
-
+import { fetchMorphology } from '../morph/morphTool.js';
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: displaySentence
@@ -59,7 +59,7 @@ export async function displaySentence(index) {
     button.style.color = colorForPOS(word);   // sentence token font color
 
     // Add click interaction for Morph, Relation, and Focus modes
-    button.addEventListener("click", (event) => handleWordClick(word.id));
+    button.addEventListener("click", (event) => handleWordClick(word.id,word.form));
 
   tokenizedSentence.appendChild(button);
 });
@@ -87,8 +87,8 @@ export async function displaySentence(index) {
 
 let selectedWordId = null; // keeps track of the first click(dependent word)
 
-export function handleWordClick(wordId) {
-
+export function handleWordClick(wordId,word) {
+  fetchMorphology(word, "grc").then(console.log);
   // If Morph tool is active → just show morph info, don’t alter tree
   if (window.isMorphActive) {
     // Clear all previous selections
