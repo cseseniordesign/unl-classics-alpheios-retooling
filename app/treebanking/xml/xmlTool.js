@@ -157,7 +157,7 @@ export function setupXMLTool() {
         catch (validationError) {
           const msg = validationError?.message || '';
 
-          // 🔸 Case 1: Lenient mode + morphology-only → warn + highlight, stay editable
+          // Case 1: Lenient mode + morphology-only → warn + highlight, stay editable
           if (window.isLenientValidation && isMorphologyOnlyError(msg)) {
             console.warn('[XML EDIT] Lenient mode (morphology only):', msg);
             showToast(`Schema warning (lenient morph): ${msg}`, true);
@@ -172,7 +172,7 @@ export function setupXMLTool() {
             return;
           }
 
-          // 🔸 Case 2: Any other error (relations, head, malformed, etc.) → hard fail
+          // Case 2: Any other error (relations, head, malformed, etc.) → hard fail
           else {
             showToast(`Schema validation failed: ${msg}`, true);
 
@@ -202,12 +202,14 @@ export function setupXMLTool() {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
 
-          // Refresh only XML display
-          const escaped = xmlString
-            .replace(/&/g, '&amp;')
-            .replace(/</g, '&lt;')
-            .replace(/>/g, '&gt;');
+         // Refresh only XML display
+          const escaped = window.originalXMLText;
           xmlDisplay.innerHTML = highlightXML(formatXML(escaped));
+
+          // If you want a faster tree color refresh, call your helper here:
+          if (typeof window.fastRefreshTree === 'function') {
+            window.fastRefreshTree();
+          }
 
           showToast('XML updated successfully.');
           success = true;
@@ -361,9 +363,36 @@ export function updateXMLIfActive() {
   }
 
   const rawXML = getCurrentSentenceXML();
+
+  // Save snapshot for Cancel button functionality
+  window.originalXMLText = rawXML;
+
   const formatted = formatXML(rawXML);
   const highlighted = highlightXML(formatted);
-  toolBody.innerHTML = `<pre class="xml-display">${highlighted}</pre>`;
+
+  const xmlDisplay = document.getElementById('xml-display');
+  
+  if (xmlDisplay) {
+    // Only update innerHTML, keep buttons and layout intact
+    xmlDisplay.innerHTML = highlighted;
+    xmlDisplay.contentEditable = false;
+    xmlDisplay.classList.remove('editing');
+  } else {
+    // Fallback if editor not built (rare)
+    toolBody.innerHTML = `
+      <div id="xml-header">
+        <div class="morph-actions" id="xml-actions">
+          <button id="xml-edit" class="btn btn-save" type="button">Edit XML</button>
+          <button id="xml-cancel" class="btn btn-cancel" type="button" style="display:none;">Cancel</button>
+          <button id="xml-confirm" class="btn btn-save" type="button" style="display:none;">Confirm</button>
+        </div>
+      </div>
+      <pre id="xml-display" class="xml-display" contenteditable="false">${highlighted}</pre>
+    `;
+    // Note: setupXMLTool already attaches listeners when clicking xml-button,
+    // so fallback should be rare.
+  }
+
   toolBody.scrollTop = 0;
 }
 
@@ -409,7 +438,7 @@ function showToast(message, isError = false) {
   setTimeout(() => {
     toast.style.opacity = '0';
     toast.style.transform = 'translateY(20px)';
-  }, 5000);
+  }, 15000);
 }
 
 // Only morphology/postag issues are eligible for leniency.
@@ -468,4 +497,35 @@ function highlightXMLValidationError(xmlText, errorMsg) {
     new RegExp(`postag="${postag}"`, 'i'),
     `postag="${highlightedPostag}"`
   );
+}
+
+function attachXMLEditorHandlers() {
+  const editBtn = document.getElementById("xml-edit");
+  const confirmBtn = document.getElementById("xml-confirm");
+  const cancelBtn = document.getElementById("xml-cancel");
+  const xmlDisplay = document.getElementById("xml-display");
+
+  if (!editBtn || !xmlDisplay) return;
+
+  // EDIT MODE
+  editBtn.addEventListener("click", () => {
+    xmlDisplay.contentEditable = true;
+    xmlDisplay.classList.add("editing");
+    editBtn.style.display = "none";
+    confirmBtn.style.display = "inline-block";
+    cancelBtn.style.display = "inline-block";
+  });
+
+  // CANCEL — revert by simply reloading sentence XML
+  cancelBtn.addEventListener("click", () => {
+    updateXMLIfActive();
+  });
+
+  // CONFIRM — use your existing confirm logic
+  confirmBtn.addEventListener("click", () => {
+    const plainXML = xmlDisplay.innerText.trim();
+
+    // This calls your existing save pipeline
+    document.getElementById("xml-confirm").dispatchEvent(new Event("confirm-xml-save"));
+  });
 }
