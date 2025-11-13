@@ -29,7 +29,7 @@ html, body{
   font-family: "Arial", sans-serif;
 }
 
-#input-text {
+#input-container {
   font-size: medium;
   margin-top: 1%;
   margin-left: 17%;
@@ -37,34 +37,42 @@ html, body{
   font-family: "Arial", sans-serif;
 }
 
-#input-text textarea {
+.input-text {
   font-family: "Arial", sans-serif;
   font-size: medium;
   border: 2px solid darkgray;
 } 
 
-.input-text-area:focus {
+.input-text:focus {
   outline: none;
   box-shadow: 0 0 0 3px lightgray;
 }
 
-#search-text {
-  font-size: small;
+#search-and-URI-container {
+  font-size: smaller;
+  margin-top: 5%;
 }
 
-#search-text textarea {
+.search-box {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+}
+
+.search-input {
   font-family: "Arial", sans-serif;
   font-size: small;
   border: 2px solid darkgray;
   border-radius: 5px;
+  resize: none;
 }
 
-.search-text-area:focus {
+.search-input:focus {
   outline: none;
   box-shadow: 0 0 0 3px lightgray;
 }
 
-.retrieve-passage-button {
+.retrieve-passage-btn {
   margin: 2px 0;
   padding: 2px 12px;
   font-size: 12px;
@@ -78,7 +86,7 @@ html, body{
   background: #008CBA;
   color: white;
 }
-.retrieve-passage-button:hover {
+.retrieve-passage-btn:hover {
   background-color: #82878b;
   opacity: 1;
   transform: translateY(0);
@@ -92,32 +100,55 @@ a {
 }
 
 .available-works {
-  font-size: smaller;
+  font-size: small;
   clear: both;
   margin-top: 2px;
   margin-left: 5px;
   margin-bottom: 5%;
 }
 
-#enter-URI {
-  font-size: small;
-  margin-top: 5%;
+.URI-box {
+  display: flex;
+  align-items: center;
+  gap: 0px;
 }
 
-#enter-URI textarea {
+.URI-input {
   font-family: "Arial", sans-serif;
   font-size: small;
   border: 2px solid darkgray;
   border-radius: 5px;
+  resize: none;
 }
 
-.URI-text-area:focus {
+.URI-input:focus {
   outline: none;
   box-shadow: 0 0 0 3px lightgray;
 }
 
-.upload-XML {
-  font-size: small;
+.enter-URI-btn {
+  margin: 2px 0;
+  padding: 2px 16px;
+  font-size: 12px;
+  border: 2px solid #ccc;
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  border-radius: 8px;
+  outline: none;
+  height: 32px;
+  box-sizing: border-box;
+  background: #008CBA;
+  color: white;
+}
+.enter-URI-btn:hover {
+  background-color: #82878b;
+  opacity: 1;
+  transform: translateY(0);
+  transition-duration: .35s;
+}
+
+#upload-XML {
+  font-size: smaller;
   font-weight: none;
   margin-top: 5%;
 }
@@ -125,6 +156,46 @@ a {
 #upload-XML fieldset {
   width: 70%;
   border: 2px solid darkgray;
+}
+
+.URL-box {
+  display: flex;
+  align-items: center;
+  gap: 0px;
+}
+
+.URL-input {
+  font-family: "Arial", sans-serif;
+  font-size: small;
+  border: 2px solid darkgray;
+  border-radius: 5px;
+  resize: none;
+}
+
+.URL-input:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px lightgray;
+}
+
+.enter-url-btn {
+  margin: 2px 0;
+  padding: 2px 25px;
+  font-size: 12px;
+  border: 2px solid #ccc;
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  border-radius: 8px;
+  outline: none;
+  height: 32px;
+  box-sizing: border-box;
+  background: #008CBA;
+  color: white;
+}
+.enter-url-btn:hover {
+  background-color: #82878b;
+  opacity: 1;
+  transform: translateY(0);
+  transition-duration: .35s;
 }
 
 #input-manipulation legend {
@@ -167,39 +238,6 @@ a {
 }
 
 .edit-button:hover {
-  background-color: #82878b;
-  opacity: 1;
-  transform: translateY(0);
-  transition-duration: .35s;
-}
-
-#upload-XML textarea {
-  font-family: "Arial", sans-serif;
-  font-size: small;
-  border: 2px solid darkgray;
-  border-radius: 5px;
-}
-
-.url-text-area:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px lightgray;
-}
-
-.enter-url-button {
-  margin: 2px 0;
-  padding: 2px 12px;
-  font-size: 12px;
-  border: 2px solid #ccc;
-  -webkit-border-radius: 8px;
-  -moz-border-radius: 8px;
-  border-radius: 8px;
-  outline: none;
-  height: 32px;
-  box-sizing: border-box;
-  background: #008CBA;
-  color: white;
-}
-.enter-url-button:hover {
   background-color: #82878b;
   opacity: 1;
   transform: translateY(0);

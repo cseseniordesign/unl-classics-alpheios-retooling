@@ -3,8 +3,9 @@ import { updateNavigationButtons, updateSentenceSelector } from './navigation.js
 import { getPOSChar, colorForPOS, createsCycle } from '../tree/treeUtils.js';
 import { createNodeHierarchy } from '../tree/treeRender.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
-
+import { saveState } from '../xml/undo.js';
 import { fetchMorphology } from '../morph/morphTool.js';
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: displaySentence
@@ -149,6 +150,7 @@ export function handleWordClick(wordId,word) {
   const btnNewHead = document.querySelector(`button[data-word-id="${newHeadId}"]`);
   if (btnNewHead) btnNewHead.classList.remove("highlight");
 
+  saveState();
   if (createsCycle(currentSentence.words, selectedWordId, newHeadId)) {
     // Flip logic — make the old head now depend on the selected word
     independent.head = dependent.head;
@@ -158,8 +160,7 @@ export function handleWordClick(wordId,word) {
     dependent.head = newHeadId;
     triggerAutoSave();
   }
-
-  //saveState();
+  
   createNodeHierarchy(window.currentIndex);
 
   resetSelection();

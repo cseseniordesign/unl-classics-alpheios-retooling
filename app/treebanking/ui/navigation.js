@@ -1,5 +1,5 @@
 import { createTable } from "../table/tableRender.js";
-
+import { clearStacks } from "../xml/undo.js";
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: updateNavigationButtons
@@ -25,6 +25,7 @@ export function updateNavigationButtons(index) {
  * @returns {void} Runs synchronously to populate and manage the sentence dropdown.
  */
 export function setupSentenceSelector() {
+  clearStacks();
   const select = document.getElementById('sentence-select');
   if (!select) return;
 
