@@ -48,67 +48,15 @@ const POSTAG_ALLOWED_POSITIONS = {
     '-': []
 };
 
-/**
- * Expected relation families by POS (case-insensitive).
- * Not exhaustive, but covers standard AGDT/Perseids conventions.
- */
-const RELATION_RULES = {
-  // --- Nouns ---
-  n: [
-    'SBJ','OBJ','PNOM','ATR','APP','APOS','EXD',
-    'ADV_AP','ADV','PRED','PRED_CO','OBJ_AP',
-    'AUXZ','AUXY','COORD' 
-  ],
-  // --- Adjectives ---
-  a: [
-    'ATR','PNOM','APP','APOS','ADV','OBJ','OBJ_AP','EXD',
-    'AUXZ','AUXY','AUXC','COORD','PRED','PRED_CO' 
-  ],
-  // --- Pronouns ---
-  p: [
-    'SBJ','OBJ','ATR','APP','APOS','EXD','OBJ_AP','PNOM',
-    'AUXZ','AUXY','AUXC','COORD','ADV','ADV_AP' 
-  ],
-  // --- Articles ---
-  l: [
-    'ATR','APP','APOS','EXD',
-    'AUXZ','AUXY','COORD' 
-  ],
-  // --- Verbs ---
-  v: [
-    'PRED','PRED_CO','ADV','ADV_CO','COORD','OBJ','OBJ_AP',
-    'SBJ','ADV_AP','AUXC','AUXY','AUXZ','AUXP' 
-  ],
-  // --- Adpositions / Prepositions ---
-  r: [
-    'AUXP','ADV','ADV_AP','OBJ','OBJ_AP','EXD',
-    'AUXZ','AUXY' 
-  ],
-  // --- Conjunctions ---
-  c: [
-    'COORD','AUXC','AUXY','AUXZ','AUXP','ADV','ADV_CO' 
-  ],
-  // --- Adverbs ---
-  d: [
-    'ADV','AUXY','AUXZ','AUXC','EXD','COORD','AUXP','ADV_AP' 
-  ],
-  // --- Interjections ---
-  i: [
-    'AUXZ','EXD','ADV','ADV_AP','AUXY','COORD' 
-  ],
-  // --- Punctuation / Symbols ---
-  u: [
-    'AUXX','AUXK','AUXZ','AUXY','APOS','COORD','ADV','AUXC','AUXP','EXD'
-  ],
-  // --- Numerals ---
-  m: [
-    'ATR','APP','APOS','EXD','OBJ','ADV','PNOM','COORD','AUXZ'
-  ],
-  // --- Placeholder / Unknown / Dummy ---
-  '-': [
-    'EXD','AUXZ','AUXY','AUXC','COORD','ADV','AUXP','AUXK','AUXX'
-  ]
-};
+const BASE_REL = new Set([
+  'PRED','SBJ','OBJ','ATR','ADV',
+  'AUXP','AUXC','AUXY','AUXZ','AUXV','AUXR','AUXG','AUXX','AUXK',
+  'COORD','ATV','ATVV','PNOM','OCOMP','APOS','EXD'
+]);
+
+const REL_SUFFIXES = new Set([
+    'CO', 'AP'
+]);
 
 /**
  * Helper: detect dummy / filler nodes like [0], [1], [foo]
@@ -242,13 +190,40 @@ export function validateTreebankSchema(xmlDoc) {
                 }
             }
 
-            // --- Relation validation (strict) ---
-            const rel = relation.toUpperCase();
-            const validRels = (RELATION_RULES[pos] || []).map(r => r.toUpperCase());
-            if (validRels.length && !validRels.includes(rel)) {
-                throw new Error(
-                `Word id="${wid}": POS '${pos}' has invalid relation '${rel}'. Expected one of: ${validRels.join(', ')}.`
-                );
+            {
+                const relRaw = relation.trim();
+                const rel = relRaw.toUpperCase();
+
+                // placeholder allowed
+                if (rel === '---') {
+                    // OK
+                }
+                // exact base relation allowed
+                else if (BASE_REL.has(rel)) {
+                    // OK
+                }
+                // possible composite form
+                else if (rel.includes('_')) {
+                    const parts = rel.split('_');
+                    const base = parts[0];
+                    const suffixes = parts.slice(1);
+
+                    const allSuffixesValid =
+                        BASE_REL.has(base) &&
+                        suffixes.every(suf => REL_SUFFIXES.has(suf));
+
+                    if (!allSuffixesValid) {
+                        throw new Error(
+                            `Word id="${wid}": Invalid relation '${relRaw}'.`
+                        );
+                    }
+                }
+                // otherwise invalid
+                else {
+                    throw new Error(
+                        `Word id="${wid}": Invalid relation '${relRaw}'.`
+                    );
+                }
             }
         });
     });
