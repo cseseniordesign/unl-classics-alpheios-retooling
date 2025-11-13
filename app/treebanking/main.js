@@ -9,7 +9,7 @@ import { setupSentenceSelector } from './ui/navigation.js';
 import { setupResizeHandle, displaySentence } from './ui/sentenceDisplay.js';
 import { compactTree, expandTree, fitTreeToView, focusOnNode } from './tree/treeUtils.js';
 import { saveCurrentTreebank } from './xml/saveXML.js';
-import { undoButton } from './xml/undo.js';
+import { undoButton, redoButton } from './xml/undo.js';
 import { createTable } from './table/tableRender.js';
 
 window.root = null;
@@ -65,6 +65,13 @@ function setupUndoButton() {
     const button = document.getElementById("undo");
     if (button) {
         button.addEventListener("click", undoButton);
+    }
+}
+
+function setupRedoButton() {
+    const button = document.getElementById("redo");
+    if (button) {
+        button.addEventListener("click", redoButton);
     }
 }
 
@@ -159,4 +166,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupSaveButton();
   setupTreeButtons();
   setupUndoButton();
+  setupRedoButton();
 });

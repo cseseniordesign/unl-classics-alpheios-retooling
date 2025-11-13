@@ -1,6 +1,6 @@
 import { createNodeHierarchy } from '../tree/treeRender.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
-
+import { displaySentence } from '../ui/sentenceDisplay.js';
 /*
 *
 * The following code block implements undo and redo functionality
@@ -24,15 +24,26 @@ export function saveState() {
 // This function will revert the tree to its previous state.
 export function undoButton(){
     if (undoStack.length === 0) return;
-    alert("Oops! This functionality is still under construction. Please check back soon!");
     redoStack.push(structuredClone(window.treebankData));
     window.treebankData = undoStack.pop();
     triggerAutoSave();
-    // TODO: LOAD IN THE NEW TREE;
-    createNodeHierarchy(window.currentIndex);
+    displaySentence(window.currentIndex);
     return;
 }
 
+export function redoButton(){
+   if (redoStack.length === 0) return;
+   undoStack.push(structuredClone(window.treebankData));
+   window.treebankData = redoStack.pop();
+   triggerAutoSave();
+   displaySentence(window.currentIndex);
+   return;
+}
+
+export function clearStacks() {
+    undoStack = []
+    redoStack = []
+}
 
 // // This function will revert the tree to its previous change.
 // function redoButton(){
