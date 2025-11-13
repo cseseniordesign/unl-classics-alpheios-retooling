@@ -68,7 +68,7 @@ jobs:
 
   # Deploy to GitHub Pages
   deploy:
-    needs: build  # change to `needs: test` if tests must pass first
+    needs: test
     runs-on: ubuntu-latest
     environment:
       name: github-pages
