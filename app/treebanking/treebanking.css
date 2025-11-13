@@ -814,3 +814,32 @@ html, body{
 .delete-form:hover {
   color: #551A8B;
 }
+
+#xml-header {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+#xml-display.editing {
+  border: 1px solid #ffb300;
+  outline: none;
+  padding: 8px;
+  white-space: pre-wrap;
+}
+
+.xml-error-char {
+  background-color: rgba(255, 50, 50, 0.3);
+  color: #b00;
+  border-radius: 2px;
+  padding: 0 1px;
+}
+
+@keyframes pulseError {
+  0% { background-color: rgba(255, 50, 50, 0.3); }
+  50% { background-color: rgba(255, 150, 150, 0.6); }
+  100% { background-color: rgba(255, 50, 50, 0.3); }
+}
+.xml-error-char {
+  animation: pulseError 0.8s ease;
+}

@@ -159,7 +159,7 @@ export function handleWordClick(wordId,word) {
     triggerAutoSave();
   }
 
-  saveState();
+  //saveState();
   createNodeHierarchy(window.currentIndex);
 
   resetSelection();

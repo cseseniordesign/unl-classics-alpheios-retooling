@@ -149,6 +149,10 @@ export function applyActiveSelectionToWord(word) {
   if (typeof window.updateXMLIfActive === 'function') {
     window.updateXMLIfActive();
   }
+  // After updating sentence tokens, refresh the tree colors
+  if (typeof window.fastRefreshTree === 'function') {
+    window.fastRefreshTree();
+  }
 }
 
 export function renderUserFormsList(word, toolBody) {
@@ -284,9 +288,10 @@ function enableMorphEntryExpansion(scopeEl) {
   const ORDER_BY_POS = {
     v: ['pos','person','number','tense','mood','voice'],
     n: ['pos','number','gender','case'],
-    p: ['pos','number','gender','case'],
+    p: ['pos','person','number','gender','case'],
     l: ['pos','number','gender','case'],
-    a: ['pos','number','gender','case','degree']
+    a: ['pos','number','gender','case','degree'],
+    d: ['pos', 'degree']
   };
 
   const posChar = (tag && tag[0]) ? tag[0].toLowerCase() : '';
