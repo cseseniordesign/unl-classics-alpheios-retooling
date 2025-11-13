@@ -18,6 +18,7 @@ let redoStack = [];
 export function saveState() {
     undoStack.push(structuredClone(window.treebankData));
     redoStack = [];
+    return;
 }
 
 // This function will revert the tree to its previous state.
