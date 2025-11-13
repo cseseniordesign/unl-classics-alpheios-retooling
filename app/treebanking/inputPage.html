@@ -6,7 +6,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="inputPage.css">
-  <title>Input Page</title>
+  <title>Arethusa Input Page</title>
 </head>
 
 <body>
@@ -15,28 +15,32 @@
   </div>
 
   <div id="body">
-    <div id="input-text">
+    <div id="input-container">
       <p>Input Text</p>
-      <textarea title= "Input Text" class="input-text-area" id="input-text-area" title="Input Text" rows="10" cols="55" placeholder="Enter the text you want to treebank..." font="Arial"></textarea>
+      <div class="input-box">
+        <textarea class="input-text" title="Input Text" rows="10" cols="55" placeholder="Enter the text you want to treebank..." font="Arial"></textarea>
+      </div>
       
-      <div id="search-text">
+      <div id="search-and-URI-container">
         <p>Search for a Text:</p>
-        <textarea class="search-text-area" id="search-text-area" title="Search Text" rows="1" cols="50"></textarea>
-        <div id="retrieve-passage-button">
-          <button class="retrieve-passage-button" id="retrieve-passage-btn" type="submit" title="Retrieve Passage" aria-label="Retrieve Passage">Retrieve Passage</button>
+        <div class="search-box">
+          <textarea class="search-input" title="Search Text" rows="1" cols="49" placeholder="Search for a Text"></textarea>
+          <button class="retrieve-passage-btn" type="submit" title="Retrieve Passage" aria-label="Retrieve Passage">Retrieve Passage</button>
+        </div>
+        <div class="available-works">
+          <a rel="noopener" target="_blank" href="https://cts.perseids.org/">Available Works</a>
+        </div>
+
+        <div id="enter-URI">
+          <p>Enter your own Text URI:</p>
+          <div class="URI-box">
+            <textarea class="URI-input" title="URI Input" rows="1" cols="50" placeholder="Enter a Text URI"></textarea>
+            <button class="enter-URI-btn" type="submit" title="Enter URI" aria-label="Enter URI">Enter Text URI</button>
+          </div>
         </div>
       </div>
 
-      <div class="available-works" id="available-works">
-        <a rel="noopener" target="_blank" href="https://cts.perseids.org/">Available Works</a>
-      </div>
-
-      <div class="enter-URI" id="enter-URI">
-        <p>Enter your own Text URI:</p>
-        <textarea title= "Enter your own" class="URI-text-area" id="enter-URI-area" name="Enter URI" rows="1" cols="50"></textarea>
-      </div>
-
-      <div class="upload-XML" id="upload-XML">
+      <div id="upload-XML">
         <p>Upload Base XML Treebank:</p>
         <fieldset class="upload-file">
           <input type="file" id="file" title="files" onchange="startRead()">
@@ -44,19 +48,18 @@
 
         <p>or</p>
 
-        <textarea class="url-text-area" id="url-text-area" title="Enter URL" rows="1" cols="50"></textarea>
-        <div id="enter-url-button">
-          <button class="enter-url-button" id="enter-url-btn" type="submit" title="Enter URL" aria-label="Enter URL">Enter URL</button>
+        <div class="URL-box">
+          <textarea class="URL-input" title="URL Input" rows="1" cols="50" placeholder= "Enter URL of the Treebank Template"></textarea>
+          <button class="enter-url-btn" type="submit" title="Enter URL" aria-label="Enter URL">Enter URL</button>
         </div>
 
       </div>
-
     </div>
 
     <div id="input-manipulation">
       <fieldset class="lang-btns">
         <legend>Language</legend>
-        <input type="radio" id="lang-grc" name="lang" value="grc" checked="checked">
+        <input type="radio" id="lang-grc" name="lang" value="grc">
         <label for="lang-grc">Greek</label>
         <input type="radio" id="lang-lat" name="lang" value="lat">
         <label for="lang-lat">Latin</label>
@@ -73,16 +76,13 @@
       <fieldset class="dir-btns">
         <legend>Text Direction</legend>
         <input type="radio" id="ltr" name="direction" value="ltr">
-        <label for="lang-grc">Left to Right</label>
+        <label for="ltr">Left to Right</label>
         <input type="radio" id="rtl" name="direction" value="rlt">
-        <label for="lang-lat">Right to Left</label>
+        <label for="rtl">Right to Left</label>
       </fieldset> 
       
       <button type="submit" class="edit-button">Edit</button>
     </div>
-
   </div>
-
 </body>
-
 </html>
