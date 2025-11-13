@@ -379,3 +379,29 @@ export function drawLinks(gx, rootHierarchy, idParentPairs) {
         .text(d => d.target?.data?.relation || "");
     });
 }
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: hideTree
+ * --------------------------------------------------------------------------
+ * Stops displaying the current tree
+ *
+ * @param {}
+ * @returns {} 
+ */
+export function hideTree() {
+    d3.select('#sandbox svg').style("display", "none");
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: hideTree
+ * --------------------------------------------------------------------------
+ * Resumes displaying the current tree
+ *
+ * @param {}
+ * @returns {} 
+ */
+export function displayTree() {
+    d3.select('#sandbox svg').style("display", "flex");
+}

@@ -10,7 +10,7 @@ import { setupResizeHandle, displaySentence } from './ui/sentenceDisplay.js';
 import { compactTree, expandTree, fitTreeToView, focusOnNode } from './tree/treeUtils.js';
 import { saveCurrentTreebank } from './xml/saveXML.js';
 import { undoButton } from './xml/undo.js';
-import { createTable } from './table/tableRender.js';
+import { createTable, switchToTree } from './table/tableRender.js';
 
 window.root = null;
 window.svg = null;
@@ -18,6 +18,8 @@ window.gx = null;
 window.idParentPairs = null;
 window.verticalSpacing = 1;
 window.displaySentence = displaySentence;
+
+var isTableVisible = false;
 
 /* ============================================================================
     BUTTON & INTERFACE EVENTS
@@ -136,8 +138,16 @@ function setupTreeButtons() {
     }
   });
 
-  // Table Button - Puts up table view instead of tree view
-  tableBtn?.addEventListener("click", () => createTable(window.currentIndex));
+  // Table Button - Swaps between tree and table view
+  tableBtn?.addEventListener("click", () => {
+    if (isTableVisible) {
+      switchToTree(window.currentIndex);            // remove or hide the table
+      isTableVisible = false;    // update flag
+    } else {
+      createTable(window.currentIndex); // show the table
+      isTableVisible = true;            // update flag
+    }
+  });
 }
 
 /* ============================================================================

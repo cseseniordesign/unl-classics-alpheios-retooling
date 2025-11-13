@@ -1,4 +1,6 @@
 import { prepareSentenceData } from "../tree/treeRender.js";
+import { displaySentence } from "../ui/sentenceDisplay.js";
+import { hideTree, displayTree } from "../tree/treeRender.js";
 
 /**
  * --------------------------------------------------------------------------
@@ -23,7 +25,59 @@ export function createTable(sentenceId) {
 
     // Transform the sentence into a flat array of {id, parentId, form, relation}
     const idParentPairs = prepareSentenceData(sentence);
-    window.idParentPairs = idParentPairs;
 
-    console.table(idParentPairs);
+    hideTree();
+    displayTable(idParentPairs);
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: switchToTable
+ * --------------------------------------------------------------------------
+ * Destroys the table being displayed, and
+ * Unhides the current tree.
+ *
+ * @param {}
+ * @returns {} 
+ */
+export function switchToTree() {
+    const table = document.querySelector("#sandbox table");
+    table.remove();
+    displayTree();
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: displayTable
+ * --------------------------------------------------------------------------
+ * Destroys the table being displayed, and
+ * Unhides the current tree.
+ *
+ * @param {Object} SentenceValues - Object containing each word and its elements from a sentence 
+ * @returns {} 
+ */
+function displayTable(sentenceValues) {
+    const tableContainer = document.getElementById("sandbox");
+    const table = document.createElement("table");
+
+    // Create header row
+    const header = table.insertRow();
+    const headers = Object.keys(sentenceValues[0]);
+    headers.forEach(key => {
+    const th = document.createElement("th");
+    th.textContent = key;
+    header.appendChild(th);
+    });
+
+    // Create data rows
+    sentenceValues.forEach(rowData => {
+    const row = table.insertRow();
+    headers.forEach(key => {
+        const cell = row.insertCell();
+        cell.textContent = rowData[key];
+    });
+    });
+
+    // Append the table to the container
+    tableContainer.appendChild(table);
 }
