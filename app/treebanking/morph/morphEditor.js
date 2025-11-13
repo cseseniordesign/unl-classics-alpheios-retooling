@@ -51,6 +51,7 @@ const nfPos   = host.querySelector('#nf-pos');
 const nfDyn   = host.querySelector('#nf-dynamic');
 
 // Option maps
+const PERSON = [["",  "---"], ["1", "1st"], ["2", "2nd"], ["3", "3rd"]];
 const TENSE  = { "": "---", p:"present", i:"imperfect", r:"perfect", l:"plusquamperfect", f:"future", a:"aorist" };
 const MOOD   = { "": "---", i:"indicative", s:"subjunctive", o:"optative", n:"infinitive", m:"imperative", p:"participle" };
 const VOICE  = { "": "---", a:"active", e:"medio-passive", p:"passive" };
@@ -60,37 +61,60 @@ const CASES  = { "": "---", n:"nominative", g:"genitive", d:"dative", a:"accusat
 const DEGREE = { "": "---", p:"positive", c:"comparative", s:"superlative" };
 
 const buildSelect = (id, map) => {
-    const sel = document.createElement('select'); sel.id = id;
-    Object.entries(map).forEach(([v,l]) => {
-    const o = document.createElement('option'); o.value = v; o.textContent = l; sel.appendChild(o);
+    const sel = document.createElement('select');
+    sel.id = id;
+
+    const entries = Array.isArray(map) ? map : Object.entries(map);
+
+    entries.forEach(([v, l]) => {
+        const o = document.createElement('option');
+        o.value = v;
+        o.textContent = l;
+        sel.appendChild(o);
     });
+
     sel.className = 'cf-select';
     sel.style.width = '100%';
+    sel.value = "";            // force default to '---' when present
     return sel;
 };
 
 function renderDynamicForPOS(pos) {
     nfDyn.innerHTML = '';
-    const add = (label, el) => {
-    const wrap = document.createElement('div');
-    wrap.className = 'field';
-    const lab = document.createElement('label'); lab.textContent = label;
-    wrap.append(lab, el); nfDyn.appendChild(wrap);
+        const add = (label, el) => {
+        const wrap = document.createElement('div');
+        wrap.className = 'field';
+        const lab = document.createElement('label'); lab.textContent = label;
+        wrap.append(lab, el); nfDyn.appendChild(wrap);
     };
+
     if (pos === 'v') {
-    add('Tense',  buildSelect('nf-tense',  TENSE));
-    add('Mood',   buildSelect('nf-mood',   MOOD));
-    add('Voice',  buildSelect('nf-voice',  VOICE));
+        add('Person', buildSelect('nf-person', PERSON));
+        add('Number', buildSelect('nf-num',    NUMBER));
+        add('Tense',  buildSelect('nf-tense',  TENSE));
+        add('Mood',   buildSelect('nf-mood',   MOOD));
+        add('Voice',  buildSelect('nf-voice',  VOICE));
+    } else if (pos === 'p') {
+        add('Person', buildSelect('nf-person', PERSON));
+        add('Number', buildSelect('nf-num',    NUMBER));
+        add('Gender', buildSelect('nf-g',      GENDER));
+        add('Casus',  buildSelect('nf-case',   CASES));
     } else if (pos === 'a') {
-    add('Number', buildSelect('nf-num',    NUMBER));
-    add('Gender', buildSelect('nf-g',      GENDER));
-    add('Casus',  buildSelect('nf-case',   CASES));
-    add('Degree', buildSelect('nf-deg',    DEGREE));
-    } else if (['n','p','l'].includes(pos)) {
-    add('Number', buildSelect('nf-num',    NUMBER));
-    add('Gender', buildSelect('nf-g',      GENDER));
-    add('Casus',  buildSelect('nf-case',   CASES));
-    }
+        add('Number', buildSelect('nf-num',    NUMBER));
+        add('Gender', buildSelect('nf-g',      GENDER));
+        add('Casus',  buildSelect('nf-case',   CASES));
+        add('Degree', buildSelect('nf-deg',    DEGREE));
+    } else if (['n','l'].includes(pos)) {
+        add('Number', buildSelect('nf-num',    NUMBER));
+        add('Gender', buildSelect('nf-g',      GENDER));
+        add('Casus',  buildSelect('nf-case',   CASES));
+    } else if (pos === 'm') {
+        add('Number', buildSelect('nf-num', NUMBER));
+        add('Gender', buildSelect('nf-g', GENDER));
+        add('Casus',  buildSelect('nf-case', CASES));
+    } else if (pos === 'd') {
+        add('Degree', buildSelect('nf-deg', DEGREE));
+  }
 }
 
 nfPos.addEventListener('change', e => renderDynamicForPOS(e.target.value));
@@ -117,13 +141,14 @@ host.querySelector('#nf-save').addEventListener('click', () => {
 
     // Collect dynamic fields if present
     const fields = {
-    tense:  nfDyn.querySelector('#nf-tense')?.value || '',
-    mood:   nfDyn.querySelector('#nf-mood')?.value  || '',
-    voice:  nfDyn.querySelector('#nf-voice')?.value || '',
-    number: nfDyn.querySelector('#nf-num')?.value   || '',
-    gender: nfDyn.querySelector('#nf-g')?.value     || '',
-    case:   nfDyn.querySelector('#nf-case')?.value  || '',
-    degree: nfDyn.querySelector('#nf-deg')?.value   || ''
+        person: nfDyn.querySelector('#nf-person')?.value || '',
+        tense:  nfDyn.querySelector('#nf-tense')?.value || '',
+        mood:   nfDyn.querySelector('#nf-mood')?.value  || '',
+        voice:  nfDyn.querySelector('#nf-voice')?.value || '',
+        number: nfDyn.querySelector('#nf-num')?.value   || '',
+        gender: nfDyn.querySelector('#nf-g')?.value     || '',
+        case:   nfDyn.querySelector('#nf-case')?.value  || '',
+        degree: nfDyn.querySelector('#nf-deg')?.value   || ''
     };
 
     // --- Require all visible fields to be filled in ---
@@ -141,36 +166,56 @@ host.querySelector('#nf-save').addEventListener('click', () => {
     markInvalid(nfLemma);
     }
 
-    // For verbs
+    // For verbs: person, number, tense, mood, voice all required
     if (posChar === 'v') {
-    const tenseEl = nfDyn.querySelector('#nf-tense');
-    const moodEl  = nfDyn.querySelector('#nf-mood');
-    const voiceEl = nfDyn.querySelector('#nf-voice');
-    if (!fields.tense) { missingFields.push('Tense'); markInvalid(tenseEl); }
-    if (!fields.mood)  { missingFields.push('Mood');  markInvalid(moodEl); }
-    if (!fields.voice) { missingFields.push('Voice'); markInvalid(voiceEl); }
+        const personEl = nfDyn.querySelector('#nf-person');
+        const numEl    = nfDyn.querySelector('#nf-num');
+        const tenseEl  = nfDyn.querySelector('#nf-tense');
+        const moodEl   = nfDyn.querySelector('#nf-mood');
+        const voiceEl  = nfDyn.querySelector('#nf-voice');
+
+        if (!fields.person) { missingFields.push('Person'); markInvalid(personEl); }
+        if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
+        if (!fields.tense)  { missingFields.push('Tense');  markInvalid(tenseEl); }
+        if (!fields.mood)   { missingFields.push('Mood');   markInvalid(moodEl); }
+        if (!fields.voice)  { missingFields.push('Voice');  markInvalid(voiceEl); }
     }
 
     // For nouns, pronouns, articles
-    if (['n', 'p', 'l'].includes(posChar)) {
-    const numEl = nfDyn.querySelector('#nf-num');
-    const gEl   = nfDyn.querySelector('#nf-g');
-    const cEl   = nfDyn.querySelector('#nf-case');
-    if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
-    if (!fields.gender) { missingFields.push('Gender'); markInvalid(gEl); }
-    if (!fields.case)   { missingFields.push('Case');   markInvalid(cEl); }
+    if (['n', 'm', 'l'].includes(posChar)) {
+        const numEl = nfDyn.querySelector('#nf-num');
+        const gEl   = nfDyn.querySelector('#nf-g');
+        const cEl   = nfDyn.querySelector('#nf-case');
+
+        if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
+        if (!fields.gender) { missingFields.push('Gender'); markInvalid(gEl); }
+        if (!fields.case)   { missingFields.push('Case');   markInvalid(cEl); }
+    }
+
+    // For pronouns: person, number, gender, case required
+    if (posChar === 'p') {
+        const personEl = nfDyn.querySelector('#nf-person');
+        const numEl    = nfDyn.querySelector('#nf-num');
+        const gEl      = nfDyn.querySelector('#nf-g');
+        const cEl      = nfDyn.querySelector('#nf-case');
+
+        if (!fields.person) { missingFields.push('Person'); markInvalid(personEl); }
+        if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
+        if (!fields.gender) { missingFields.push('Gender'); markInvalid(gEl); }
+        if (!fields.case)   { missingFields.push('Case');   markInvalid(cEl); }
     }
 
     // For adjectives
     if (posChar === 'a') {
-    const numEl = nfDyn.querySelector('#nf-num');
-    const gEl   = nfDyn.querySelector('#nf-g');
-    const cEl   = nfDyn.querySelector('#nf-case');
-    const dEl   = nfDyn.querySelector('#nf-deg');
-    if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
-    if (!fields.gender) { missingFields.push('Gender'); markInvalid(gEl); }
-    if (!fields.case)   { missingFields.push('Case');   markInvalid(cEl); }
-    if (!fields.degree) { missingFields.push('Degree'); markInvalid(dEl); }
+        const numEl = nfDyn.querySelector('#nf-num');
+        const gEl   = nfDyn.querySelector('#nf-g');
+        const cEl   = nfDyn.querySelector('#nf-case');
+        const dEl   = nfDyn.querySelector('#nf-deg');
+
+        if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
+        if (!fields.gender) { missingFields.push('Gender'); markInvalid(gEl); }
+        if (!fields.case)   { missingFields.push('Case');   markInvalid(cEl); }
+        if (!fields.degree) { missingFields.push('Degree'); markInvalid(dEl); }
     }
 
     if (missingFields.length > 0) {
@@ -198,6 +243,11 @@ host.querySelector('#nf-save').addEventListener('click', () => {
     applyActiveSelectionToWord(word);
     renderUserFormsList(word, toolBody);
     host.remove();
+
+    // Redraw (update colors + labels instantly)
+    if (typeof window.fastRefreshTree === 'function') {
+        window.fastRefreshTree();
+    }
 
     triggerAutoSave(); // autosave after creating new form
 

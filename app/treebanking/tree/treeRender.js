@@ -86,6 +86,42 @@ export function createNodeHierarchy(sentenceId) {
   fitTreeToView(svg, gx, container, zoom, margin);
 }
 
+// ---------------------------------------------------------------------------
+// FUNCTION: fastRefreshTree
+// ---------------------------------------------------------------------------
+// Lightweight refresh: keeps the existing layout, only updates node colors
+// (POS) based on the current window.treebankData / active forms.
+// Called whenever a form is (re)selected or saved.
+// ---------------------------------------------------------------------------
+export function fastRefreshTree() {
+  // Need an existing rendered tree and current sentence id
+  if (!window.root || !window.gx || !window.treebankData || !window.currentIndex) return;
+
+  const sentenceId = String(window.currentIndex);
+  const sentence = window.treebankData.find(s => s.id === sentenceId);
+  if (!sentence) return;
+
+  // Map words by id for quick lookup
+  const byId = new Map(sentence.words.map(w => [String(w.id), w]));
+
+  // Update the postag stored on each D3 node from the latest word data
+  window.root.each(d => {
+    const w = byId.get(String(d.id));
+    if (w) {
+      d.data.postag = w._displayPostag || w.postag || '';
+    }
+  });
+
+  // Recolor nodes and update data-pos attribute
+  window.gx.selectAll('.node')
+    .attr('data-pos', d =>
+      (d.data.postag && d.data.postag[0]) ? d.data.postag[0] : ''
+    )
+    .select('text')
+    .style('fill', d => colorForPOS({ postag: d.data.postag }));
+}
+window.fastRefreshTree = fastRefreshTree;
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: prepareSentenceData

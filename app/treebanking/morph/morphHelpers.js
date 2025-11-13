@@ -25,8 +25,14 @@ export function composeUserPostag(posChar, fields) {
       if (fields.tense)  tag[3] = fields.tense;
       if (fields.mood)   tag[4] = fields.mood;
       if (fields.voice)  tag[5] = fields.voice;
-    } else if (['n','p','l'].includes(posChar)) {
-      // noun/pron/article: [2]=number, [6]=gender, [7]=case
+    } else if (posChar === 'p') {
+      // pronoun: [1]=person, [2]=number, [6]=gender, [7]=case
+      if (fields.person) tag[1] = fields.person;
+      if (fields.number) tag[2] = fields.number;
+      if (fields.gender) tag[6] = fields.gender;
+      if (fields.case)   tag[7] = fields.case;
+    } else if (['n','l', 'm'].includes(posChar)) {
+      // noun/article/numeral: [2]=number, [6]=gender, [7]=case
       if (fields.number) tag[2] = fields.number;
       if (fields.gender) tag[6] = fields.gender;
       if (fields.case)   tag[7] = fields.case;
@@ -36,7 +42,10 @@ export function composeUserPostag(posChar, fields) {
       if (fields.gender) tag[6] = fields.gender;
       if (fields.case)   tag[7] = fields.case;
       if (fields.degree) tag[5] = fields.degree; // harmless if not used
-    }
+    }  else if (posChar === 'd') {
+    // adverb: only degree, at [8]
+    if (fields.degree) tag[8] = fields.degree;
+  }
     // other POS (c, d, r, u, m, i): POS only at [0] is fine
     return tag.join('');
 }
