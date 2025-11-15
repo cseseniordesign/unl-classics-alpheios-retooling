@@ -79,43 +79,149 @@ const buildSelect = (id, map) => {
     return sel;
 };
 
+function createLabel(text){
+    const l = document.createElement('label');
+    l.textContent = text;
+    return l;
+}
+
 function renderDynamicForPOS(pos) {
     nfDyn.innerHTML = '';
-        const add = (label, el) => {
+
+    const add = (label, el) => {
         const wrap = document.createElement('div');
         wrap.className = 'field';
-        const lab = document.createElement('label'); lab.textContent = label;
-        wrap.append(lab, el); nfDyn.appendChild(wrap);
+        const lab = document.createElement('label');
+        lab.textContent = label;
+        wrap.append(lab, el);
+        nfDyn.appendChild(wrap);
+        return wrap;
     };
 
+    // ===================================================================
+    //                         VERBS (Matches Arethusa)
+    // ===================================================================
     if (pos === 'v') {
+        const personSel = buildSelect('nf-person', PERSON);
+        const numSel    = buildSelect('nf-num', NUMBER);
+        const tenseSel  = buildSelect('nf-tense', TENSE);
+        const moodSel   = buildSelect('nf-mood', MOOD);
+        const voiceSel  = buildSelect('nf-voice', VOICE);
+
+        const genderSel = buildSelect('nf-g', GENDER);
+        const caseSel   = buildSelect('nf-case', CASES);
+        const degSel    = buildSelect('nf-deg', DEGREE);
+
+        // --- Create all wrappers ONCE (order here doesn't matter, we’ll reorder later)
+        const pWrap = add('Person', personSel);
+        const nWrap = add('Number', numSel);
+        const tWrap = add('Tense',  tenseSel);
+        const mWrap = add('Mood',   moodSel);
+        const vWrap = add('Voice',  voiceSel);
+
+        const div = document.createElement('div');
+        div.className = 'morph-divider';
+        nfDyn.appendChild(div);
+
+        const gWrap = add('Gender', genderSel);
+        const cWrap = add('Casus',  caseSel);
+        const dWrap = add('Degree', degSel);
+
+        // Map wrapper names → elements so we can reorder / show / hide easily
+        const WRAPPERS = { pWrap, nWrap, tWrap, mWrap, vWrap, gWrap, cWrap, dWrap, div };
+
+        // Layout for each mood, in **postag order**
+        // "" = '---' initial; treat like infinitive (no person/number)
+        const VERB_LAYOUT = {
+            "":  ["tWrap", "mWrap", "vWrap"],                      // default (---)
+            "i": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],    // indicative
+            "s": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],    // subjunctive
+            "o": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],    // optative
+            "m": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],    // imperative
+            "n": ["tWrap", "mWrap", "vWrap"],                      // infinitive
+            "p": ["nWrap", "tWrap", "mWrap", "vWrap",                       // participle
+                 "gWrap", "cWrap", "dWrap"]
+        };
+
+        function applyVerbLayout() {
+            const mood = moodSel.value || "";
+            const order = VERB_LAYOUT[mood] || VERB_LAYOUT[""];
+
+            // 1) Hide everything
+            Object.values(WRAPPERS).forEach(el => {
+            if (!el) return;
+            el.style.display = 'none';
+            });
+
+            // 2) Show + reorder according to layout
+            order.forEach(key => {
+            const el = WRAPPERS[key];
+            if (!el) return;
+
+            // hr vs normal field
+            if (key === "div") {
+                el.style.display = 'block';
+                nfDyn.appendChild(el);
+            } else {
+                el.style.display = 'flex';
+                nfDyn.appendChild(el);
+            }
+            });
+        }
+
+        // Initial state: mood is '---' so you get Tense / Mood / Voice only
+        applyVerbLayout();
+
+        // Whenever mood changes, update the layout to match Arethusa
+        moodSel.addEventListener('change', applyVerbLayout);
+
+        return;
+    }
+
+    // ===================================================================
+    //                       PRONOUN (p)
+    // ===================================================================
+    if (pos === 'p') {
         add('Person', buildSelect('nf-person', PERSON));
-        add('Number', buildSelect('nf-num',    NUMBER));
-        add('Tense',  buildSelect('nf-tense',  TENSE));
-        add('Mood',   buildSelect('nf-mood',   MOOD));
-        add('Voice',  buildSelect('nf-voice',  VOICE));
-    } else if (pos === 'p') {
-        add('Person', buildSelect('nf-person', PERSON));
-        add('Number', buildSelect('nf-num',    NUMBER));
-        add('Gender', buildSelect('nf-g',      GENDER));
-        add('Casus',  buildSelect('nf-case',   CASES));
-    } else if (pos === 'a') {
-        add('Number', buildSelect('nf-num',    NUMBER));
-        add('Gender', buildSelect('nf-g',      GENDER));
-        add('Casus',  buildSelect('nf-case',   CASES));
-        add('Degree', buildSelect('nf-deg',    DEGREE));
-    } else if (['n','l'].includes(pos)) {
-        add('Number', buildSelect('nf-num',    NUMBER));
-        add('Gender', buildSelect('nf-g',      GENDER));
-        add('Casus',  buildSelect('nf-case',   CASES));
-    } else if (pos === 'm') {
         add('Number', buildSelect('nf-num', NUMBER));
-        add('Gender', buildSelect('nf-g', GENDER));
+        add('Gender', buildSelect('nf-g',    GENDER));
         add('Casus',  buildSelect('nf-case', CASES));
-    } else if (pos === 'd') {
+        return;
+    }
+
+    // ===================================================================
+    //                   ADJECTIVE (a)
+    // ===================================================================
+    if (pos === 'a') {
+        add('Number', buildSelect('nf-num',   NUMBER));
+        add('Gender', buildSelect('nf-g',     GENDER));
+        add('Casus',  buildSelect('nf-case',  CASES));
+        add('Degree', buildSelect('nf-deg',   DEGREE));
+        return;
+    }
+
+    // ===================================================================
+    //     Noun / Article / Numeral (n, l, m)
+    // ===================================================================
+    if (['n', 'l', 'm'].includes(pos)) {
+        add('Number', buildSelect('nf-num', NUMBER));
+        add('Gender', buildSelect('nf-g',   GENDER));
+        add('Casus',  buildSelect('nf-case', CASES));
+        return;
+    }
+
+    // ===================================================================
+    //               Adverb (d)
+    // ===================================================================
+    if (pos === 'd') {
         add('Degree', buildSelect('nf-deg', DEGREE));
-  }
-}
+        return;
+    }
+
+    // Other POS have no dynamic fields
+    nfDyn.innerHTML = '';
+    }
+
 
 nfPos.addEventListener('change', e => renderDynamicForPOS(e.target.value));
 
@@ -166,20 +272,51 @@ host.querySelector('#nf-save').addEventListener('click', () => {
     markInvalid(nfLemma);
     }
 
-    // For verbs: person, number, tense, mood, voice all required
     if (posChar === 'v') {
+        const mood = fields.mood;
+
         const personEl = nfDyn.querySelector('#nf-person');
         const numEl    = nfDyn.querySelector('#nf-num');
         const tenseEl  = nfDyn.querySelector('#nf-tense');
-        const moodEl   = nfDyn.querySelector('#nf-mood');
         const voiceEl  = nfDyn.querySelector('#nf-voice');
+        const genderEl = nfDyn.querySelector('#nf-g');
+        const caseEl   = nfDyn.querySelector('#nf-case');
 
-        if (!fields.person) { missingFields.push('Person'); markInvalid(personEl); }
-        if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
-        if (!fields.tense)  { missingFields.push('Tense');  markInvalid(tenseEl); }
-        if (!fields.mood)   { missingFields.push('Mood');   markInvalid(moodEl); }
-        if (!fields.voice)  { missingFields.push('Voice');  markInvalid(voiceEl); }
+        const finite = ['i','s','o','m'];   // indicative, subjunctive, optative, imperative
+        const isInf  = (mood === 'n');      // infinitive
+        const isPart = (mood === 'p');      // participle
+
+        // ------------------------
+        // FINITE VERBS (normal)
+        // ------------------------
+        if (finite.includes(mood)) {
+            if (!fields.person) { missingFields.push('Person'); markInvalid(personEl); }
+            if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
+            if (!fields.tense)  { missingFields.push('Tense');  markInvalid(tenseEl); }
+            if (!fields.voice)  { missingFields.push('Voice');  markInvalid(voiceEl); }
+        }
+
+        // ------------------------
+        // INFINITIVE
+        // ------------------------
+        if (isInf) {
+            if (!fields.tense) { missingFields.push('Tense'); markInvalid(tenseEl); }
+            if (!fields.voice) { missingFields.push('Voice'); markInvalid(voiceEl); }
+
+        }
+
+        // ------------------------
+        // PARTICIPLE
+        // ------------------------
+        if (isPart) {
+            if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
+            if (!fields.gender) { missingFields.push('Gender'); markInvalid(genderEl); }
+            if (!fields.case)   { missingFields.push('Case');   markInvalid(caseEl); }
+            if (!fields.tense)  { missingFields.push('Tense');  markInvalid(tenseEl); }
+            if (!fields.voice)  { missingFields.push('Voice');  markInvalid(voiceEl); }
+        }
     }
+
 
     // For nouns, pronouns, articles
     if (['n', 'm', 'l'].includes(posChar)) {

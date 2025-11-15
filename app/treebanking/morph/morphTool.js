@@ -286,7 +286,7 @@ function enableMorphEntryExpansion(scopeEl) {
   // Pick a sensible order by POS (fallback covers all keys)
   const DEFAULT_ORDER = ['pos','number','gender','case','person','tense','mood','voice','degree'];
   const ORDER_BY_POS = {
-    v: ['pos','person','number','tense','mood','voice'],
+    v: ['pos','person','number','gender','tense','mood','voice', 'case', 'degree'],
     n: ['pos','number','gender','case'],
     p: ['pos','person','number','gender','case'],
     l: ['pos','number','gender','case'],
@@ -318,6 +318,7 @@ function enableMorphEntryExpansion(scopeEl) {
     tense:  { p:'present', i:'imperfect', r:'perfect', l:'pluperfect', f:'future', a:'aorist' },
     mood:   { i:'indicative', s:'subjunctive', o:'optative', n:'infinitive', m:'imperative', p:'participle' },
     voice:  { a:'active', e:'medio-passive', p:'passive' },
+    degree: { p:'positive', c:'comparative', s:'superlative' },
     person: { '1':'first', '2':'second', '3':'third' }
   };
 
@@ -509,7 +510,6 @@ function renderMorphInfo(word) {
   const toolBody = document.getElementById('tool-body');
   if (!toolBody || !word) return;
 
-
   // ensure we have original XML snapshot
   ensureDocumentSnapshot(word);
 
@@ -518,14 +518,12 @@ function renderMorphInfo(word) {
   const postag = word._doc.postag;
   const posColor = colorForTag(postag);
 
-  // Construct the document form object
   const documentForm = {
     lemma: lemma,
     postag: postag,
     source: 'document'
   };
 
-  // Replace old hardcoded HTML with unified helper call
   toolBody.innerHTML = `
     <div class="morph-container">
       <p class="morph-form">
@@ -538,7 +536,6 @@ function renderMorphInfo(word) {
     </div>
   `;
 
-  // Style tweaks after insertion
   const lemmaEl = toolBody.querySelector('.morph-lemma');
   if (lemmaEl) lemmaEl.style.color = posColor;
 
@@ -554,33 +551,5 @@ function renderMorphInfo(word) {
     entry.dataset.expanded = 'false';
     entry.querySelector('.morph-details')?.remove();
     entry.querySelector('.morph-divider')?.remove();
-  });
-
-  // === Restore expanded states if re-rendered ===
-  document.querySelectorAll('.morph-entry').forEach(entry => {
-    if (entry.dataset.expanded === 'true') {
-      const tagEl = entry.querySelector('.morph-tag');
-      const tag = tagEl ? tagEl.textContent.trim() : '';
-      const parsed = parseMorphTag(tag);
-      if (parsed && Object.keys(parsed).length > 0) {
-        const divider = document.createElement('hr');
-        divider.className = 'morph-divider';
-        entry.appendChild(divider);
-
-        const detailsHTML = Object.entries(parsed)
-          .map(([label, val]) => `
-            <div class="morph-row">
-              <div class="morph-label">${label}</div>
-              <div class="morph-colon">:</div>
-              <div class="morph-value">${val}</div>
-            </div>
-          `)
-          .join('');
-        const detailsDiv = document.createElement('div');
-        detailsDiv.className = 'morph-details';
-        detailsDiv.innerHTML = detailsHTML;
-        entry.appendChild(detailsDiv);
-      }
-    }
   });
 }

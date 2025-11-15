@@ -15,39 +15,126 @@ const POS_COLORS = {
 };
 
 export function composeUserPostag(posChar, fields) {
-    const tag = Array(9).fill('-');
-    tag[0] = posChar || '-';
+  // Always produce 9 characters
+  const tag = Array(9).fill('-');
 
-    if (posChar === 'v') {
-      // v[1]=person, [2]=number, [3]=tense, [4]=mood, [5]=voice
+  // POS always goes in slot 0
+  tag[0] = posChar || '-';
+
+  switch (posChar) {
+
+    // ========================
+    //        VERB  (v)
+    // ========================
+    case 'v':
+      // Slot meanings for verbs:
+      // 1 = person
+      // 2 = number
+      // 3 = tense
+      // 4 = mood
+      // 5 = voice
+      // 6 = gender (for participles)
+      // 7 = case   (for participles)
+      // 8 = degree (rare, usually '-')
       if (fields.person) tag[1] = fields.person;
       if (fields.number) tag[2] = fields.number;
       if (fields.tense)  tag[3] = fields.tense;
       if (fields.mood)   tag[4] = fields.mood;
       if (fields.voice)  tag[5] = fields.voice;
-    } else if (posChar === 'p') {
-      // pronoun: [1]=person, [2]=number, [6]=gender, [7]=case
+
+      // participles / verbal adjectives:
+      if (fields.gender) tag[6] = fields.gender;
+      if (fields.case)   tag[7] = fields.case;
+      if (fields.degree) tag[8] = fields.degree;
+
+      return tag.join('');
+
+
+    // ========================
+    //      PRONOUN  (p)
+    // ========================
+    case 'p':
+      // pronoun uses:
+      // 1 = person (pronouns have it)
+      // 2 = number
+      // 6 = gender
+      // 7 = case
       if (fields.person) tag[1] = fields.person;
       if (fields.number) tag[2] = fields.number;
       if (fields.gender) tag[6] = fields.gender;
       if (fields.case)   tag[7] = fields.case;
-    } else if (['n','l', 'm'].includes(posChar)) {
-      // noun/article/numeral: [2]=number, [6]=gender, [7]=case
+      return tag.join('');
+
+
+    // ========================
+    //     NOUN/ARTICLE (n,l)
+    // ========================
+    case 'n':
+    case 'l':
+      // 2 = number
+      // 6 = gender
+      // 7 = case
       if (fields.number) tag[2] = fields.number;
       if (fields.gender) tag[6] = fields.gender;
       if (fields.case)   tag[7] = fields.case;
-    } else if (posChar === 'a') {
-      // adjective
+      return tag.join('');
+
+
+    // ========================
+    //     ADJECTIVE  (a)
+    // ========================
+    case 'a':
+      // 2 = number
+      // 6 = gender
+      // 7 = case
+      // 8 = degree
       if (fields.number) tag[2] = fields.number;
       if (fields.gender) tag[6] = fields.gender;
       if (fields.case)   tag[7] = fields.case;
-      if (fields.degree) tag[5] = fields.degree; // harmless if not used
-    }  else if (posChar === 'd') {
-    // adverb: only degree, at [8]
-    if (fields.degree) tag[8] = fields.degree;
+      if (fields.degree) tag[8] = fields.degree;
+      return tag.join('');
+
+
+    // ========================
+    //      NUMERAL (m)
+    // ========================
+    case 'm':
+      // Same structure as nouns:
+      if (fields.number) tag[2] = fields.number;
+      if (fields.gender) tag[6] = fields.gender;
+      if (fields.case)   tag[7] = fields.case;
+      return tag.join('');
+
+
+    // ========================
+    //      ADVERB  (d)
+    // ========================
+    case 'd':
+      // Only degree matters
+      if (fields.degree) tag[8] = fields.degree;
+      return tag.join('');
+
+
+    // ========================
+    //  Conjunction (c),
+    //  Adposition (r),
+    //  Interjection (i),
+    //  Punctuation/Unknown (u)
+    // ========================
+    case 'c':
+    case 'r':
+    case 'i':
+    case 'u':
+      // Nothing except POS
+      return tag.join('');
+
+
+    // ========================
+    //     DEFAULT / UNKNOWN
+    // ========================
+    default:
+      return tag.join('');
   }
-    // other POS (c, d, r, u, m, i): POS only at [0] is fine
-    return tag.join('');
 }
 
 /**
