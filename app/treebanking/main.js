@@ -19,7 +19,7 @@ window.idParentPairs = null;
 window.verticalSpacing = 1;
 window.displaySentence = displaySentence;
 
-var isTableVisible = false;
+export var isTableVisible = false;
 
 /* ============================================================================
     BUTTON & INTERFACE EVENTS

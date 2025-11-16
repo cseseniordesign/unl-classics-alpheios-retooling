@@ -391,6 +391,13 @@ export function drawLinks(gx, rootHierarchy, idParentPairs) {
  */
 export function hideTree() {
     d3.select('#sandbox svg').style("display", "none");
+    document.getElementById("selection-options").style.display = 'none';
+    document.getElementById("compact").style.display = 'none';
+    document.getElementById("expand").style.display = 'none';
+    document.getElementById("focus-root").style.display = 'none';
+    document.getElementById("focus-selection").style.display = 'none';
+    document.getElementById("center").style.display = 'none';
+    document.getElementById("sandbox").style.overflowY = 'auto';
 }
 
 /**
@@ -404,4 +411,11 @@ export function hideTree() {
  */
 export function displayTree() {
     d3.select('#sandbox svg').style("display", "flex");
+    document.getElementById("selection-options").style.display = 'flex';
+    document.getElementById("compact").style.display = 'flex';
+    document.getElementById("expand").style.display = 'flex';
+    document.getElementById("focus-root").style.display = 'flex';
+    document.getElementById("focus-selection").style.display = 'flex';
+    document.getElementById("center").style.display = 'flex';
+    document.getElementById("sandbox").style.overflowY = '';
 }

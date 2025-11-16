@@ -843,3 +843,24 @@ html, body{
 .xml-error-char {
   animation: pulseError 0.8s ease;
 }
+
+table {
+  justify-self: center;
+  width: 80%;
+  border: 1px, solid, white;
+  margin-bottom: 4%;
+}
+
+th{
+  padding: 1%;
+  border: 1px solid, black;
+  text-align: center;
+  color: white;
+  background-color: #4e6476;
+}
+
+td{
+  padding: 1%;
+  border: 1px solid, black;
+  text-align: center;
+}
