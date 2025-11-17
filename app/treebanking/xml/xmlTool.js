@@ -302,12 +302,15 @@ export function setupXMLTool() {
           }
 
           // Find that sentence in the global treebankData by id
-          const oldIdx = window.treebankData.findIndex(s => s.id === updatedSentence.id);
+          const oldIdx = window.treebankData.findIndex(
+            s => String(s.id) === originalId
+          );
           if (oldIdx === -1) {
-            console.warn('[XML EDIT] Could not locate sentence id', updatedSentence.id, 'in treebankData');
+            console.warn('[XML EDIT] Could not locate original sentence id', originalId, 'in treebankData');
           } else {
             window.treebankData[oldIdx] = updatedSentence;
           }
+
 
           // Cache display copy for Cancel + XML panel
           window.currentXMLText = xmlString;
