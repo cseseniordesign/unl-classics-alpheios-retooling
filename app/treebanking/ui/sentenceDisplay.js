@@ -5,6 +5,8 @@ import { createNodeHierarchy } from '../tree/treeRender.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
 import { saveState } from '../xml/undo.js';
 import { fetchMorphology } from '../morph/morphTool.js';
+import { isTableVisible } from '../main.js';
+import { createTable } from '../table/tableRender.js';
 
 /**
  * --------------------------------------------------------------------------
@@ -68,6 +70,11 @@ export async function displaySentence(index) {
 
   // Generate and display the D3 dependency tree
   createNodeHierarchy(index);
+
+  if (isTableVisible) {
+    document.querySelector("#sandbox table").remove();
+    createTable(index);
+  }
 
   // Refresh XML panel if open
   if (typeof window.updateXMLIfActive === 'function') {
