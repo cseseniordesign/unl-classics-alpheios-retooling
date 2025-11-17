@@ -7,6 +7,7 @@ import { saveState } from '../xml/undo.js';
 import { fetchMorphology } from '../morph/morphTool.js';
 import { isTableVisible } from '../main.js';
 import { createTable } from '../table/tableRender.js';
+import { recomputeDirty, discardXmlEdits } from '../xml/xmlTool.js';
 
 /**
  * --------------------------------------------------------------------------
@@ -19,6 +20,8 @@ import { createTable } from '../table/tableRender.js';
  * @returns {Promise<void>} Resolves after loading data and rendering the selected sentence and its tree.
  */
 export async function displaySentence(index) {
+  index = Number(index);
+  if (!Number.isFinite(index)) inex = 1;
   const tokenizedSentence = document.getElementById('tokenized-sentence');
 
   // Ensure the dataset is loaded before proceeding
@@ -236,3 +239,25 @@ function resetSelection() {
   if (prev) prev.classList.remove("selected");
   selectedWordId = null
 }
+
+export function safeDisplaySentence(targetId, options = {}) {
+  const { skipXMLGuard = false } = options;
+
+  // If we're not skipping, enforce the XML "unsaved edits" check
+  if (!skipXMLGuard) {
+    recomputeDirty(document.getElementById('xml-display'));
+
+    if (window.xmlDirty) {
+      const ok = confirm("You have unsaved XML edits. Discard them?");
+      if (!ok) return false;   // navigation cancelled
+
+      // User chose to discard edits → revert editor to snapshot
+      discardXmlEdits();
+    }
+  }
+
+  // Now it's safe to switch sentences
+  displaySentence(Number(targetId));
+  return true;
+}
+window.safeDisplaySentence = safeDisplaySentence;

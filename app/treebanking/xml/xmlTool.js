@@ -1,7 +1,39 @@
 import parseTreeBankXML from './parser.js';
-import { displaySentence } from '../ui/sentenceDisplay.js';
+import { safeDisplaySentence } from '../ui/sentenceDisplay.js';
 import { validateTreebankSchema } from './schemaValidator.js';
 
+
+// ---------------------------------------------
+// SNAPSHOT-BASED DIRTY TRACKING HELPERS
+// ---------------------------------------------
+
+window.xmlSnapshot = "";   // holds clean XML
+window.xmlDirty    = false; // true = unsaved changes
+
+export function takeSnapshot(xmlDisplay) {
+    // Take snapshot of the TRUE XML (not highlighted)
+    window.xmlSnapshot = window.originalXMLText
+        .replace(/&lt;/g, '<')
+        .replace(/&gt;/g, '>')
+        .replace(/&amp;/g, '&')
+        .trim();
+
+    window.xmlDirty = false;
+}
+
+export function recomputeDirty(xmlDisplay) {
+  const display = xmlDisplay || document.getElementById("xml-display");
+
+  // No XML editor or not in edit mode → nothing to protect
+  if (!display || !display.classList.contains("editing")) {
+    window.xmlDirty = false;
+    return;
+  }
+
+  // If we ARE in edit mode, we trust the input handler
+  // to have set xmlDirty = true when the user typed.
+  // So: do NOT touch xmlDirty here.
+}
 
 /**
  * --------------------------------------------------------------------------
@@ -22,6 +54,7 @@ import { validateTreebankSchema } from './schemaValidator.js';
 export function setupXMLTool() {
   if (window.xmlToolInitialized) return; // avoid double setup
   window.xmlToolInitialized = true;
+  window.xmlInternalUpdate = false;
 
   const xmlBtn = document.getElementById('xml');
   const toolBody = document.getElementById('tool-body');
@@ -51,7 +84,7 @@ export function setupXMLTool() {
       toolBody.innerHTML = `
       <div id="xml-header">
         <div class="morph-actions" id="xml-actions">
-            <button id="xml-edit" class="btn btn-save">Edit</button>
+            <button id="xml-edit" class="btn btn-save">Edit XML</button>
             <button id="xml-cancel" class="btn btn-cancel" style="display:none;">Cancel</button>
             <button id="xml-confirm" class="btn btn-save" style="display:none;">Confirm</button>
         </div>
@@ -69,6 +102,7 @@ export function setupXMLTool() {
 
       // === EDIT MODE ===
       editBtn.addEventListener('click', () => {
+        window.xmlEditingSentenceId = String(window.currentIndex);
         const currentText = xmlDisplay.innerText.trim();
         const plainXML = (window.originalXMLText || currentText)
           .replace(/&lt;/g, '<')
@@ -81,6 +115,9 @@ export function setupXMLTool() {
         editBtn.style.display = 'none';
         confirmBtn.style.display = 'inline-block';
         cancelBtn.style.display = 'inline-block';
+        // Snapshot the plain XML BEFORE user edits begin
+        window.xmlSnapshot = plainXML.trim();
+        window.xmlDirty = false;
 
         // --- Restrict postag to 9 chars and visually warn user ---
         const limiter = () => {
@@ -100,7 +137,9 @@ export function setupXMLTool() {
           }, text);
 
           if (newText !== text) {
+            window.xmlInternalUpdate = true;
             xmlDisplay.textContent = newText;
+            window.xmlInternalUpdate = false;
             const sel = window.getSelection();
             sel.removeAllRanges();
           }
@@ -117,30 +156,67 @@ export function setupXMLTool() {
 
         xmlDisplay.addEventListener('input', limiter);
         xmlDisplay._limiter = limiter;
+        xmlDisplay.addEventListener("input", () => {
+          if (!window.xmlInternalUpdate) {
+            window.xmlDirty = true;
+          }
+        });
       });
 
       // === CANCEL EDIT ===
       cancelBtn.addEventListener('click', () => {
-        xmlDisplay.innerHTML = highlightXML(formatXML(window.originalXMLText));
-        xmlDisplay.contentEditable = false;
-        xmlDisplay.classList.remove('editing');
-        editBtn.style.display = 'inline-block';
-        confirmBtn.style.display = 'none';
-        cancelBtn.style.display = 'none';
-        if (xmlDisplay._limiter) {
-          xmlDisplay.removeEventListener('input', xmlDisplay._limiter);
-          delete xmlDisplay._limiter;
-        }
+        discardXmlEdits();
       });
 
       // === CONFIRM EDIT ===
       confirmBtn.addEventListener('click', () => {
-        const editedText = xmlDisplay.textContent.trim();
+        const editedText    = xmlDisplay.textContent.trim();
+        const snapshotPlain = (window.xmlSnapshot || '').trim();
         let xmlDoc;
         let success = false;
 
+        // ─────────────────────────────
+        // EARLY EXIT: NO REAL CHANGES
+        // ─────────────────────────────
+        // If the current editor contents are exactly the same as the snapshot
+        // taken when "Edit XML" was clicked, then do *not* treat this as an update:
+        // - no toast
+        // - no model change
+        // - just restore pretty view + clean state
+        if (editedText === snapshotPlain) {
+          const escaped = snapshotPlain
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+          window.originalXMLText = escaped;
+
+          window.xmlInternalUpdate = true;
+          xmlDisplay.innerHTML = highlightXML(formatXML(escaped));
+          window.xmlInternalUpdate = false;
+
+          xmlDisplay.contentEditable = false;
+          xmlDisplay.classList.remove('editing');
+          editBtn.style.display = 'inline-block';
+          confirmBtn.style.display = 'none';
+          cancelBtn.style.display = 'none';
+
+          window.xmlDirty = false;
+          takeSnapshot(xmlDisplay);
+
+          if (xmlDisplay._limiter) {
+            xmlDisplay.removeEventListener('input', xmlDisplay._limiter);
+            delete xmlDisplay._limiter;
+          }
+
+          enterReadOnly();
+          return;
+        }
+
         try {
+          // ─────────────────────────────
           // Stage 1: Well-formed XML
+          // ─────────────────────────────
           const parser = new DOMParser();
           xmlDoc = parser.parseFromString(editedText, 'application/xml');
           const parseError = xmlDoc.querySelector('parsererror');
@@ -150,69 +226,110 @@ export function setupXMLTool() {
             throw new Error(shortMsg || 'XML not well-formed');
           }
 
-        // Stage 2: Schema validation (adaptive but relations ALWAYS strict)
-        try {
-          validateTreebankSchema(xmlDoc);
-        }
-        catch (validationError) {
-          const msg = validationError?.message || '';
+          // ─────────────────────────────
+          // Stage 2: Schema validation
+          // ─────────────────────────────
+          try {
+            validateTreebankSchema(xmlDoc);
+          } catch (validationError) {
+            const msg = validationError?.message || '';
 
-          // Case 1: Lenient mode + morphology-only → warn + highlight, stay editable
-          if (window.isLenientValidation && isMorphologyOnlyError(msg)) {
-            console.warn('[XML EDIT] Lenient mode (morphology only):', msg);
-            showToast(`Schema warning (lenient morph): ${msg}`, true);
+            if (window.isLenientValidation && isMorphologyOnlyError(msg)) {
+              console.warn('[XML EDIT] Lenient (morph-only):', msg);
+              showToast(`Schema warning (lenient morph): ${msg}`, true);
 
-            // Highlight problem area in the editable XML
-            const highlighted = highlightXMLValidationError(xmlDisplay.textContent, msg);
-            if (highlighted !== xmlDisplay.textContent) {
-              xmlDisplay.innerHTML = highlighted;
+              const highlighted = highlightXMLValidationError(xmlDisplay.textContent, msg);
+              if (highlighted !== xmlDisplay.textContent) {
+                window.xmlInternalUpdate = true;
+                xmlDisplay.innerHTML = highlighted;
+                window.xmlInternalUpdate = false;
+              }
+
+              // Stay in edit mode
+              return;
             }
 
-            // Do NOT rethrow → user can fix while staying in edit mode
-            return;
-          }
-
-          // Case 2: Any other error (relations, head, malformed, etc.) → hard fail
-          else {
             showToast(`Schema validation failed: ${msg}`, true);
-
-            // Optional: visually mark the error in the editor if it’s pinpointable
             const highlighted = highlightXMLValidationError(xmlDisplay.textContent, msg);
             if (highlighted !== xmlDisplay.textContent) {
+              window.xmlInternalUpdate = true;
               xmlDisplay.innerHTML = highlighted;
+              window.xmlInternalUpdate = false;
             }
-
             console.error('[XML EDIT] Stage 2 failed:', validationError);
-            // Rethrow to abort the rest of the confirm sequence
             throw validationError;
           }
-        }
 
-          // Stage 3: Update model without redrawing full UI
+          // ─────────────────────────────
+          // Stage 3: Update model
+          // ─────────────────────────────
           const xmlString = new XMLSerializer().serializeToString(xmlDoc);
+
+          // IMPORTANT: xmlString is just ONE <sentence> ... </sentence>
           const newData = parseTreeBankXML(xmlString);
-          const index = window.treebankData.findIndex(s => s.id === `${window.currentIndex}`);
-          if (index !== -1) {
-            window.treebankData[index] = newData[0];
+          const updatedSentence = newData[0];
+
+          if (!updatedSentence) {
+            throw new Error('No <sentence> found after XML edit.');
           }
 
+          // DO NOT ALLOW CHANGING <sentence id>
+          const originalId = String(window.xmlEditingSentenceId || window.currentIndex);
+          const newId      = String(updatedSentence.id);
+
+          if (newId !== originalId) {
+            throw new Error(
+              `Changing <sentence> id is not allowed in this editor. ` +
+              `Please keep id="${originalId}".`
+            );
+          }
+          // === CYCLE DETECTION ===
+          if (updatedSentence) {
+            const words = updatedSentence.words;
+
+            for (const w of words) {
+              const wid = String(w.id);
+              const newHead = String(w.head);
+
+              if (detectCycleForXML(words, wid, newHead)) {
+                throw new Error("Cannot Create a Cycle");
+              }
+            }
+          }
+
+          if (!updatedSentence) {
+            throw new Error('No <sentence> found after XML edit.');
+          }
+
+          // Find that sentence in the global treebankData by id
+          const oldIdx = window.treebankData.findIndex(s => s.id === updatedSentence.id);
+          if (oldIdx === -1) {
+            console.warn('[XML EDIT] Could not locate sentence id', updatedSentence.id, 'in treebankData');
+          } else {
+            window.treebankData[oldIdx] = updatedSentence;
+          }
+
+          // Cache display copy for Cancel + XML panel
           window.currentXMLText = xmlString;
           window.originalXMLText = xmlString
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
 
-         // Refresh only XML display
+          // Refresh XML panel
           const escaped = window.originalXMLText;
+          window.xmlInternalUpdate = true;
           xmlDisplay.innerHTML = highlightXML(formatXML(escaped));
+          window.xmlInternalUpdate = false;
 
-          // If you want a faster tree color refresh, call your helper here:
-          if (typeof window.fastRefreshTree === 'function') {
-            window.fastRefreshTree();
-          }
+          console.log('[XML EDIT] Updated sentence id:', updatedSentence.id);
+
+          // Re-render sentence/tree without triggering the “unsaved edits” guard
+          safeDisplaySentence(updatedSentence.id, { skipXMLGuard: true });
 
           showToast('XML updated successfully.');
           success = true;
+
         } catch (e) {
           console.error('[XML EDIT] Confirm failed:', e);
           showToast(`XML Edit failed: ${e.message}`, true);
@@ -223,6 +340,8 @@ export function setupXMLTool() {
             editBtn.style.display = 'inline-block';
             confirmBtn.style.display = 'none';
             cancelBtn.style.display = 'none';
+            window.xmlDirty = false;
+            takeSnapshot(xmlDisplay);
 
             if (xmlDisplay._limiter) {
               xmlDisplay.removeEventListener('input', xmlDisplay._limiter);
@@ -231,7 +350,7 @@ export function setupXMLTool() {
 
             enterReadOnly();
           } else {
-            // Stay in edit mode for corrections
+            // Stay in edit mode on error
             xmlDisplay.contentEditable = true;
             xmlDisplay.classList.add('editing');
             editBtn.style.display = 'none';
@@ -246,14 +365,28 @@ export function setupXMLTool() {
     }
   });
 
-  // --- Ensure other tabs restore tree interactivity ---
-  allToolButtons.forEach(btn => {
-    if (btn.id !== 'xml') {
-      btn.addEventListener('click', () => {
-        exitReadOnly();
-      });
-    }
-  });
+  // --- Ensure other tabs prompt about unsaved XML ---
+  if (!window.xmlListenersAttached) {
+    allToolButtons.forEach(btn => {
+      if (btn.id !== 'xml') {
+        btn.addEventListener('click', (e) => {
+          recomputeDirty(document.getElementById('xml-display'));
+          if (window.xmlDirty) {
+            const ok = confirm("You have unsaved XML changes. Discard them?");
+            if (!ok) {
+              e.preventDefault();
+              e.stopImmediatePropagation();
+              return;
+            }
+            discardXmlEdits();
+          }
+          exitReadOnly();
+        });
+      }
+    });
+
+    window.xmlListenersAttached = true;
+  }
 
   // --- Auto-clear read-only when XML tab becomes inactive ---
   const observer = new MutationObserver(() => {
@@ -371,12 +504,26 @@ export function updateXMLIfActive() {
   const highlighted = highlightXML(formatted);
 
   const xmlDisplay = document.getElementById('xml-display');
-  
+
   if (xmlDisplay) {
-    // Only update innerHTML, keep buttons and layout intact
+    window.xmlInternalUpdate = true;
     xmlDisplay.innerHTML = highlighted;
+    window.xmlInternalUpdate = false;
+
+    // Always reset to clean, read-only view on sentence change
     xmlDisplay.contentEditable = false;
     xmlDisplay.classList.remove('editing');
+
+    const editBtn    = document.getElementById('xml-edit');
+    const confirmBtn = document.getElementById('xml-confirm');
+    const cancelBtn  = document.getElementById('xml-cancel');
+
+    if (editBtn)    editBtn.style.display = 'inline-block';
+    if (confirmBtn) confirmBtn.style.display = 'none';
+    if (cancelBtn)  cancelBtn.style.display = 'none';
+
+    // New sentence = no edits yet
+    window.xmlDirty = false;
   } else {
     // Fallback if editor not built (rare)
     toolBody.innerHTML = `
@@ -438,7 +585,7 @@ function showToast(message, isError = false) {
   setTimeout(() => {
     toast.style.opacity = '0';
     toast.style.transform = 'translateY(20px)';
-  }, 15000);
+  }, 5000);
 }
 
 // Only morphology/postag issues are eligible for leniency.
@@ -499,33 +646,87 @@ function highlightXMLValidationError(xmlText, errorMsg) {
   );
 }
 
-function attachXMLEditorHandlers() {
-  const editBtn = document.getElementById("xml-edit");
-  const confirmBtn = document.getElementById("xml-confirm");
-  const cancelBtn = document.getElementById("xml-cancel");
-  const xmlDisplay = document.getElementById("xml-display");
+/**
+ * Safe cycle detector for XML editor.
+ * -------------------------------------------------------------
+ * Unlike createsCycle(), this one NEVER loops forever.
+ * It detects:
+ *   - cycles involving the given dependentId
+ *   - cycles elsewhere in the graph (e.g. 2↔3 even if dependent=1)
+ */
+export function detectCycleForXML(words, dependentId, newHeadId) {
+  const dep = String(dependentId);
+  let current = String(newHeadId);
 
-  if (!editBtn || !xmlDisplay) return;
+  // Precompute valid IDs (schema should guarantee this, but be safe)
+  const validIds = new Set(words.map(w => String(w.id)));
 
-  // EDIT MODE
-  editBtn.addEventListener("click", () => {
-    xmlDisplay.contentEditable = true;
-    xmlDisplay.classList.add("editing");
-    editBtn.style.display = "none";
-    confirmBtn.style.display = "inline-block";
-    cancelBtn.style.display = "inline-block";
-  });
+  const visited = new Set();
 
-  // CANCEL — revert by simply reloading sentence XML
-  cancelBtn.addEventListener("click", () => {
-    updateXMLIfActive();
-  });
+  while (current && current !== "0" && current !== "root") {
 
-  // CONFIRM — use your existing confirm logic
-  confirmBtn.addEventListener("click", () => {
-    const plainXML = xmlDisplay.innerText.trim();
+    // invalid head? treat as non-cycle, but safe-out
+    if (!validIds.has(current)) return false;
 
-    // This calls your existing save pipeline
-    document.getElementById("xml-confirm").dispatchEvent(new Event("confirm-xml-save"));
-  });
+    // 1. cycle directly involving this dependent
+    if (current === dep) return true;
+
+    // 2. repeating a node = cycle somewhere (even if not involving dep)
+    if (visited.has(current)) return true;
+
+    visited.add(current);
+
+    // walk upward
+    const parent = words.find(w => String(w.id) === current);
+    if (!parent) return false;
+
+    current = String(parent.head);
+  }
+
+  return false; // reached root cleanly
 }
+
+export function discardXmlEdits() {
+  const xmlDisplay = document.getElementById('xml-display');
+  const editBtn    = document.getElementById('xml-edit');
+  const confirmBtn = document.getElementById('xml-confirm');
+  const cancelBtn  = document.getElementById('xml-cancel');
+
+  // If there's no editor or we're not actually editing, just clear the flag
+  if (!xmlDisplay || !xmlDisplay.classList.contains('editing')) {
+    window.xmlDirty = false;
+    return;
+  }
+
+  // Use the snapshot taken at the moment "Edit XML" was clicked
+  const snapshotPlain = (window.xmlSnapshot || '').trim();
+
+  // Re-escape and re-highlight it for display
+  const escaped = snapshotPlain
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;');
+
+  window.originalXMLText = escaped; // canonical for this panel
+
+  window.xmlInternalUpdate = true;
+  xmlDisplay.innerHTML = highlightXML(formatXML(escaped));
+  window.xmlInternalUpdate = false;
+
+  // Exit edit mode visually
+  xmlDisplay.contentEditable = false;
+  xmlDisplay.classList.remove('editing');
+  if (editBtn)    editBtn.style.display = 'inline-block';
+  if (confirmBtn) confirmBtn.style.display = 'none';
+  if (cancelBtn)  cancelBtn.style.display = 'none';
+
+  // Turn off dirty flag
+  window.xmlDirty = false;
+
+  // Remove limiter input listener if present
+  if (xmlDisplay._limiter) {
+    xmlDisplay.removeEventListener('input', xmlDisplay._limiter);
+    delete xmlDisplay._limiter;
+  }
+}
+

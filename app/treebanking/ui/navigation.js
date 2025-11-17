@@ -1,5 +1,8 @@
 import { createTable } from "../table/tableRender.js";
 import { clearStacks } from "../xml/undo.js";
+import { displaySentence, safeDisplaySentence } from '../ui/sentenceDisplay.js';
+import { recomputeDirty, getCurrentSentenceXML } from '../xml/xmlTool.js';
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: updateNavigationButtons
@@ -29,13 +32,11 @@ export function setupSentenceSelector() {
   const select = document.getElementById('sentence-select');
   if (!select) return;
 
-  // Clear existing dropdown options
   select.innerHTML = '';
 
   const data = window.treebankData;
   if (!data || !data.length) return;
 
-  // Populate new options from available sentences
   data.forEach(sentence => {
     const opt = document.createElement('option');
     opt.value = sentence.id;
@@ -43,15 +44,20 @@ export function setupSentenceSelector() {
     select.appendChild(opt);
   });
 
-  // Default to currently displayed sentence
   select.value = window.currentIndex || 1;
 
-  // On selection change, show the chosen sentence
+  // NEW listener
   select.addEventListener('change', (e) => {
-    const selectedId = parseInt(e.target.value);
-    displaySentence(selectedId);
+    const selectedId = parseInt(e.target.value, 10);
+    const ok = safeDisplaySentence(selectedId);
+
+    if (!ok) {
+      // User hits "cancel"
+      select.value = window.currentIndex;
+    }
   });
 }
+
 
 /**
  * --------------------------------------------------------------------------

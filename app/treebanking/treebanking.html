@@ -29,10 +29,10 @@
 
         <div id="nav-buttons">
             <div class="nav-group">
-                <button id="first" class="nav-btn" title="First Sentence" onclick="displaySentence(1)">
+                <button id="first" class="nav-btn" title="First Sentence" onclick="safeDisplaySentence(1)">
                 <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M9 4 L3 16 L9 28 V4 M17 4 L11 16 L17 28 V4"/></svg>
                 </button>
-                <button id="back" class="nav-btn" title="Previous Sentence" onclick="displaySentence(window.currentIndex-1)">
+                <button id="back" class="nav-btn" title="Previous Sentence" onclick="safeDisplaySentence(window.currentIndex-1)">
                 <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M15 4 L7 16 L15 28 Z"/></svg>
                 </button>
             </div>
@@ -40,10 +40,10 @@
             <select id="sentence-select" title="Select Sentence" class="select"></select>
 
             <div class="nav-group">
-                <button id="next" class="nav-btn" title="Next Sentence" onclick="displaySentence(window.currentIndex+1)">
+                <button id="next" class="nav-btn" title="Next Sentence" onclick="safeDisplaySentence(window.currentIndex+1)">
                 <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M5 4 L13 16 L5 28 Z"/></svg>
                 </button>
-                <button id="last" class="nav-btn" title="Last Sentence" onclick="displaySentence(window.totalSentences)">
+                <button id="last" class="nav-btn" title="Last Sentence" onclick="safeDisplaySentence(window.totalSentences)">
                 <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M3 4 L9 16 L3 28 V4 M11 4 L17 16 L11 28 V4"/></svg>
                 </button>
             </div>

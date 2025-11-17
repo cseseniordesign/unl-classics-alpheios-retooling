@@ -13,6 +13,8 @@
  * --------------------------------------------------------------------------
  */
 
+import { createsCycle } from "../tree/treeUtils.js";
+
 const VALID_POS = new Set([
     'n', // noun
     'v', // verb
@@ -35,10 +37,10 @@ const VALID_ATTRS = ['id', 'form', 'lemma', 'postag', 'relation', 'head'];
 // 0 = POS, 1 = Person, 2 = Number, 3 = Tense, 4 = Mood, 5 = Voice, 6 = Gender, 7 = Casus, 8 = Degree/Extra
 const POSTAG_ALLOWED_POSITIONS = {
     n: [2, 6, 7],       // number, gender, casus
-    v: [1, 2, 3, 4, 5], // person, number, tense, mood, voice (change in morph)
+    v: [1, 2, 3, 4, 5, 6, 7, 8], // all
     a: [2, 6, 7, 8],    // number, gender, casus, degree
     d: [8],             // degree             
-    p: [1, 2, 6, 7],    // person, number, gender, casus (change in morph)
+    p: [1, 2, 6, 7],    // person, number, gender, casus 
     r: [],              // adpositions
     c: [],              // conjunctions
     l: [2, 6, 7],       // number, gender, casus
@@ -140,6 +142,23 @@ export function validateTreebankSchema(xmlDoc) {
             if (head && !/^-?\d+$/.test(head))
                 throw new Error(`Word id="${wid}" has non-numeric head "${head}".`);
 
+            // Head Range Enforcement
+            const headNum = Number(head);
+            const maxId = words.length;
+
+            if (headNum < 0 || headNum > maxId) {
+                throw new Error(
+                    `Word id="${wid}": head="${head}" is out of range. Valid heads are 0–${maxId}.`
+                );
+            }
+
+            // Cycle Detection
+            if (createsCycle(words, String(wid), String(head))) {
+            throw new Error(
+                `Cycle detected: setting head="${head}" for id="${wid}" would create a dependency loop.`
+            );
+            }
+
             // --- Dummy words (allowed) ---
             if (isDummyWord(w)) {
                 if (!relation)
@@ -163,8 +182,8 @@ export function validateTreebankSchema(xmlDoc) {
                 const isPersonSlot = ((pos === 'v' || pos === 'p') && i === 1);
 
                 const validChar = isPersonSlot
-                    ? /^[a-z1-3-]$/.test(ch)   // allow digits 1–3 here
-                    : /^[a-z-]$/.test(ch);    // elsewhere: only letters or '-'
+                    ? /^[a-z1-3-_]$/.test(ch)   // allow digits 1–3 here
+                    : /^[a-z-_]$/.test(ch);    // elsewhere: only letters or '-'
 
                 if (!validChar) {
                     throw new Error(
