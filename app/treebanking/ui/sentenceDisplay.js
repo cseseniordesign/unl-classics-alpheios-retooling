@@ -4,7 +4,7 @@ import { getPOSChar, colorForPOS, createsCycle } from '../tree/treeUtils.js';
 import { createNodeHierarchy } from '../tree/treeRender.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
 import { saveState } from '../xml/undo.js';
-import { fetchMorphology } from '../morph/morphTool.js';
+import { fetchMorphology } from '../morph/morpheus.js';
 import { isTableVisible } from '../main.js';
 import { createTable } from '../table/tableRender.js';
 import { recomputeDirty, discardXmlEdits } from '../xml/xmlTool.js';

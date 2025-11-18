@@ -1,68 +1,8 @@
-import { colorForTag, parseMorphTag, ensureDocumentSnapshot } from './morphHelpers.js';
+import { colorForTag, parseMorphTag, ensureDocumentSnapshot, composeUserPostag, ensureFormsArray} from './morphHelpers.js';
 import { renderCreateEditorBelow } from './morphEditor.js';
 import { colorForPOS } from '../tree/treeUtils.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
-
-/**
- * --------------------------------------------------------------------------
- * FUNCTION: fetchMorphology
- * --------------------------------------------------------------------------
- * Connect to Morpheus API via perseids
- * returns a list of objects containing each instance of the given words potential morphology
- * --------------------------------------------------------------------------
- */
-export async function fetchMorphology(word, lang) {
-  const engine = lang === "grc" ? "morpheusgrc" : "morpheuslat";
-  const url = `https://services.perseids.org/bsp/morphologyservice/analysis/word?lang=${lang}&engine=${engine}&word=${encodeURIComponent(word)}`;
-
-  const response = await fetch(url);
-  const rawText = await response.text();
-
-  let json;
-  try {
-    json = JSON.parse(rawText);
-  } catch (err) {
-    console.error("Failed to parse JSON:", err, rawText);
-    return [];
-  }
-
-  const entry = json?.RDF?.Annotation?.Body?.rest?.entry;
-  if (!entry) {
-    console.warn("No morphological data found for:", word);
-    return [];
-  }
-
-  // Convert to array if not already
-  const entries = Array.isArray(entry) ? entry : [entry];
-
-  //Ensure iterating through values correctly
-  const val = (obj, path) =>
-    path.reduce((o, k) => (o && o[k] !== undefined ? o[k] : undefined), obj);
-
-  const results = [];
-
-  entries.forEach(e => {
-    const dict = e.dict || {};
-    const inflList = Array.isArray(e.infl) ? e.infl : [e.infl];
-
-    inflList.forEach(infl => {
-      if (!infl) return;
-      results.push({
-        lemma: val(dict, ["hdwd", "$"]) || word,
-        order: val(dict, ["order", "$"]),
-        num: val(infl, ["num", "$"]),
-        tense: val(infl, ["tense", "$"]),
-        mood: val(infl, ["mood", "$"]),
-        voice: val(infl, ["voice", "$"]),
-        gender: val(dict, ["gend", "$"]) || val(infl, ["gend", "$"]),
-        case: val(infl, ["case", "$"]),
-      });
-    });
-  });
-  return results;
-}
-
-
+import { fetchMorphology } from './morpheus.js';
 
 /**
  * --------------------------------------------------------------------------
@@ -219,16 +159,6 @@ export function renderUserFormsList(word, toolBody) {
 // Forms management helpers
 // =========================
 
-export function ensureFormsArray(word) {
-  if (!Array.isArray(word.forms)) {
-    word.forms = [];
-  }
-
-  if (typeof word.activeForm !== 'number') {
-    word.activeForm = -1; // default to the XML/document form
-  }
-}
-
 function enableMorphEntryExpansion(scopeEl) {
   // Prevent attaching this listener multiple times to the same container
   if (scopeEl._expansionBound) return;
@@ -382,7 +312,7 @@ function appendCreateAndUserForms(word, toolBody) {
   if (!toolBody.querySelector('.morph-create')) {
     const btn = document.createElement('button');
     btn.className = 'morph-create';
-    btn.textContent = 'Create new form';
+    btn.textContent = 'Create New Form';
     toolBody.querySelector('.morph-container')?.appendChild(btn);
     btn.addEventListener('click', () => renderCreateEditorBelow(word, toolBody));
   }
@@ -513,6 +443,10 @@ function renderMorphInfo(word) {
   // ensure we have original XML snapshot
   ensureDocumentSnapshot(word);
 
+  if (typeof word.activeForm !== 'number') {
+    word.activeForm = -1;
+  }
+
   // --- Render top "document" card using the same card builder ---
   const lemma  = word._doc.lemma;
   const postag = word._doc.postag;
@@ -545,6 +479,9 @@ function renderMorphInfo(word) {
   // Append creation/editor + list BELOW the top card 
   appendCreateAndUserForms(word, toolBody);
 
+  // Kick off Morpheus suggestions (async)
+  attachMorpheusSuggestions(word, toolBody);
+
   // Force all morph entries to start collapsed after forms are rebuilt
   document.querySelectorAll('.morph-entry').forEach(entry => {
     entry.classList.remove('expanded');
@@ -552,4 +489,233 @@ function renderMorphInfo(word) {
     entry.querySelector('.morph-details')?.remove();
     entry.querySelector('.morph-divider')?.remove();
   });
+}
+
+// ============================================================================
+// MORPHEUS → FORM HELPERS
+// ============================================================================
+
+function guessPosCharFromMorph(result) {
+  const hasVerbish = !!(result.tense || result.mood || result.voice);
+  const hasNominal = !!(result.gender || result.case || result.num);
+  if (hasVerbish) return 'v';   // verb-like
+  if (hasNominal) return 'n';   // noun/adjective-like
+  return '';                    // unknown → "---------"
+}
+
+function codeFromNumber(num) {
+  switch ((num || '').toLowerCase()) {
+    case 'sg':
+    case 's':
+    case 'singular':
+      return 's';
+    case 'pl':
+    case 'p':
+    case 'plural':
+      return 'p';
+    case 'dual':
+    case 'd':
+      return 'd';
+    default:
+      return '';
+  }
+}
+
+function codeFromCase(c) {
+  switch ((c || '').toLowerCase()) {
+    case 'nom':
+    case 'nominative':
+      return 'n';
+    case 'gen':
+    case 'genitive':
+      return 'g';
+    case 'dat':
+    case 'dative':
+      return 'd';
+    case 'acc':
+    case 'accusative':
+      return 'a';
+    case 'voc':
+    case 'vocative':
+      return 'v';
+    default:
+      return '';
+  }
+}
+
+function codeFromGender(g) {
+  switch ((g || '').toLowerCase()) {
+    case 'm':
+    case 'masc':
+    case 'masculine':
+      return 'm';
+    case 'f':
+    case 'fem':
+    case 'feminine':
+      return 'f';
+    case 'n':
+    case 'neut':
+    case 'neuter':
+      return 'n';
+    case 'c':
+    case 'common':
+      return 'c';
+    default:
+      return '';
+  }
+}
+
+function codeFromTense(t) {
+  switch ((t || '').toLowerCase()) {
+    case 'pres':
+    case 'present':
+      return 'p';
+    case 'imperf':
+    case 'imperfect':
+      return 'i';
+    case 'perf':
+    case 'perfect':
+      return 'r';
+    case 'plup':
+    case 'pluperfect':
+      return 'l';
+    case 'fut':
+    case 'future':
+      return 'f';
+    case 'aor':
+    case 'aorist':
+      return 'a';
+    default:
+      return '';
+  }
+}
+
+function codeFromMood(m) {
+  switch ((m || '').toLowerCase()) {
+    case 'ind':
+    case 'indicative':
+      return 'i';
+    case 'subj':
+    case 'subjunctive':
+      return 's';
+    case 'opt':
+    case 'optative':
+      return 'o';
+    case 'inf':
+    case 'infinitive':
+      return 'n';
+    case 'imperat':
+    case 'imperative':
+      return 'm';
+    case 'part':
+    case 'participle':
+      return 'p';
+    default:
+      return '';
+  }
+}
+
+function codeFromVoice(v) {
+  switch ((v || '').toLowerCase()) {
+    case 'act':
+    case 'active':
+      return 'a';
+    case 'mp':
+    case 'medio-passive':
+    case 'middle':
+    case 'med':
+      return 'e';
+    case 'pass':
+    case 'passive':
+      return 'p';
+    default:
+      return '';
+  }
+}
+
+// Turn one Morpheus result into a { lemma, postag, source } form
+function formFromMorphResult(result, word) {
+  const posChar = guessPosCharFromMorph(result);
+
+  const fields = {
+    person: '',
+    number: codeFromNumber(result.num),
+    tense:  codeFromTense(result.tense),
+    mood:   codeFromMood(result.mood),
+    voice:  codeFromVoice(result.voice),
+    gender: codeFromGender(result.gender),
+    case:   codeFromCase(result.case),
+    degree: ''
+  };
+
+  const postag = composeUserPostag(posChar, fields);
+
+  // If Morpheus gave us no usable features, skip this suggestion
+  // (postag empty or just dashes like "---------")
+  if (!postag || /^-+$/.test(postag)) {
+    return null;
+  }
+
+  const lemma =
+    (result.lemma && String(result.lemma).trim()) ||
+    (word.lemma && String(word.lemma).trim()) ||
+    (word.form && String(word.form).trim()) ||
+    '';
+
+  return {
+    lemma,
+    postag,
+    source: 'bsp/morpheus'
+  };
+}
+
+// Fetch Morpheus analyses and attach them as extra forms
+async function attachMorpheusSuggestions(word, toolBody) {
+  if (!word) return;
+
+  // Only fetch once per word
+  if (word._morpheusLoaded) return;
+  word._morpheusLoaded = true;
+
+  const lang =
+    window.treebankLang ||
+    window.treeLanguage ||
+    'grc';
+
+  const queryForm =
+    (word.lemma && word.lemma.trim()) ||
+    word.form;
+
+  let results = [];
+  try {
+    results = await fetchMorphology(queryForm, lang);
+  } catch (err) {
+    console.error('[Morph] Morpheus fetch failed for', queryForm, err);
+    word._morpheusLoaded = false; // allow retry if we want later
+    return;
+  }
+
+  if (!Array.isArray(results) || results.length === 0) {
+    return;
+  }
+
+  ensureFormsArray(word);
+
+  const existing = new Set(
+    word.forms.map(f => `${(f.lemma || '').trim()}::${f.postag || ''}`)
+  );
+
+  results.forEach(r => {
+    const form = formFromMorphResult(r, word);
+    if (!form || !form.lemma || !form.postag) return;
+
+    const key = `${(form.lemma || '').trim()}::${form.postag}`;
+    if (existing.has(key)) return;
+
+    existing.add(key);
+    word.forms.push(form);
+  });
+
+  // Re-render the user forms list so Morpheus forms appear
+  appendCreateAndUserForms(word, toolBody);
 }
