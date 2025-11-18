@@ -252,7 +252,7 @@ html, body{
 
 #tools {
   width: 38%;
-  height: 96%;
+  height: inherit;
   justify-self: right;
   margin-right: 0.5%;
   padding-top: 0.5%;
@@ -312,7 +312,6 @@ html, body{
 }
 
 #tool-body {
-  height: 96%;
   padding-left: 1%;
   border: #4e6476, solid, 1px;
   box-sizing: border-box;
