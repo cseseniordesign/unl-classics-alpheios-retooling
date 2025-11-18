@@ -495,12 +495,53 @@ function renderMorphInfo(word) {
 // MORPHEUS → FORM HELPERS
 // ============================================================================
 
+// Map Morpheus POS strings to Arethusa one-letter POS codes
+function posCharFromMorpheusPOS(posRaw) {
+  const s = (posRaw || '').toString().trim().toLowerCase();
+  if (!s) return '';
+
+  // Typical Morpheus POS strings:
+  // "verb", "noun", "adjective", "pronoun", "article",
+  // "adverb", "conjunction", "preposition", "interjection", etc.
+  if (s.startsWith('verb'))         return 'v';
+  if (s.startsWith('noun'))         return 'n';
+  if (s.startsWith('adj'))          return 'a';
+  if (s.includes('participle'))     return 'v'; // treat as verb-like
+  if (s.startsWith('pron'))         return 'p';
+  if (s.startsWith('art'))          return 'l'; // article
+  if (s.startsWith('adv'))          return 'd';
+  if (s.startsWith('conj'))         return 'c';
+  if (s.startsWith('prep') ||
+      s.includes('preposition'))    return 'r'; // adposition
+  if (s.startsWith('num') ||
+      s.startsWith('card'))         return 'm'; // numeral
+  if (s.startsWith('interj'))       return 'i';
+  if (s.startsWith('punct'))        return 'u';
+
+  return '';
+}
+
 function guessPosCharFromMorph(result) {
+  // Prefer explicit POS from Morpheus
+  const fromPOS = posCharFromMorpheusPOS(result.pos);
+  if (fromPOS) return fromPOS;
+
+  // Fallback heuristic based on features
   const hasVerbish = !!(result.tense || result.mood || result.voice);
   const hasNominal = !!(result.gender || result.case || result.num);
-  if (hasVerbish) return 'v';   // verb-like
-  if (hasNominal) return 'n';   // noun/adjective-like
-  return '';                    // unknown → "---------"
+  if (hasVerbish) return 'v';
+  if (hasNominal) return 'n';
+  return '';
+}
+
+
+function codeFromPerson(p) {
+  const s = (p || '').toString().toLowerCase().trim();
+  if (!s) return '';
+  if (s === '1' || s === '1st' || s.startsWith('first'))  return '1';
+  if (s === '2' || s === '2nd' || s.startsWith('second')) return '2';
+  if (s === '3' || s === '3rd' || s.startsWith('third'))  return '3';
+  return '';
 }
 
 function codeFromNumber(num) {
@@ -638,7 +679,7 @@ function formFromMorphResult(result, word) {
   const posChar = guessPosCharFromMorph(result);
 
   const fields = {
-    person: '',
+    person: codeFromPerson(result.person),
     number: codeFromNumber(result.num),
     tense:  codeFromTense(result.tense),
     mood:   codeFromMood(result.mood),
@@ -682,39 +723,80 @@ async function attachMorpheusSuggestions(word, toolBody) {
     window.treeLanguage ||
     'grc';
 
-  const queryForm =
-    (word.lemma && word.lemma.trim()) ||
-    word.form;
+  const surface =
+    (word.form && String(word.form).trim()) || '';
+  const lemma =
+    (word.lemma && String(word.lemma).trim()) || '';
+
+  const beforeCount = (word.forms || []).length;
 
   let results = [];
+  let usedQuery = surface || lemma;
+
   try {
-    results = await fetchMorphology(queryForm, lang);
+    // 1) Prefer the actual token in the text
+    if (surface) {
+      usedQuery = surface;
+      results = await fetchMorphology(surface, lang);
+    }
+    // 2) If nothing came back, fall back to the lemma
+    if ((!results || results.length === 0) && lemma) {
+      usedQuery = lemma;
+      results = await fetchMorphology(lemma, lang);
+    }
   } catch (err) {
-    console.error('[Morph] Morpheus fetch failed for', queryForm, err);
-    word._morpheusLoaded = false; // allow retry if we want later
+    console.error('[Morph] Morpheus fetch failed for', usedQuery, err);
+    word._morpheusLoaded = false; // allow retry later
     return;
   }
 
   if (!Array.isArray(results) || results.length === 0) {
+    if (window.morphDebug) {
+      console.log('[Morph] no Morpheus results for', usedQuery);
+    }
     return;
+  }
+
+  if (window.morphDebug) {
+    console.log('[Morph] raw Morpheus analyses for', usedQuery, results.length);
   }
 
   ensureFormsArray(word);
 
+  // Existing forms from our list
   const existing = new Set(
     word.forms.map(f => `${(f.lemma || '').trim()}::${f.postag || ''}`)
   );
+
+  // Also block the original XML lemma+postag so Morpheus
+  // doesn't suggest a duplicate of the "document" form.
+  const baseLemma  = (word._doc?.lemma  || word.lemma  || '').trim();
+  const basePostag = (word._doc?.postag || word.postag || '').trim();
+  if (baseLemma || basePostag) {
+    existing.add(`${baseLemma}::${basePostag}`);
+  }
 
   results.forEach(r => {
     const form = formFromMorphResult(r, word);
     if (!form || !form.lemma || !form.postag) return;
 
     const key = `${(form.lemma || '').trim()}::${form.postag}`;
-    if (existing.has(key)) return;
+    if (existing.has(key)) return;        // dedupe exact lemma+postag
 
     existing.add(key);
     word.forms.push(form);
   });
+
+  if (window.morphDebug) {
+    const afterCount = word.forms.length;
+    console.log(
+      '[Morph] attached',
+      afterCount - beforeCount,
+      'new forms for',
+      usedQuery,
+      '(now total:', afterCount, ')'
+    );
+  }
 
   // Re-render the user forms list so Morpheus forms appear
   appendCreateAndUserForms(word, toolBody);
