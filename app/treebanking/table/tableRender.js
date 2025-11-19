@@ -1,6 +1,7 @@
 import { prepareSentenceData } from "../tree/treeRender.js";
 import { displaySentence } from "../ui/sentenceDisplay.js";
 import { hideTree, displayTree } from "../tree/treeRender.js";
+import { POS_COLORS } from "../tree/treeUtils.js";
 
 /**
  * --------------------------------------------------------------------------
@@ -61,23 +62,37 @@ function displayTable(sentenceValues) {
     const table = document.createElement("table");
 
     // Create header row
-    const header = table.insertRow();
+     const header = table.insertRow();
     const headers = Object.keys(sentenceValues[0]);
-    headers.forEach(key => {
-    const th = document.createElement("th");
-    th.textContent = key;
-    header.appendChild(th);
+    headers.forEach((key) => {
+        const th = document.createElement("th");
+        th.textContent = key;
+        header.appendChild(th);
     });
+
+    //find indices of form and postag within the table
+    const formIndex = headers.indexOf("form");
+    const postagIndex = headers.indexOf("postag");
 
     // Create data rows
     sentenceValues.forEach(rowData => {
-    const row = table.insertRow();
-    headers.forEach(key => {
-        const cell = row.insertCell();
-        cell.textContent = rowData[key];
-    });
+        const row = table.insertRow();
+
+        headers.forEach((key, index) => {
+            const cell = row.insertCell();
+
+            //input text
+            cell.textContent = (rowData && rowData[key] != null) ? String(rowData[key]) : "";
+
+            // apply coloring
+            if (index === formIndex) {
+                const postag = (postagIndex !== -1) ? rowData[headers[postagIndex]] : rowData["postag"];
+                const posKey = (typeof postag === "string" && postag.length > 0) ? postag[0] : '';
+                const color = POS_COLORS[posKey] || '#444';
+                cell.style.color = color;
+            }
+        });
     });
 
-    // Append the table to the container
     tableContainer.appendChild(table);
 }
