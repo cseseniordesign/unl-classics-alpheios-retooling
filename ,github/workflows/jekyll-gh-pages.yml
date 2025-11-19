@@ -16,11 +16,8 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  # Build Jekyll site and create artifacts
   build:
     runs-on: ubuntu-latest
-    outputs:
-      site-path: _site
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,23 +28,20 @@ jobs:
       - name: Build Jekyll site
         uses: actions/jekyll-build-pages@v1
         with:
-          source: ./app/treebanking/
-          destination: ./_site
+          source: app/treebanking
+          destination: _site
 
-      # Upload artifact for GitHub Pages deployment
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./_site
+          path: _site
 
-      # Optional: Upload artifact for testing
       - name: Upload artifact for tests
         uses: actions/upload-artifact@v4
         with:
           name: site-for-tests
-          path: ./_site
+          path: _site
 
-  # Optional test job
   test:
     needs: build
     runs-on: ubuntu-latest
@@ -59,14 +53,13 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: site-for-tests
-          path: ./_site
+          path: site_under_test
 
       - name: Run JavaScript tests
         run: |
           echo "Running tests..."
           echo "Tests completed successfully."
 
-  # Deploy to GitHub Pages
   deploy:
     needs: test
     runs-on: ubuntu-latest
