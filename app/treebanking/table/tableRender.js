@@ -90,6 +90,7 @@ function displayTable(sentenceValues) {
                 const posKey = (typeof postag === "string" && postag.length > 0) ? postag[0] : '';
                 const color = POS_COLORS[posKey] || '#444';
                 cell.style.color = color;
+                cell.style.fontWeight = "750";
             }
         });
     });

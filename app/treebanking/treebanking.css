@@ -859,6 +859,7 @@ table {
   width: 80%;
   border: 1px, solid, white;
   margin-bottom: 4%;
+  font-family: Inter, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
 }
 
 th{
