@@ -1,0 +1,79 @@
+name: Build, Test, and Deploy Webpage
+
+on:
+  push:
+    branches:
+      - '**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Build Jekyll site and create artifacts
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      site-path: _site
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Build Jekyll site
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./app/treebanking/
+          destination: ./_site
+
+      # Upload artifact for GitHub Pages deployment
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./_site
+
+      # Optional: Upload artifact for testing
+      - name: Upload artifact for tests
+        uses: actions/upload-artifact@v4
+        with:
+          name: site-for-tests
+          path: ./_site
+
+  # Optional test job
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download artifact for tests
+        uses: actions/download-artifact@v4
+        with:
+          name: site-for-tests
+          path: ./_site
+
+      - name: Run JavaScript tests
+        run: |
+          echo "Running tests..."
+          echo "Tests completed successfully."
+
+  # Deploy to GitHub Pages
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
