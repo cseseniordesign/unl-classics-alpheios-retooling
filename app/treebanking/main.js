@@ -25,36 +25,6 @@ export var isTableVisible = false;
     BUTTON & INTERFACE EVENTS
    ============================================================================ */
 
-// Download XML file
-function setupDownloadButton() {
-  const button = document.getElementById("download");
-  if (!button) return;
-
-  button.addEventListener("click", async () => {
-    const data = window.treebankData || [];
-    let xmlOut = '<?xml version="1.0" encoding="UTF-8"?>\n<treebank>\n';
-
-    for (const s of data) {
-      xmlOut += `  <sentence id="${s.id}">\n`;
-      for (const w of s.words) {
-        const lemma  = (w._displayLemma  || w.lemma  || '').replace(/"/g, '&quot;');
-        const postag = (w._displayPostag || w.postag || '').replace(/"/g, '&quot;');
-        xmlOut += `    <word id="${w.id}" form="${w.form}" lemma="${lemma}" postag="${postag}" relation="${w.relation}" head="${w.head}" />\n`;
-      }
-      xmlOut += '  </sentence>\n';
-    }
-    xmlOut += '</treebank>';
-
-    const blob = new Blob([xmlOut], { type: "application/xml" });
-    const el = document.createElement('a');
-    el.href = URL.createObjectURL(blob);
-    el.download = "Treebank.xml";
-    document.body.appendChild(el);
-    el.click();
-    document.body.removeChild(el);
-    URL.revokeObjectURL(el.href);
-  });
-}
 
 function setupSaveButton() {
   const button = document.getElementById("save");
@@ -172,7 +142,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupMorphTool();
 
   // --- Buttons ---
-  setupDownloadButton();
   setupSaveButton();
   setupTreeButtons();
   setupUndoButton();

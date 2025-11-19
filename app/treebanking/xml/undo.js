@@ -1,6 +1,7 @@
 import { createNodeHierarchy } from '../tree/treeRender.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
-import { displaySentence, safeDisplaySentence } from '../ui/sentenceDisplay.js';
+
+
 /*
 *
 * The following code block implements undo and redo functionality
@@ -9,68 +10,68 @@ import { displaySentence, safeDisplaySentence } from '../ui/sentenceDisplay.js';
 * modifications as needed. In order for the stacks to be properly mantained,
 * there needs to be calls to saveState() function whenever a change is made to the tree.
 *
-* Samuel DuBois 2025 10 28
 */
+
+// Initalize undo and redo stacks
 let undoStack = [];
 let redoStack = [];
 
-// This function will copy the current state of the tree.
+
+/*
+*
+* This will save the current state of the treebank data to the undo stack. It also clears the redo stack
+* since new changes invalidate the redo history.
+*
+*/
 export function saveState() {
     undoStack.push(structuredClone(window.treebankData));
     redoStack = [];
     return;
 }
 
-// This function will revert the tree to its previous state.
+
+/*
+*
+* This is the implementation of the undo button functionality. It will
+* push to the redo stack the current state of the tree and then load the
+* popped tree from the undo stack.
+*
+*/
 export function undoButton(){
     if (undoStack.length === 0) return;
     redoStack.push(structuredClone(window.treebankData));
     window.treebankData = undoStack.pop();
     triggerAutoSave();
-    safeDisplaySentencedisplaySentence(window.currentIndex);
+    createNodeHierarchy(window.currentIndex);
     return;
 }
 
+
+/*
+*
+* This is the implementation of the redo button functionality. It will
+* push to the undo stack the current state of the tree and then load the
+* popped tree from the redo stack.
+*
+*/
 export function redoButton(){
    if (redoStack.length === 0) return;
    undoStack.push(structuredClone(window.treebankData));
    window.treebankData = redoStack.pop();
    triggerAutoSave();
-   safeDisplaySentencedisplaySentence(window.currentIndex);
+   createNodeHierarchy(window.currentIndex);
    return;
 }
 
+
+/*
+*
+* This function will clear both the undo and redo stacks. This function should be
+* called when loading a new treebank or creating a new treebank to prevent invalid
+* states from being restored.
+*
+*/
 export function clearStacks() {
     undoStack = []
     redoStack = []
 }
-
-// // This function will revert the tree to its previous change.
-// function redoButton(){
-//   if (redoStack.length === 0) return;
-
-//   undoStack.push(structuredClone(treeState));
-//   treeState = redoStack.pop();
-//   renderTree(treeState);
-// }
-
-// // This is the event for the redo button.
-// document.addEventListener("DOMContentLoaded", () => {
-//   // Specify the button you are going to listen for
-//   const button = document.getElementById("redo");
-
-//   // Add the event listener to the button you are listening for.
-//   button.addEventListener("click", async () => {
-//     alert("Oops! This functionality is still under construction. Please check back soon!");
-//     redoButton()
-//   });
-// });
-
-
-// document.addEventListener("DOMContentLoaded", () => {
-//   const button = document.getElementById("save");
-
-//   button.addEventListener("click", async () => {
-//     alert("Oops! This functionality is still under construction. Please check back soon!");
-//   });
-// });
