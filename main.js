@@ -2,7 +2,7 @@
     IMPORTS
    ============================================================================ */
 import parseTreeBankXML from './app/treebanking/xml/parser.js';
-import { loadTreebankData } from './xml/xmlLoader.js';
+import { loadTreebankData } from './app/treebanking/xml/xmlLoader.js';
 import { setupXMLTool } from './app/treebanking/xml/xmlTool.js';
 import { setupMorphTool } from './app/treebanking/morph/morphTool.js';
 import { setupSentenceSelector } from './app/treebanking/ui/navigation.js';
