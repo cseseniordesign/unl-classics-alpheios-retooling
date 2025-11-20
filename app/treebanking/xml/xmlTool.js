@@ -225,6 +225,7 @@ export function setupXMLTool() {
             const shortMsg = raw.split('Below is a rendering')[0].trim();
             throw new Error(shortMsg || 'XML not well-formed');
           }
+          normalizeSentenceWordIds(xmlDoc);
 
           // ─────────────────────────────
           // Stage 2: Schema validation
@@ -733,3 +734,73 @@ export function discardXmlEdits() {
   }
 }
 
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: normalizeSentenceWordIds
+ * --------------------------------------------------------------------------
+ * For the edited sentence:
+ *   - renumbers <word id="..."> to 1..N in document order
+ *   - remaps any head attributes that point to those old IDs
+ *   - if a head points at a deleted/non-existent id, reattach it to 0 (root)
+ *
+ * This lets users freely delete / insert <word> elements in the XML editor.
+ * After they confirm, IDs are made dense and consistent again.
+ *
+ * @param {XMLDocument} xmlDoc - The parsed XML fragment containing one <sentence>.
+ */
+function normalizeSentenceWordIds(xmlDoc) {
+  if (!xmlDoc) return;
+
+  const sentenceEl = xmlDoc.querySelector('sentence');
+  if (!sentenceEl) return;
+
+  // All <word> children in document order
+  const wordEls = Array.from(sentenceEl.querySelectorAll('word'));
+  if (!wordEls.length) return;
+
+  const idMap = Object.create(null);
+
+  // First pass: assign new ids 1..N and build old→new map
+  wordEls.forEach((w, idx) => {
+    const oldId = (w.getAttribute('id') || String(idx + 1)).trim();
+    const newId = String(idx + 1);
+    idMap[oldId] = newId;
+    w.setAttribute('id', newId);
+  });
+
+  const maxId = wordEls.length;
+
+  // Second pass: remap heads
+  wordEls.forEach(w => {
+    const rawHead = (w.getAttribute('head') || '').trim();
+    if (!rawHead) {
+      return; // nothing set
+    }
+
+    // Allow 0 / root to pass through unchanged
+    if (rawHead === '0' || rawHead.toLowerCase() === 'root') {
+      w.setAttribute('head', '0');
+      return;
+    }
+
+    // If this head used to point to some real word id, remap it
+    const mapped = idMap[rawHead];
+    if (mapped) {
+      w.setAttribute('head', mapped);
+      return;
+    }
+
+    // If we get here, this head points to a deleted / non-existent id.
+    // To keep the tree valid, reattach this node to the root (0) and log it.
+    if (window.morphDebug) {
+      console.warn(
+        '[XML] normalizeSentenceWordIds: head',
+        rawHead,
+        'no longer exists; reattaching word',
+        w.getAttribute('id'),
+        'to root (0)'
+      );
+    }
+    w.setAttribute('head', '0');
+  });
+}
