@@ -15,7 +15,7 @@ export async function loadTreebankData() {
 
   try {
     // Fetch the XML file and read it as plain text
-    const response = await fetch('/unl-classics-alpheios-retooling/assets/treebank.xml');
+    const response = await fetch('../assets/treebank.xml');
     const xmlText = await response.text();
 
     // Parse the XML into structured JS objects via parser.js
