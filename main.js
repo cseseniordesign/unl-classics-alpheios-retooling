@@ -12,7 +12,6 @@ import { saveCurrentTreebank } from './xml/saveXML.js';
 import { undoButton, redoButton } from './xml/undo.js';
 import { createTable, switchToTree } from './table/tableRender.js';
 
-
 window.root = null;
 window.svg = null;
 window.gx = null;
