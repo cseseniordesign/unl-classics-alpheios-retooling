@@ -42,6 +42,11 @@ jobs:
           name: site-for-tests
           path: _site
 
+      - name: List built site contents
+        run: |
+          echo "Listing _site directory:"
+          find _site -type f
+
   test:
     needs: build
     runs-on: ubuntu-latest
