@@ -87,6 +87,11 @@ export async function displaySentence(index) {
   if (typeof window.setupWordHoverSync === 'function') {
     window.setupWordHoverSync();
   }
+  
+  // Keep the Sentence tools panel in sync with the current sentence
+  if (typeof window.refreshSentenceToolUI === 'function') {
+    window.refreshSentenceToolUI();
+  }
 } 
 
 /**

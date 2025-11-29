@@ -11,6 +11,7 @@ import { compactTree, expandTree, fitTreeToView, focusOnNode } from './tree/tree
 import { saveCurrentTreebank } from './xml/saveXML.js';
 import { undoButton, redoButton } from './xml/undo.js';
 import { createTable, switchToTree } from './table/tableRender.js';
+import { setupSentenceTool } from './ui/sentenceTool.js';
 
 window.root = null;
 window.svg = null;
@@ -146,4 +147,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupTreeButtons();
   setupUndoButton();
   setupRedoButton();
+  setupSentenceTool();  
 });
