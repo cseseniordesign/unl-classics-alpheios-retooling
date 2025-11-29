@@ -187,11 +187,22 @@ export function buildXML() {
  * --------------------------------------------------------------------------
  */
 export async function saveCurrentTreebank() {
+  let statusEl;
+
   try {
     const xmlOut = buildXML();
     if (!xmlOut) {
       alert("No treebank data to save!");
       return;
+    }
+
+    // Show "Saving..." feedback immediately when the user clicks Save
+    statusEl = document.getElementById("autosave-status");
+    if (statusEl) {
+      statusEl.textContent = "Saving...";
+      statusEl.style.background = "#333";
+      statusEl.style.opacity = "1";
+      statusEl.style.transform = "translateY(0)";
     }
 
     // If user already opened/uploaded a file, reuse its handle
@@ -213,13 +224,44 @@ export async function saveCurrentTreebank() {
       const writable = await handle.createWritable();
       await writable.write(xmlOut);
       await writable.close();
-      window.uploadedFileHandle = handle; // remember for next autosaves
+      window.uploadedFileHandle = handle; // remember for next saves
       console.log("File saved and handle stored for future autosaves.");
     }
 
     lastXML = xmlOut;
+
+    // Turn "Saving..." into "Saved" and fade it out, same style as autosave
+    if (statusEl) {
+      clearTimeout(window._autosaveTransition);
+      window._autosaveTransition = setTimeout(() => {
+        statusEl.textContent = "Saved";
+        statusEl.style.background = "#2e7d32";
+      }, 300); // small delay so the user sees "Saving..."
+
+      clearTimeout(window._autosaveFade);
+      window._autosaveFade = setTimeout(() => {
+        statusEl.style.opacity = "0";
+        statusEl.style.transform = "translateY(10px)";
+      }, 2500);
+    }
+
   } catch (err) {
     console.error("Error saving XML:", err);
+
+    // Show an error in the status pill if available
+    statusEl = statusEl || document.getElementById("autosave-status");
+    if (statusEl) {
+      statusEl.textContent = "Save failed!";
+      statusEl.style.background = "#c62828";
+      statusEl.style.opacity = "1";
+      statusEl.style.transform = "translateY(0)";
+
+      clearTimeout(window._autosaveFade);
+      window._autosaveFade = setTimeout(() => {
+        statusEl.style.opacity = "0";
+        statusEl.style.transform = "translateY(10px)";
+      }, 4000);
+    }
   }
 }
 
