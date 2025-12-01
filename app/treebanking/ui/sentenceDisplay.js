@@ -21,11 +21,11 @@ import { recomputeDirty, discardXmlEdits } from '../xml/xmlTool.js';
  */
 export async function displaySentence(index) {
   index = Number(index);
-  if (!Number.isFinite(index)) inex = 1;
+  if (!Number.isFinite(index)) index = 1;
   const tokenizedSentence = document.getElementById('tokenized-sentence');
 
   // Ensure the dataset is loaded before proceeding
-  const data = await loadTreebankData();
+  const data = await loadTreebankData(localStorage.getItem("xmlContent"));
   if (!data || data.length === 0) {
     console.warn('No treebank data available.');
     return;

@@ -2,7 +2,7 @@
     IMPORTS
    ============================================================================ */
 import parseTreeBankXML from './xml/parser.js';
-import { loadTreebankData } from './xml/xmlLoader.js';
+import { handleFileUpload, loadTreebankData } from './xml/xmlLoader.js';
 import { setupXMLTool } from './xml/xmlTool.js';
 import { setupMorphTool } from './morph/morphTool.js';
 import { setupSentenceSelector } from './ui/navigation.js';
@@ -132,9 +132,17 @@ function setupTreeButtons() {
    ============================================================================ */
 document.addEventListener('DOMContentLoaded', async () => {
   // --- Load and render ---
-  await loadTreebankData();
+  const raw = localStorage.getItem("treebankData");
+  if (!raw) { 
+    //console.warn("No treebank data found");
+    //return;
+    await loadTreebankData();
+  }
+  else {
+    const data = JSON.parse(raw);
+    window.treebankData = data;
+  }
   await displaySentence(1);
-
   // --- Initialize UI ---
   setupSentenceSelector();
   setupResizeHandle();

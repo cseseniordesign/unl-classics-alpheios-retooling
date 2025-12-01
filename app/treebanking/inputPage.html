@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="en">
 
 <head>
@@ -43,7 +42,7 @@
       <div id="upload-XML">
         <p>Upload Base XML Treebank:</p>
         <fieldset class="upload-file">
-          <input type="file" id="file" title="files" onchange="startRead()">
+          <input type="file" id="file" accept=".xml" title="files" onchange="handleFileUpload()">
         </fieldset>
 
         <p>or</p>
@@ -85,4 +84,9 @@
     </div>
   </div>
 </body>
+<script type = "module" src="main.js">
+  import {handleFileUpload} from './xml/xmlLoader.js';
+  window.handleFileUpload = handleFileUpload;
+</script>
+
 </html>
