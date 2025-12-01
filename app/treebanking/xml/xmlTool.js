@@ -174,6 +174,7 @@ export function setupXMLTool() {
         const snapshotPlain = (window.xmlSnapshot || '').trim();
         let xmlDoc;
         let success = false;
+        let headWarnings = [];  
 
         // ─────────────────────────────
         // EARLY EXIT: NO REAL CHANGES
@@ -225,6 +226,7 @@ export function setupXMLTool() {
             const shortMsg = raw.split('Below is a rendering')[0].trim();
             throw new Error(shortMsg || 'XML not well-formed');
           }
+          headWarnings = normalizeSentenceWordIds(xmlDoc);
 
           // ─────────────────────────────
           // Stage 2: Schema validation
@@ -331,7 +333,19 @@ export function setupXMLTool() {
           safeDisplaySentence(updatedSentence.id, { skipXMLGuard: true });
 
           showToast('XML updated successfully.');
+
+          if (headWarnings && headWarnings.length) {
+            const ids = headWarnings.map(h => h.wordId).join(', ');
+            const count = headWarnings.length;
+            const msg =
+              count === 1
+                ? `Warning: word ${ids} had an invalid head; it was reset to 0 (root).`
+                : `Warning: words ${ids} had invalid heads; they were reset to 0 (root).`;
+            showToast(msg, false, true); // yellow warning
+          }
+
           success = true;
+
 
         } catch (e) {
           console.error('[XML EDIT] Confirm failed:', e);
@@ -579,9 +593,18 @@ export function exitReadOnly() {
     .style('opacity', 1);
 }
 
-function showToast(message, isError = false) {
+function showToast(message, isError = false, isWarning = false) {
   const toast = document.getElementById('toast');
-  toast.style.background = isError ? '#c33' : '#2e7d32';
+  if (!toast) return;
+
+  if (isError) {
+    toast.style.background = '#c33';       // red for errors
+  } else if (isWarning) {
+    toast.style.background = '#f0c36d';    // yellow for warnings
+  } else {
+    toast.style.background = '#2e7d32';    // green for success
+  }
+
   toast.textContent = message;
   toast.style.opacity = '1';
   toast.style.transform = 'translateY(0)';
@@ -733,3 +756,117 @@ export function discardXmlEdits() {
   }
 }
 
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: normalizeSentenceWordIds
+ * --------------------------------------------------------------------------
+ * For the edited sentence:
+ *   - First, checks for any non-numeric head values (other than 0/root).
+ *     If any are found, throws an error so the user can fix them.
+ *   - If all heads are syntactically OK (numeric or 0/root), then:
+ *       * renumbers <word id="..."> to 1..N in document order
+ *       * remaps any head attributes that point to those old IDs
+ *       * if a numeric head points at a deleted/non-existent id,
+ *         reattaches it to 0 (root) and records a warning
+ *
+ * Returns an array of { wordId, oldHead } for any numeric heads that were
+ * reset to 0, so the caller can show a yellow warning toast.
+ *
+ * @param {XMLDocument} xmlDoc - The parsed XML fragment containing one <sentence>.
+ * @returns {Array<{wordId: string, oldHead: string}>}
+ */
+function normalizeSentenceWordIds(xmlDoc) {
+  if (!xmlDoc) return [];
+
+  const sentenceEl = xmlDoc.querySelector('sentence');
+  if (!sentenceEl) return [];
+
+  const wordEls = Array.from(sentenceEl.querySelectorAll('word'));
+  if (!wordEls.length) return [];
+
+  const invalidNumericHeads = [];
+
+  // ------------------------------------------------------
+  // Pass 0: Detect NON-numeric heads (other than 0/root).
+  // We do this BEFORE renumbering so we can bail out cleanly.
+  // ------------------------------------------------------
+  const nonNumericHeads = [];
+  wordEls.forEach(w => {
+    const rawHead = (w.getAttribute('head') || '').trim();
+
+    if (!rawHead) return;
+
+    // 0 / root is always allowed
+    if (rawHead === '0' || rawHead.toLowerCase() === 'root') return;
+
+    // If it isn't all digits, it's invalid syntax and we want the user to fix it.
+    if (!/^[0-9]+$/.test(rawHead)) {
+      const wid = (w.getAttribute('id') || '?').trim();
+      nonNumericHeads.push({ wordId: wid, oldHead: rawHead });
+    }
+  });
+
+  if (nonNumericHeads.length > 0) {
+    const details = nonNumericHeads
+      .map(h => `word ${h.wordId} → head "${h.oldHead}"`)
+      .join('; ');
+    // Throw so the main confirm handler treats this like a validation error.
+    throw new Error(
+      `Invalid head value(s) in XML: ${details}. Heads must be numeric ids or "0"/"root".`
+    );
+  }
+
+  // ------------------------------------------------------
+  // Pass 1: Assign new ids 1..N and build old→new map
+  // ------------------------------------------------------
+  const idMap = Object.create(null);
+
+  wordEls.forEach((w, idx) => {
+    const oldId = (w.getAttribute('id') || String(idx + 1)).trim();
+    const newId = String(idx + 1);
+    idMap[oldId] = newId;
+    w.setAttribute('id', newId);
+  });
+
+  // ------------------------------------------------------
+  // Pass 2: Remap numeric heads and record any that become 0
+  // ------------------------------------------------------
+  wordEls.forEach(w => {
+    const rawHead = (w.getAttribute('head') || '').trim();
+
+    if (!rawHead) {
+      return; // nothing set
+    }
+
+    // Allow 0 / "root" to pass through unchanged
+    if (rawHead === '0' || rawHead.toLowerCase() === 'root') {
+      w.setAttribute('head', '0');
+      return;
+    }
+
+    // At this point, we know from Pass 0 that rawHead is numeric.
+    const mapped = idMap[rawHead];
+    if (mapped) {
+      w.setAttribute('head', mapped);
+      return;
+    }
+
+    // Numeric, but no such word id after renumbering:
+    // reattach to root and record a warning.
+    const wid = w.getAttribute('id') || '?';
+    invalidNumericHeads.push({ wordId: wid, oldHead: rawHead });
+
+    if (window.morphDebug) {
+      console.warn(
+        '[XML] normalizeSentenceWordIds: numeric head',
+        rawHead,
+        'no longer exists; reattaching word',
+        wid,
+        'to root (0)'
+      );
+    }
+    w.setAttribute('head', '0');
+  });
+
+  return invalidNumericHeads;
+}
