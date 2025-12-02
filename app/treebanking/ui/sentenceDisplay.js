@@ -21,11 +21,11 @@ import { recomputeDirty, discardXmlEdits } from '../xml/xmlTool.js';
  */
 export async function displaySentence(index) {
   index = Number(index);
-  if (!Number.isFinite(index)) index = 1;
+  if (!Number.isFinite(index)) inex = 1;
   const tokenizedSentence = document.getElementById('tokenized-sentence');
 
   // Ensure the dataset is loaded before proceeding
-  const data = await loadTreebankData(localStorage.getItem("xmlContent"));
+  const data = await loadTreebankData();
   if (!data || data.length === 0) {
     console.warn('No treebank data available.');
     return;
@@ -104,68 +104,81 @@ export async function displaySentence(index) {
 
 let selectedWordId = null; // keeps track of the first click(dependent word)
 
-export function handleWordClick(wordId,word) {
+export function handleWordClick(wordId, word) {
   fetchMorphology(word, "grc").then(console.log);
-  // If Morph tool is active → just show morph info, don’t alter tree
+
+  const tokenEl = document.querySelector(`button[data-word-id="${wordId}"]`) ||
+                  document.querySelector(`.token[data-word-id="${wordId}"]`);
+  const nodeSel = (typeof d3 !== 'undefined')
+    ? d3.select(`.node[id="${wordId}"]`)
+    : null;
+
+  // 1) Relation tool active → select + show relation (no head changes)
+  if (window.isRelationActive) {
+    // Clear previous selection
+    document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
+    if (typeof d3 !== 'undefined') {
+      d3.selectAll(".node.selected").classed("selected", false);
+    }
+
+    if (tokenEl) tokenEl.classList.add("selected");
+    if (nodeSel && !nodeSel.empty()) nodeSel.classed("selected", true);
+
+    window.currentSelectedWordId = wordId;
+
+    if (typeof window.renderRelationInfo === "function" &&
+        Array.isArray(window.treebankData)) {
+      const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+      const w = currentSentence?.words.find(w => w.id === wordId);
+      if (w) {
+        window.renderRelationInfo(w);
+      }
+    }
+    return;
+  }
+
+  // 2) Morph tool active → select + show morph (no head changes)
   if (window.isMorphActive) {
-    // Clear all previous selections
-    document.querySelectorAll(".token").forEach(t => t.classList.remove("selected"));
-    d3.selectAll(".node").classed("selected", false);
-
-    // Select the clicked token and its corresponding tree node
-    const token = document.querySelector(`.token[data-word-id='${wordId}']`);
-    const node = d3.select(`.node[id='${wordId}']`);
-
-    if (token) token.classList.add("selected");
-    if (!node.empty()) {
-      node.classed("selected", true);
+    document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
+    if (typeof d3 !== 'undefined') {
+      d3.selectAll(".node.selected").classed("selected", false);
     }
 
-    // Render the morph info in the tool panel
-    const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
-    const word = currentSentence.words.find(w => w.id === wordId);
-    if (word && typeof window.renderMorphInfo === 'function') {
-      window.renderMorphInfo(word);
+    if (tokenEl) tokenEl.classList.add("selected");
+    if (nodeSel && !nodeSel.empty()) nodeSel.classed("selected", true);
+
+    window.currentSelectedWordId = wordId;
+
+    if (typeof window.renderMorphInfo === "function" &&
+        Array.isArray(window.treebankData)) {
+      const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+      const w = currentSentence?.words.find(w => w.id === wordId);
+      if (w) {
+        window.renderMorphInfo(w);
+      }
     }
-
-    return;
-  }
-  
-  // If Relation tool is active → open relation editor (no head change)
-  const relationBtn = document.getElementById("relation");
-  const relationReallyActive =
-    window.isRelationActive &&
-    relationBtn &&
-    relationBtn.classList.contains("active");
-
-  if (relationReallyActive) {
-    // Clear previous selections
-    document.querySelectorAll(".token").forEach(t => t.classList.remove("selected"));
-    d3.selectAll(".node").classed("selected", false);
-
-    // Highlight the clicked token + node
-    const token = document.querySelector(`.token[data-word-id='${wordId}']`);
-    const node  = d3.select(`.node[id='${wordId}']`);
-    if (token) token.classList.add("selected");
-    if (!node.empty()) {
-      node.classed("selected", true);
-    }
-
-    // Look up the word object in the current sentence
-    const currentSentence = window.treebankData.find(
-      s => s.id === `${window.currentIndex}`
-    );
-    const clickedWord = currentSentence?.words.find(w => w.id === wordId);
-
-    if (clickedWord && typeof window.renderRelationInfo === "function") {
-      window.renderRelationInfo(clickedWord);
-    }
-
     return;
   }
 
-  // If XML tab is active or tree locked, ignore clicks
+  // 3) Read-only → do nothing
   if (window.isReadOnly) return;
+
+  // 4) Default: dependency reassignment (two-click head changing)
+  if (!selectedWordId) {
+    selectedWordId = wordId;
+
+    // Clear any previous visual selection
+    document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
+    if (typeof d3 !== 'undefined') {
+      d3.selectAll(".node.selected").classed("selected", false);
+    }
+
+    if (tokenEl) tokenEl.classList.add("selected");
+    if (nodeSel && !nodeSel.empty()) nodeSel.classed("selected", true);
+
+    window.currentSelectedWordId = wordId;
+    return;
+  }
 
   // Otherwise, normal dependency reassignment mode
   //if there hasn't already been a selected word
@@ -273,10 +286,21 @@ export function setupResizeHandle() {
  * resets the first selected word 
  */
 function resetSelection() {
-  const prev = document.querySelector(".token.selected");
-  if (prev) prev.classList.remove("selected");
-  selectedWordId = null
+  // Clear any selected token(s) in the sentence bar
+  document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
+
+  // Clear any selected node(s) in the tree
+  if (typeof d3 !== 'undefined') {
+    d3.selectAll(".node.selected").classed("selected", false);
+  }
+
+  // Clear selection state
+  selectedWordId = null;
+  window.currentSelectedWordId = null;
 }
+
+// Make it available to other modules (XML tool, etc.)
+window.resetSelection = resetSelection;
 
 export function safeDisplaySentence(targetId, options = {}) {
   const { skipXMLGuard = false } = options;
@@ -295,6 +319,10 @@ export function safeDisplaySentence(targetId, options = {}) {
   }
 
   // Now it's safe to switch sentences
+  if (typeof window.resetSelection === "function") {
+    window.resetSelection();
+  }
+
   displaySentence(Number(targetId));
   return true;
 }

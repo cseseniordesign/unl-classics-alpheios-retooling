@@ -75,7 +75,21 @@ export function setupXMLTool() {
     } else {
       // --- Activate XML mode ---
       xmlBtn.classList.add('active');
+            // Close other tools
+      if (typeof window.closeMorphTool === "function") {
+        window.closeMorphTool();
+      }
+      if (typeof window.closeRelationTool === "function") {
+        window.closeRelationTool();
+      }
+      if (typeof window.closeSentenceTool === "function") {
+        window.closeSentenceTool();
+      }
 
+      // Clear any word selection (we're leaving the tree/sentence context)
+      if (typeof window.resetSelection === "function") {
+        window.resetSelection();
+      }
       const rawXML = getCurrentSentenceXML();
       const formatted = formatXML(rawXML);
       const highlighted = highlightXML(formatted);
