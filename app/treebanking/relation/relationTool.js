@@ -423,8 +423,28 @@ export function setupRelationTool() {
     document.body.classList.add("mode-relation");
     window.isRelationActive = true;
 
+    // If a word is already selected, immediately show its relation info
+    const selectedToken = document.querySelector(".token.selected");
+    if (selectedToken && Array.isArray(window.treebankData)) {
+        const wordId = selectedToken.dataset.wordId;
+
+        const currentSentence = window.treebankData.find(
+            s => s.id === `${window.currentIndex}`
+        );
+        const wordObj = currentSentence?.words.find(
+            w => String(w.id) === String(wordId)
+        );
+
+        if (wordObj) {
+        // Use your existing renderer
+            renderRelationEditor(wordObj, toolBody);
+            return; // we’re done, don’t overwrite with “Click a word…”
+        }
+    }
+
+    // Fallback if nothing is selected yet
     toolBody.innerHTML =
-      '<p style="padding:8px;">Click a word to edit its dependency relation.</p>';
+        '<p style="padding:8px;">Click a word to edit its dependency relation.</p>';
   };
 
   // Single click handler

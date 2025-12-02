@@ -26,12 +26,11 @@ export function setupMorphTool() {
     if (!window.isMorphActive) return;
     window.isMorphActive = false;
     morphBtn.classList.remove('active');
-    toolBody.innerHTML = `<p>Please select a tool from the bar above that you would like to use.</p>`;
-    // clear highlights
-    document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
-    d3.selectAll(".node").classed("selected", false);
+    toolBody.innerHTML =
+      `<p>Please select a tool from the bar above that you would like to use.</p>`;
+    // Do NOT clear selection here – we want it to persist to other tools
   };
-
+  
   morphBtn.addEventListener('click', () => {
     const wasActive = window.isMorphActive;
     allToolButtons.forEach(btn => btn.classList.remove('active'));
@@ -40,12 +39,30 @@ export function setupMorphTool() {
     if (window.isMorphActive) {
       document.body.classList.add('mode-morph');
       morphBtn.classList.add('active');
-      toolBody.innerHTML = `<p style="padding:8px;">Click a word to view morphological info.</p>`;
+
+      // If a word is already selected, immediately show its morph info
+      const selectedToken = document.querySelector(".token.selected");
+      if (selectedToken && Array.isArray(window.treebankData) &&
+          typeof window.renderMorphInfo === "function") {
+        const wordId = selectedToken.dataset.wordId;
+        const currentSentence = window.treebankData.find(
+          s => s.id === `${window.currentIndex}`
+        );
+        const word = currentSentence?.words.find(w => w.id === wordId);
+        if (word) {
+          window.renderMorphInfo(word);
+          return;
+        }
+      }
+
+      // Fallback when nothing is selected
+      toolBody.innerHTML =
+        `<p style="padding:8px;">Click a word to view morphological info.</p>`;
     } else {
       document.body.classList.remove('mode-morph');
-      d3.selectAll(".node").classed("selected", false);
-      document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
-      toolBody.innerHTML = `<p>Please select a tool from the bar above that you would like to use.</p>`;
+      // Do NOT clear selection here – it may be reused by Relation tool
+      toolBody.innerHTML =
+        `<p>Please select a tool from the bar above that you would like to use.</p>`;
     }
   });
 
