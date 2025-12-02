@@ -130,11 +130,44 @@ export function handleWordClick(wordId,word) {
 
     return;
   }
+  
+  // If Relation tool is active → open relation editor (no head change)
+  const relationBtn = document.getElementById("relation");
+  const relationReallyActive =
+    window.isRelationActive &&
+    relationBtn &&
+    relationBtn.classList.contains("active");
+
+  if (relationReallyActive) {
+    // Clear previous selections
+    document.querySelectorAll(".token").forEach(t => t.classList.remove("selected"));
+    d3.selectAll(".node").classed("selected", false);
+
+    // Highlight the clicked token + node
+    const token = document.querySelector(`.token[data-word-id='${wordId}']`);
+    const node  = d3.select(`.node[id='${wordId}']`);
+    if (token) token.classList.add("selected");
+    if (!node.empty()) {
+      node.classed("selected", true);
+    }
+
+    // Look up the word object in the current sentence
+    const currentSentence = window.treebankData.find(
+      s => s.id === `${window.currentIndex}`
+    );
+    const clickedWord = currentSentence?.words.find(w => w.id === wordId);
+
+    if (clickedWord && typeof window.renderRelationInfo === "function") {
+      window.renderRelationInfo(clickedWord);
+    }
+
+    return;
+  }
 
   // If XML tab is active or tree locked, ignore clicks
   if (window.isReadOnly) return;
 
- // Otherwise, normal dependency reassignment mode
+  // Otherwise, normal dependency reassignment mode
   //if there hasn't already been a selected word
   if(!selectedWordId) {
     selectedWordId = wordId;

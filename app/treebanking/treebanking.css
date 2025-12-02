@@ -1019,3 +1019,140 @@ td{
   outline: none;
   box-shadow: 0 0 0 2px rgba(57,74,89,0.35);
 }
+
+.relation-tool {
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  position: relative;
+  overflow: visible;  /* don't clip dropdowns */
+}
+
+.relation-top-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 4px 0 6px 0;
+}
+
+/* Base dropdown (left side) */
+.relation-tool .rel-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Button that shows current relation */
+.relation-tool .rel-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 90px;
+  height: 30px;
+  padding: 3px 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  font-family: inherit;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #000;
+  cursor: pointer;
+}
+
+.relation-tool .rel-button:hover {
+  border-color: #999;
+}
+
+.relation-tool .rel-button-label {
+  margin-right: 4px;
+}
+
+.relation-tool .rel-button-arrow {
+  font-size: 0.7rem;
+  color: #000;
+}
+
+/* Main popup list under the Relation button */
+.relation-tool .nested-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 2px;
+  padding: 2px 0;
+  list-style: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  width: 100%;
+  min-width: 0;
+  max-height: none;
+  overflow: visible;   /* allow Aux submenu to stick out */
+  display: none;
+  z-index: 20;
+}
+
+/* Show when dropdown has .open */
+.relation-tool .rel-dropdown.open > .nested-dropdown {
+  display: block;
+}
+
+/* Items inside the popup (base + Aux submenu) */
+.relation-tool .rel-item,
+.relation-tool .rel-subitem {
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.relation-tool .rel-item:hover,
+.relation-tool .rel-subitem:hover {
+  background-color: #e6e6e6;
+}
+
+/* Aux row with right arrow + submenu */
+.relation-tool .rel-has-submenu {
+  position: relative;
+  padding-right: 18px;
+}
+
+.relation-tool .rel-has-submenu::after {
+  content: "▸";
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem;
+}
+
+/* Second column: AuxP, AuxC, ... */
+.relation-tool .rel-submenu {
+  position: absolute;
+  top: 0;
+  left: 100%;
+  margin-left: 2px;
+  min-width: 120px;
+  padding: 2px 0;
+  list-style: none;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background-color: #fff;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  z-index: 999;
+  display: none;   /* shown on Aux hover */
+}
+
+/* Show submenu whenever Aux row is hovered */
+.relation-tool .rel-has-submenu:hover .rel-submenu {
+  display: block !important;
+}
+
+/* When the Relation tool is active, don't clip horizontally */
+body.mode-relation #tool-body {
+  overflow-x: visible;
+}
+
+.rel-dropdown-suffix .rel-button {
+  min-width: 70px;
+}

@@ -50,13 +50,13 @@ const POSTAG_ALLOWED_POSITIONS = {
     '-': []
 };
 
-const BASE_REL = new Set([
+export const BASE_REL = new Set([
   'PRED','SBJ','OBJ','ATR','ADV',
   'AUXP','AUXC','AUXY','AUXZ','AUXV','AUXR','AUXG','AUXX','AUXK',
   'COORD','ATV','ATVV','PNOM','OCOMP','APOS','EXD'
 ]);
 
-const REL_SUFFIXES = new Set([
+export const REL_SUFFIXES = new Set([
     'CO', 'AP'
 ]);
 
