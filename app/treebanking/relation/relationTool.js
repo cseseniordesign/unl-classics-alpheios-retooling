@@ -373,7 +373,6 @@ function renderRelationEditor(word, toolBody) {
   document.addEventListener("click", handleDocClick, { once: true });
 }
 
-
 /** Attach relation tool to toolbar. */
 export function setupRelationTool() {
   const relationBtn = document.getElementById("relation");
@@ -381,39 +380,60 @@ export function setupRelationTool() {
   const allButtons  = document.querySelectorAll("#toolbar button");
   if (!relationBtn || !toolBody) return;
 
-  window.isRelationActive = false;
+  // avoid double-setup
+  if (window.relationToolInitialized) return;
+  window.relationToolInitialized = true;
 
+  // Public closer so other tools can shut Relation off if needed
   window.closeRelationTool = function () {
-    if (!window.isRelationActive) return;
-    window.isRelationActive = false;
     relationBtn.classList.remove("active");
     document.body.classList.remove("mode-relation");
+    window.isRelationActive = false;
     toolBody.innerHTML =
       '<p>Please select a tool from the bar above that you would like to use.</p>';
   };
 
-  relationBtn.addEventListener("click", () => {
-    const wasActive = window.isRelationActive;
+  const handler = () => {
+    const wasActive = relationBtn.classList.contains("active");
+
+    // Clear all active toolbar buttons
     allButtons.forEach(btn => btn.classList.remove("active"));
 
-    window.isRelationActive = !wasActive;
-
-    if (window.isRelationActive) {
-      if (typeof window.closeMorphTool === "function") {
-        window.closeMorphTool();
-      }
-      relationBtn.classList.add("active");
-      document.body.classList.add("mode-relation");
-      toolBody.innerHTML =
-        '<p style="padding:8px;">Click a word to edit its dependency relation.</p>';
-    } else {
+    if (wasActive) {
+      // We were on Relation → turn it off
       window.closeRelationTool();
+      return;
     }
-  });
 
-  // Called from sentenceDisplay.js when a word is clicked
+    // We are switching *to* Relation from some other tool.
+    // Let other tools clean up their own state if they expose closers.
+    if (typeof window.closeMorphTool === "function") {
+      window.closeMorphTool();
+    }
+    if (typeof window.closeSentenceTool === "function") {
+      window.closeSentenceTool();
+    }
+    if (typeof window.exitReadOnly === "function") {
+      // XML tool's "leave edit mode"
+      window.exitReadOnly();
+    }
+
+    // Activate Relation
+    relationBtn.classList.add("active");
+    document.body.classList.add("mode-relation");
+    window.isRelationActive = true;
+
+    toolBody.innerHTML =
+      '<p style="padding:8px;">Click a word to edit its dependency relation.</p>';
+  };
+
+  // Single click handler
+  relationBtn.addEventListener("click", handler);
+
+  // Called from sentenceDisplay / tree click
   window.renderRelationInfo = function (word) {
-    if (!window.isRelationActive) return;
+    // Guard based on the button state, not a stale flag
+    if (!relationBtn.classList.contains("active")) return;
     renderRelationEditor(word, toolBody);
   };
   window.renderRelationEditor = window.renderRelationInfo;
