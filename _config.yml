@@ -1,1 +1,3 @@
 baseurl: "/unl-classics-alpheios-retooling"
+include:
+  - app
