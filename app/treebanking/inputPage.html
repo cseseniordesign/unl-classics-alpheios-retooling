@@ -17,7 +17,7 @@
     <div id="input-container">
       <p>Input Text</p>
       <div class="input-box">
-        <textarea class="input-text" title="Input Text" rows="10" cols="55" placeholder="Enter the text you want to treebank..." font="Arial"></textarea>
+        <textarea class="input-text" title="Input Text" id="input-text" rows="10" cols="55" placeholder="Enter the text you want to treebank..." maxlength= "1000" font="Arial"></textarea>
       </div>
       
       <div id="search-and-URI-container">
@@ -80,7 +80,7 @@
         <label for="rtl">Right to Left</label>
       </fieldset> 
       
-      <button type="submit" class="edit-button">Edit</button>
+      <button type="submit" class="edit-button" id="editBtn">Edit</button>
     </div>
   </div>
 </body>
@@ -88,5 +88,5 @@
   import {handleFileUpload} from './xml/xmlLoader.js';
   window.handleFileUpload = handleFileUpload;
 </script>
-
+<script src="./input/input.js"></script>
 </html>

@@ -20,8 +20,20 @@ import { recomputeDirty, discardXmlEdits } from '../xml/xmlTool.js';
  * @returns {Promise<void>} Resolves after loading data and rendering the selected sentence and its tree.
  */
 export async function displaySentence(index) {
+  // Get the URL parameter for the input sentence
+  const params = new URLSearchParams(window.location.search);
+  const sentenceInput = params.get("sentence");
+  
+  // displays sentence from input page and returns (does not render tree yet)
+  if (sentenceInput) {
+    document.getElementById("input-sentence").textContent = sentenceInput;
+    window.rawSentence = sentenceInput; // global variable to store input sentence
+    return;
+  }
+
   index = Number(index);
   if (!Number.isFinite(index)) index = 1;
+
   const tokenizedSentence = document.getElementById('tokenized-sentence');
 
   // Ensure the dataset is loaded before proceeding
