@@ -59,7 +59,7 @@ function setupRedoButton() {
  * 
  * @returns {void} shows toast message on UI
  */
-function showToast(message) {
+export function showToast(message) {
   const toast = document.getElementById("toast");
   toast.textContent = message;
   setTimeout(() => (toast.style.opacity = "0"), 2300);

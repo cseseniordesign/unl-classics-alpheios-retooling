@@ -243,3 +243,19 @@ a {
   transform: translateY(0);
   transition-duration: .35s;
 }
+
+#toast {
+  position: absolute;
+  top: 33.5%;
+  right: 22%;
+  transform: translateX(-50%);
+  background-color: #e85146;
+  color: white;
+  padding: 10px 16px;
+  border-radius: 6px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  opacity: 0;
+  transition: opacity 0.3s ease, top 0.3s ease;
+  pointer-events: none;
+  z-index: 1000;
+}

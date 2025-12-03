@@ -35,6 +35,7 @@ export async function displaySentence(index) {
   if (!Number.isFinite(index)) index = 1;
 
   const tokenizedSentence = document.getElementById('tokenized-sentence');
+  if (!tokenizedSentence) return;
 
   // Ensure the dataset is loaded before proceeding
   const data = await loadTreebankData();
