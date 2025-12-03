@@ -13,8 +13,8 @@ import { triggerAutoSave } from '../xml/saveXML.js';
 */
 
 // Initalize undo and redo stacks
-let undoStack = [];
-let redoStack = [];
+export let undoStack = [];
+export let redoStack = [];
 
 
 /*
@@ -38,6 +38,7 @@ export function saveState() {
 *
 */
 export function undoButton(){
+    console.log(undoStack)
     if (undoStack.length === 0) return;
     redoStack.push(structuredClone(window.treebankData));
     window.treebankData = undoStack.pop();
