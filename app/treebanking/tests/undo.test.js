@@ -97,7 +97,6 @@ describe("undoButton", () => {
 
     // Redo stack should contain two mutated states
     expect(redoStack.length).toBe(2);
-    console.log("hello" + redoStack[0] )
     expect(redoStack).toEqual([
     [{ id: "1", value: 2 }],
     [{ id: "1", value: 1 }]
