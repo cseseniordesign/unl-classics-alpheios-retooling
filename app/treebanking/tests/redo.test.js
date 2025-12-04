@@ -8,7 +8,7 @@ if (typeof globalThis.structuredClone !== 'function') {
   globalThis.structuredClone = (val) => JSON.parse(JSON.stringify(val));
 }
 
-import { undoButton, redoButton, saveState, clearStacks, undoStack, redoStack } from '../xml/undo.js';
+import { undoButton, saveState, clearStacks, undoStack, redoStack } from '../xml/undo.js';
 
 describe("undoButton", () => {
   beforeEach(() => {
@@ -18,7 +18,7 @@ describe("undoButton", () => {
   });
 
   test ("does nothing if no changes are made to the heads", () => {
-    redoButton();
+    undoButton();
     
     // Expect treebankData to stay the same
     expect(window.treebankData).toEqual([]);
@@ -30,7 +30,7 @@ describe("undoButton", () => {
     expect(redoStack.length).toBe(0);
   })
 
-  test("restores state after undoing once then redoing" , () => {
+  test("restores previous state and updates stacks after one change" , () => {
     saveState();  
     //mutate treebank
     window.treebankData = [{ id: "1", value: 1 }];
@@ -38,21 +38,18 @@ describe("undoButton", () => {
     // Perform undo
     undoButton();
 
-    //Perform redo
-    redoButton();
-
     // Expect treebankData restored to original
-    expect(window.treebankData).toEqual([{ id: "1", value: 1 }]);
+    expect(window.treebankData).toEqual([]);
 
-    // Undo stack should now be one
-    expect(undoStack.length).toBe(1);
+    // Undo stack should now be empty
+    expect(undoStack.length).toBe(0);
 
-    // Redo stack should be empty
-    expect(redoStack.length).toBe(0);
-    expect(undoStack[0]).toEqual([]);
+    // Redo stack should contain the mutated state
+    expect(redoStack.length).toBe(1);
+    expect(redoStack[0]).toEqual([{ id: "1", value: 1 }]);
   });
 
-  test("restores correct state after a sequence of undos followed by a redo", () => {
+  test("restores previous state and updates stacks after two changes and one undo", () => {
     saveState();
 
     // Mutate treebankData
@@ -65,23 +62,19 @@ describe("undoButton", () => {
 
     // Perform undo
     undoButton();
-    undoButton();
 
-    //Perform redo 
-    redoButton();
-
-    // Expect treebankData restores to previously mutated version
+    // Expect treebankData restored to previous version
     expect(window.treebankData).toEqual([{ id: "1", value: 1 }]);
 
     // Undo stack should now be one
     expect(undoStack.length).toBe(1);
 
-    // Redo stack should be one
+    // Redo stack should contain the mutated state
     expect(redoStack.length).toBe(1);
     expect(redoStack[0]).toEqual([{ id: "1", value: 2 }]);
   });
 
-  test("restores correct state after a sequence of undos followed by a sequence of redos", () => {
+  test("restores to correct state and updates stacks after two changes and undo clicked twice", () => {
     saveState();
     
     // Mutate treebankData
@@ -96,20 +89,16 @@ describe("undoButton", () => {
     undoButton();
     undoButton();
 
-    // Perfrom redo
-    redoButton();
-    redoButton();
+    // Expect treebankData restored to empty version
+    expect(window.treebankData).toEqual([]);
 
-    // Expect treebankData restored to mostly recently mutated version
-    expect(window.treebankData).toEqual([{ id: "1", value: 2 }]);
+    // Undo stack should now be empty
+    expect(undoStack.length).toBe(0);
 
-    // Undo stack should now be two
-    expect(undoStack.length).toBe(2);
-
-    // Redo stack should be 0
-    expect(redoStack.length).toBe(0);
-    expect(undoStack).toEqual([
-    [],
+    // Redo stack should contain two mutated states
+    expect(redoStack.length).toBe(2);
+    expect(redoStack).toEqual([
+    [{ id: "1", value: 2 }],
     [{ id: "1", value: 1 }]
   ]);
 

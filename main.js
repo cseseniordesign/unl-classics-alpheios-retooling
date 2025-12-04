@@ -1,18 +1,18 @@
 /* ============================================================================
     IMPORTS
    ============================================================================ */
-import parseTreeBankXML from './xml/parser.js';
-import { handleFileUpload, loadTreebankData } from './xml/xmlLoader.js';
-import { setupXMLTool } from './xml/xmlTool.js';
-import { setupMorphTool } from './morph/morphTool.js';
-import { setupSentenceSelector } from './ui/navigation.js';
-import { setupResizeHandle, displaySentence } from './ui/sentenceDisplay.js';
-import { compactTree, expandTree, fitTreeToView, focusOnNode } from './tree/treeUtils.js';
-import { saveCurrentTreebank } from './xml/saveXML.js';
-import { undoButton, redoButton } from './xml/undo.js';
-import { createTable, switchToTree } from './table/tableRender.js';
-import { setupSentenceTool } from './ui/sentenceTool.js';
-import { setupRelationTool } from './relation/relationTool.js';
+import parseTreeBankXML from './app/treebanking/xml/parser.js';
+import { handleFileUpload, loadTreebankData } from './app/treebanking/xml/xmlLoader.js';
+import { setupXMLTool } from './app/treebanking/xml/xmlTool.js';
+import { setupMorphTool } from './app/treebanking/morph/morphTool.js';
+import { setupSentenceSelector } from './app/treebanking/ui/navigation.js';
+import { setupResizeHandle, displaySentence } from './app/treebanking/ui/sentenceDisplay.js';
+import { compactTree, expandTree, fitTreeToView, focusOnNode } from './app/treebanking/tree/treeUtils.js';
+import { saveCurrentTreebank } from './app/treebanking/xml/saveXML.js';
+import { undoButton, redoButton } from './app/treebanking/xml/undo.js';
+import { createTable, switchToTree } from './app/treebanking/table/tableRender.js';
+import { setupSentenceTool } from './app/treebanking/ui/sentenceTool.js';
+import { setupRelationTool } from './app/treebanking/relation/relationTool.js';
 
 window.root = null;
 window.svg = null;
