@@ -71,5 +71,5 @@ You are free to use, modify, and distribute this work with appropriate attributi
 3) Click a word on the tree or from the sentence, then click another word to set the latter as the former's head.
 4) Click the *Morph* button and then select a word.
 5) Choose to either *Delete Form* or *Create new form*
-6) Once you are satisfied with your changes, click the save or download icon
+6) Once you are satisfied with your changes, click the download icon
 
