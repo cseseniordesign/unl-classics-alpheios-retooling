@@ -1,4 +1,4 @@
-import { showToast } from '../main.js'
+import { showToast } from '/main.js'
 
 // Attach click event after input page loads for the edit button
 document.getElementById("editBtn").addEventListener("click", sendSentence);
