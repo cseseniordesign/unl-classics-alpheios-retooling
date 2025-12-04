@@ -38,6 +38,17 @@ export async function displaySentence(index) {
   const tokenizedSentence = document.getElementById('tokenized-sentence');
   if (!tokenizedSentence) return;
 
+  // Whenever we change sentences, completely reset tool state.
+  if (window.isMorphActive && typeof window.closeMorphTool === "function") {
+    window.closeMorphTool();
+  }
+  if (window.isRelationActive && typeof window.closeRelationTool === "function") {
+    window.closeRelationTool();
+  }
+  if (typeof window.resetSelection === "function") {
+    window.resetSelection();
+  }
+
   // Ensure the dataset is loaded before proceeding
   const data = await loadTreebankData();
   if (!data || data.length === 0) {
@@ -48,6 +59,11 @@ export async function displaySentence(index) {
   // If Morph tool is open, close it when changing sentences
   if (window.isMorphActive && typeof window.closeMorphTool === 'function') {
     window.closeMorphTool();
+  }
+
+  // Whenever we change sentences, clear any existing word/tree selection.
+  if (typeof window.resetSelection === 'function') {
+    window.resetSelection();
   }
 
   // Clear previously displayed sentence text
@@ -127,48 +143,61 @@ export function handleWordClick(wordId, word) {
     ? d3.select(`.node[id="${wordId}"]`)
     : null;
 
-  // 1) Relation tool active → select + show relation (no head changes)
-  if (window.isRelationActive) {
+    // 1) Morph tool active → select + show morph (no head changes)
+  if (window.isMorphActive) {
     // Clear previous selection
-    document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
+    document.querySelectorAll(".token.selected")
+      .forEach(t => t.classList.remove("selected"));
     if (typeof d3 !== 'undefined') {
       d3.selectAll(".node.selected").classed("selected", false);
     }
 
+    // Highlight current token + node
     if (tokenEl) tokenEl.classList.add("selected");
     if (nodeSel && !nodeSel.empty()) nodeSel.classed("selected", true);
 
+    // Remember which word is selected
     window.currentSelectedWordId = wordId;
 
-    if (typeof window.renderRelationInfo === "function" &&
+    // Show morph info for this word
+    if (typeof window.renderMorphInfo === "function" &&
         Array.isArray(window.treebankData)) {
-      const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+      const currentSentence = window.treebankData.find(
+        s => s.id === `${window.currentIndex}`
+      );
       const w = currentSentence?.words.find(w => w.id === wordId);
       if (w) {
-        window.renderRelationInfo(w);
+        window.renderMorphInfo(w);
       }
     }
     return;
   }
 
-  // 2) Morph tool active → select + show morph (no head changes)
-  if (window.isMorphActive) {
-    document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
+  // 2) Relation tool active → select + show relation (no head changes)
+  if (window.isRelationActive) {
+    // Clear previous selection
+    document.querySelectorAll(".token.selected")
+      .forEach(t => t.classList.remove("selected"));
     if (typeof d3 !== 'undefined') {
       d3.selectAll(".node.selected").classed("selected", false);
     }
 
+    // Highlight current token + node
     if (tokenEl) tokenEl.classList.add("selected");
     if (nodeSel && !nodeSel.empty()) nodeSel.classed("selected", true);
 
+    // Remember which word is selected
     window.currentSelectedWordId = wordId;
 
-    if (typeof window.renderMorphInfo === "function" &&
+    // Show relation info for this word
+    if (typeof window.renderRelationInfo === "function" &&
         Array.isArray(window.treebankData)) {
-      const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+      const currentSentence = window.treebankData.find(
+        s => s.id === `${window.currentIndex}`
+      );
       const w = currentSentence?.words.find(w => w.id === wordId);
       if (w) {
-        window.renderMorphInfo(w);
+        window.renderRelationInfo(w);
       }
     }
     return;
@@ -194,17 +223,6 @@ export function handleWordClick(wordId, word) {
     return;
   }
 
-  // Otherwise, normal dependency reassignment mode
-  //if there hasn't already been a selected word
-  if(!selectedWordId) {
-    selectedWordId = wordId;
-    //selectedNodeId = wordId;
-    //add visual confirmation
-    const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
-    const node = document.querySelector(`.node[id="${wordId}"]`);
-    if (btn) btn.classList.remove("highlight"), node.classList.add("selected"), btn.classList.add("selected");
-    return;
-  }
   //remove highlight if same word clicked twice and reset selection
   const newHeadId = wordId;
   if(selectedWordId === newHeadId) {
@@ -339,7 +357,13 @@ export async function safeDisplaySentence(targetId, options = {}) {
     }
   }
 
-  // Now it's safe to switch sentences
+  // Close any active tools before switching sentences
+  if (window.isMorphActive && typeof window.closeMorphTool === "function") {
+    window.closeMorphTool();
+  }
+  if (window.isRelationActive && typeof window.closeRelationTool === "function") {
+    window.closeRelationTool();
+  }
   if (typeof window.resetSelection === "function") {
     window.resetSelection();
   }
@@ -348,3 +372,4 @@ export async function safeDisplaySentence(targetId, options = {}) {
   return true;
 }
 window.safeDisplaySentence = safeDisplaySentence;
+
