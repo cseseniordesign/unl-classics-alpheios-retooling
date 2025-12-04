@@ -3,6 +3,7 @@ import { renderCreateEditorBelow } from './morphEditor.js';
 import { colorForPOS } from '../tree/treeUtils.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
 import { fetchMorphology } from './morpheus.js';
+import { showConfirmDialog } from '../ui/modal.js';
 
 /**
  * --------------------------------------------------------------------------
@@ -28,9 +29,8 @@ export function setupMorphTool() {
     morphBtn.classList.remove('active');
     toolBody.innerHTML =
       `<p>Please select a tool from the bar above that you would like to use.</p>`;
-    // Do NOT clear selection here – we want it to persist to other tools
   };
-  
+
   morphBtn.addEventListener('click', () => {
     const wasActive = window.isMorphActive;
     allToolButtons.forEach(btn => btn.classList.remove('active'));
@@ -157,11 +157,19 @@ export function renderUserFormsList(word, toolBody) {
 
   // Delete buttons
   list.querySelectorAll('.delete-form').forEach(btn => {
-    btn.addEventListener('click', (e) => {
+    btn.addEventListener('click', async (e) => {
       e.stopPropagation();
       const card = e.target.closest('.user-form');
       const idx = Number(card.dataset.index);
-      const confirmDelete = confirm('Delete this form?');
+
+      const confirmDelete = await showConfirmDialog(
+        'Delete this form?',
+        {
+          titleText: 'Delete form?',
+          okText: 'Delete',
+          cancelText: 'Cancel'
+        }
+      );
       if (!confirmDelete) return;
 
       removeForm(word, idx);
@@ -337,14 +345,22 @@ function appendCreateAndUserForms(word, toolBody) {
   // --- Enable delete for the top (document) card ---
   const docDeleteBtn = toolBody.querySelector('.morph-container > .user-form .delete-form');
   if (docDeleteBtn) {
-    docDeleteBtn.addEventListener('click', (e) => {
+    docDeleteBtn.addEventListener('click', async (e) => {
       e.stopPropagation();
-      const confirmDelete = confirm('Delete the document form?');
+
+      const confirmDelete = await showConfirmDialog(
+        'Delete the document form?',
+        {
+          titleText: 'Delete document form?',
+          okText: 'Delete',
+          cancelText: 'Cancel'
+        }
+      );
       if (!confirmDelete) return;
 
-      removeForm(word, -1);       // triggers document clear
-      window.renderMorphInfo(word); // re-render UI
-      triggerAutoSave(); // autosave after clearing document form
+      removeForm(word, -1);          // triggers document clear
+      window.renderMorphInfo(word);  // re-render UI
+      triggerAutoSave();             // autosave after clearing document form
     });
   }
 }

@@ -1,6 +1,7 @@
 import parseTreeBankXML from './parser.js';
 import { safeDisplaySentence } from '../ui/sentenceDisplay.js';
 import { validateTreebankSchema } from './schemaValidator.js';
+import { showConfirmDialog } from '../ui/modal.js';
 
 
 // ---------------------------------------------
@@ -400,10 +401,17 @@ export function setupXMLTool() {
   if (!window.xmlListenersAttached) {
     allToolButtons.forEach(btn => {
       if (btn.id !== 'xml') {
-        btn.addEventListener('click', (e) => {
+        btn.addEventListener('click', async (e) => {
           recomputeDirty(document.getElementById('xml-display'));
           if (window.xmlDirty) {
-            const ok = confirm("You have unsaved XML changes. Discard them?");
+            const ok = await showConfirmDialog(
+              "You have unsaved XML changes. Discard them?",
+              {
+                titleText: "Discard XML changes?",
+                okText: "Discard",
+                cancelText: "Cancel"
+              }
+            );
             if (!ok) {
               e.preventDefault();
               e.stopImmediatePropagation();

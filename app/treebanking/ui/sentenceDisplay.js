@@ -8,6 +8,7 @@ import { fetchMorphology } from '../morph/morpheus.js';
 import { isTableVisible } from '../main.js';
 import { createTable } from '../table/tableRender.js';
 import { recomputeDirty, discardXmlEdits } from '../xml/xmlTool.js';
+import { showConfirmDialog } from './modal.js';
 
 /**
  * --------------------------------------------------------------------------
@@ -315,7 +316,7 @@ function resetSelection() {
 // Make it available to other modules (XML tool, etc.)
 window.resetSelection = resetSelection;
 
-export function safeDisplaySentence(targetId, options = {}) {
+export async function safeDisplaySentence(targetId, options = {}) {
   const { skipXMLGuard = false } = options;
 
   // If we're not skipping, enforce the XML "unsaved edits" check
@@ -323,7 +324,14 @@ export function safeDisplaySentence(targetId, options = {}) {
     recomputeDirty(document.getElementById('xml-display'));
 
     if (window.xmlDirty) {
-      const ok = confirm("You have unsaved XML edits. Discard them?");
+      const ok = await showConfirmDialog(
+        "You have unsaved XML edits. Discard them?",
+        {
+          titleText: "Discard XML edits?",
+          okText: "Discard",
+          cancelText: "Cancel"
+        }
+      );
       if (!ok) return false;   // navigation cancelled
 
       // User chose to discard edits → revert editor to snapshot

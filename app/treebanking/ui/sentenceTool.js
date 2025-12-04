@@ -1,10 +1,9 @@
-// ui/sentenceTool.js
-
 import { displaySentence } from './sentenceDisplay.js';
 import { saveState } from '../xml/undo.js';
 import { discardXmlEdits, exitReadOnly } from '../xml/xmlTool.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
 import { colorForPOS } from '../tree/treeUtils.js';
+import { showConfirmDialog } from './modal.js';
 
 let currentSentenceToolMode = 'merge'; // 'merge' | 'split'
 
@@ -194,24 +193,21 @@ function buildMergeUI(contentEl) {
 
   // Join button behavior
   const joinBtn = document.getElementById('join-sentences-confirm');
-  joinBtn.addEventListener('click', () => {
+  joinBtn.addEventListener('click', async () => {
     const targetId = Number(select.value);
     if (!targetId || targetId === currentId) {
       sentenceShowToast('Please choose a different sentence to merge.', true);
       return;
     }
 
-    if (window.xmlDirty) {
-      const ok = window.confirm(
-        'You have unsaved XML edits. Merging sentences will discard them. Continue?'
-      );
-      if (!ok) return;
-      discardXmlEdits();
-    }
-
-    const ok = window.confirm(
+    const ok = await showConfirmDialog(
       `Merge sentence ${targetId} into sentence ${currentId}?\n` +
-      `This will remove sentence ${targetId} and can only be undone via the Undo tool.`
+      `This will remove sentence ${targetId} and can only be undone via the Undo tool.`,
+      {
+        titleText: 'Merge sentences',
+        okText: 'Merge',
+        cancelText: 'Cancel'
+      }
     );
     if (!ok) return;
 
@@ -295,23 +291,20 @@ function buildSplitUI(contentEl) {
   select.addEventListener('change', updateSplitPreviews);
 
   const splitBtn = document.getElementById('split-sentence-confirm');
-  splitBtn.addEventListener('click', () => {
+  splitBtn.addEventListener('click', async () => {
     const splitAfter = Number(select.value);
     if (!Number.isFinite(splitAfter) || splitAfter < 1 || splitAfter >= wordCount) {
       sentenceShowToast('Please choose a valid split point.', true);
       return;
     }
 
-    if (window.xmlDirty) {
-      const ok = window.confirm(
-        'You have unsaved XML edits. Splitting the sentence will discard them. Continue?'
-      );
-      if (!ok) return;
-      discardXmlEdits();
-    }
-
-    const ok = window.confirm(
-      `Split sentence ${currentId} into two sentences after word ${splitAfter}?`
+    const ok = await showConfirmDialog(
+      `Split sentence ${currentId} into two sentences after word ${splitAfter}?`,
+      {
+        titleText: 'Split sentence',
+        okText: 'Split',
+        cancelText: 'Cancel'
+      }
     );
     if (!ok) return;
 

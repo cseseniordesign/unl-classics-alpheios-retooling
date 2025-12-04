@@ -1024,7 +1024,7 @@ td{
   font-size: 0.85rem;
   padding: 8px 10px;
   position: relative;
-  overflow: visible;  /* don't clip dropdowns */
+  overflow: visible; 
 }
 
 .relation-top-row {
@@ -1034,13 +1034,11 @@ td{
   margin: 4px 0 6px 0;
 }
 
-/* Base dropdown (left side) */
 .relation-tool .rel-dropdown {
   position: relative;
   display: inline-block;
 }
 
-/* Button that shows current relation */
 .relation-tool .rel-button {
   display: inline-flex;
   align-items: center;
@@ -1071,7 +1069,6 @@ td{
   color: #000;
 }
 
-/* Main popup list under the Relation button */
 .relation-tool .nested-dropdown {
   position: absolute;
   top: 100%;
@@ -1086,17 +1083,15 @@ td{
   width: 100%;
   min-width: 0;
   max-height: none;
-  overflow: visible;   /* allow Aux submenu to stick out */
+  overflow: visible;  
   display: none;
   z-index: 20;
 }
 
-/* Show when dropdown has .open */
 .relation-tool .rel-dropdown.open > .nested-dropdown {
   display: block;
 }
 
-/* Items inside the popup (base + Aux submenu) */
 .relation-tool .rel-item,
 .relation-tool .rel-subitem {
   padding: 4px 10px;
@@ -1111,7 +1106,6 @@ td{
   background-color: #e6e6e6;
 }
 
-/* Aux row with right arrow + submenu */
 .relation-tool .rel-has-submenu {
   position: relative;
   padding-right: 18px;
@@ -1126,7 +1120,6 @@ td{
   font-size: 0.7rem;
 }
 
-/* Second column: AuxP, AuxC, ... */
 .relation-tool .rel-submenu {
   position: absolute;
   top: 0;
@@ -1140,19 +1133,91 @@ td{
   background-color: #fff;
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   z-index: 999;
-  display: none;   /* shown on Aux hover */
+  display: none;   
 }
 
-/* Show submenu whenever Aux row is hovered */
 .relation-tool .rel-has-submenu:hover .rel-submenu {
   display: block !important;
 }
 
-/* When the Relation tool is active, don't clip horizontally */
 body.mode-relation #tool-body {
   overflow-x: visible;
 }
 
 .rel-dropdown-suffix .rel-button {
   min-width: 70px;
+}
+
+.app-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45); 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2000;
+}
+
+.app-modal-overlay[hidden] {
+  display: none;
+}
+
+.app-modal {
+  background: #f5f6f7;
+  border-radius: 10px;
+  box-shadow: 0 18px 35px rgba(15, 23, 42, 0.35);
+  padding: 16px 18px 14px;
+  width: 360px;
+  max-width: calc(100% - 32px);
+  border: 1px solid #cbd5e1;
+  font-family: Inter, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+.app-modal-title {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.app-modal-message {
+  margin: 0 0 14px;
+  font-size: 0.9rem;
+  color: #111827;
+  line-height: 1.4;
+  white-space: pre-wrap; 
+}
+
+.app-modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.app-modal-buttons .btn-primary,
+.app-modal-buttons .btn-secondary {
+  border-radius: 999px;
+  border: none;
+  padding: 5px 14px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.app-modal-buttons .btn-secondary {
+  background: #e5e7eb;
+  color: #111827;
+}
+
+.app-modal-buttons .btn-secondary:hover {
+  background: #d1d5db;
+}
+
+.app-modal-buttons .btn-primary {
+  background: #4e6476; /* same family as header/tool buttons */
+  color: #fff;
+}
+
+.app-modal-buttons .btn-primary:hover {
+  background: #394a59;
 }
