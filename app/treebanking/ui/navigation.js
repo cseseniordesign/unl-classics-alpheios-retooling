@@ -47,7 +47,7 @@ export function setupSentenceSelector() {
   select.value = window.currentIndex || 1;
 
   // NEW listener
-  select.addEventListener('change', (e) => {
+  select.addEventListener('change', async (e) => {
     const selectedId = parseInt(e.target.value, 10);
     const ok = safeDisplaySentence(selectedId);
 

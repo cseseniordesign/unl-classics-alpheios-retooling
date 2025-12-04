@@ -168,6 +168,20 @@
             z-index: 9999;">
         Saved
     </div>
+    <div id="app-modal-overlay" class="app-modal-overlay" hidden>
+        <div class="app-modal" role="dialog" aria-modal="true" aria-labelledby="app-modal-title">
+            <h2 id="app-modal-title" class="app-modal-title">Please confirm</h2>
+            <p id="app-modal-message" class="app-modal-message"></p>
+            <div class="app-modal-buttons">
+                <button type="button" id="app-modal-cancel" class="btn-secondary">
+                    Cancel
+                </button>
+                <button type="button" id="app-modal-ok" class="btn-primary">
+                    OK
+                </button>
+            </div>
+        </div>
+    </div>
 </body>
 
 <script type = "module" src="main.js"></script>
