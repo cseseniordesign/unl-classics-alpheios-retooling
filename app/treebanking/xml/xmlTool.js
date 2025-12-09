@@ -71,6 +71,7 @@ export function setupXMLTool() {
     if (wasActive) {
       // --- Exit XML mode ---
       xmlBtn.classList.remove('active');
+      xmlBtn.style.backgroundColor = '#4e6476';
       toolBody.innerHTML = `<p>Please select a tool from the bar above that you would like to use.</p>`;
       exitReadOnly();
     } else {
@@ -86,7 +87,8 @@ export function setupXMLTool() {
       if (typeof window.closeSentenceTool === "function") {
         window.closeSentenceTool();
       }
-
+      allToolButtons.forEach(btn => btn.style.backgroundColor = '#4e6476');
+      xmlBtn.style.backgroundColor = 'green';
       // Clear any word selection (we're leaving the tree/sentence context)
       if (typeof window.resetSelection === "function") {
         window.resetSelection();

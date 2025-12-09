@@ -387,6 +387,7 @@ export function setupRelationTool() {
   // Public closer so other tools can shut Relation off if needed
   window.closeRelationTool = function () {
     relationBtn.classList.remove("active");
+    relationBtn.style.backgroundColor = '#4e6476';
     document.body.classList.remove("mode-relation");
     window.isRelationActive = false;
     toolBody.innerHTML =
@@ -398,10 +399,13 @@ export function setupRelationTool() {
 
     // Clear all active toolbar buttons
     allButtons.forEach(btn => btn.classList.remove("active"));
+    allButtons.forEach(btn => btn.style.backgroundColor = '#4e6476');
+    relationBtn.style.backgroundColor = 'green';
 
     if (wasActive) {
       // We were on Relation → turn it off
       window.closeRelationTool();
+      relationBtn.style.backgroundColor = '#4e6476';
       return;
     }
 

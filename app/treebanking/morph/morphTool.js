@@ -27,6 +27,7 @@ export function setupMorphTool() {
     if (!window.isMorphActive) return;
     window.isMorphActive = false;
     morphBtn.classList.remove('active');
+    morphBtn.style.backgroundColor = '#4e6476';
     toolBody.innerHTML =
       `<p>Please select a tool from the bar above that you would like to use.</p>`;
   };
@@ -34,11 +35,13 @@ export function setupMorphTool() {
   morphBtn.addEventListener('click', () => {
     const wasActive = window.isMorphActive;
     allToolButtons.forEach(btn => btn.classList.remove('active'));
+    allToolButtons.forEach(btn => btn.style.backgroundColor = '#4e6476');
     window.isMorphActive = !wasActive;
 
     if (window.isMorphActive) {
       document.body.classList.add('mode-morph');
       morphBtn.classList.add('active');
+      morphBtn.style.backgroundColor = 'green';
 
       // If a word is already selected, immediately show its morph info
       const selectedToken = document.querySelector(".token.selected");
@@ -61,6 +64,7 @@ export function setupMorphTool() {
     } else {
       document.body.classList.remove('mode-morph');
       // Do NOT clear selection here – it may be reused by Relation tool
+      morphBtn.style.backgroundColor = '#4e6476';
       toolBody.innerHTML =
         `<p>Please select a tool from the bar above that you would like to use.</p>`;
     }
