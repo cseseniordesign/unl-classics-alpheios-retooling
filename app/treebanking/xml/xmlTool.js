@@ -2,7 +2,7 @@ import parseTreeBankXML from './parser.js';
 import { safeDisplaySentence } from '../ui/sentenceDisplay.js';
 import { validateTreebankSchema } from './schemaValidator.js';
 import { showConfirmDialog } from '../ui/modal.js';
-
+import { saveState } from "../xml/undo.js";
 
 // ---------------------------------------------
 // SNAPSHOT-BASED DIRTY TRACKING HELPERS
@@ -184,21 +184,19 @@ export function setupXMLTool() {
       });
 
       // === CONFIRM EDIT ===
-      confirmBtn.addEventListener('click', () => {
+      confirmBtn.addEventListener('click', async () => {
+        const xmlDisplay = document.getElementById('xml-display');
+        if (!xmlDisplay) return;
+
         const editedText    = xmlDisplay.textContent.trim();
         const snapshotPlain = (window.xmlSnapshot || '').trim();
         let xmlDoc;
         let success = false;
-        let headWarnings = [];  
+        let headWarnings = [];
 
         // ─────────────────────────────
         // EARLY EXIT: NO REAL CHANGES
         // ─────────────────────────────
-        // If the current editor contents are exactly the same as the snapshot
-        // taken when "Edit XML" was clicked, then do *not* treat this as an update:
-        // - no toast
-        // - no model change
-        // - just restore pretty view + clean state
         if (editedText === snapshotPlain) {
           const escaped = snapshotPlain
             .replace(/&/g, '&amp;')
@@ -213,9 +211,13 @@ export function setupXMLTool() {
 
           xmlDisplay.contentEditable = false;
           xmlDisplay.classList.remove('editing');
-          editBtn.style.display = 'inline-block';
-          confirmBtn.style.display = 'none';
-          cancelBtn.style.display = 'none';
+          const editBtn    = document.getElementById('xml-edit');
+          const confirmBtn = document.getElementById('xml-confirm');
+          const cancelBtn  = document.getElementById('xml-cancel');
+
+          if (editBtn)    editBtn.style.display = 'inline-block';
+          if (confirmBtn) confirmBtn.style.display = 'none';
+          if (cancelBtn)  cancelBtn.style.display = 'none';
 
           window.xmlDirty = false;
           takeSnapshot(xmlDisplay);
@@ -241,6 +243,37 @@ export function setupXMLTool() {
             const shortMsg = raw.split('Below is a rendering')[0].trim();
             throw new Error(shortMsg || 'XML not well-formed');
           }
+
+          const sentenceEl = xmlDoc.querySelector('sentence');
+          if (!sentenceEl) {
+            throw new Error('No <sentence> element found in XML.');
+          }
+
+          // ─────────────────────────────
+          // Duplicate word-id warning
+          // ─────────────────────────────
+          const duplicateIds = findDuplicateWordIds(sentenceEl);
+
+          if (duplicateIds.length) {
+            const proceed = await showConfirmDialog(
+              `This sentence contains duplicate word ids: ${duplicateIds.join(', ')}.\n\n` +
+              `If you continue, Arethusa will renumber all word ids in this ` +
+              `sentence sequentially based on token order and update all head ` +
+              `attributes.\n\n` +
+              `Continue and renumber, or Cancel to fix the XML manually?`,
+              {
+                titleText: 'Duplicate word IDs detected',
+                okText: 'Continue and renumber',
+                cancelText: 'Cancel'
+              }
+            );
+
+            if (!proceed) {
+              return; // stay in edit mode
+            }
+          }
+
+          // Renumber ids + remap heads (and collect any "head reset to 0" warnings)
           headWarnings = normalizeSentenceWordIds(xmlDoc);
 
           // ─────────────────────────────
@@ -261,7 +294,6 @@ export function setupXMLTool() {
                 xmlDisplay.innerHTML = highlighted;
                 window.xmlInternalUpdate = false;
               }
-
               // Stay in edit mode
               return;
             }
@@ -281,44 +313,33 @@ export function setupXMLTool() {
           // Stage 3: Update model
           // ─────────────────────────────
           const xmlString = new XMLSerializer().serializeToString(xmlDoc);
-
-          // IMPORTANT: xmlString is just ONE <sentence> ... </sentence>
           const newData = parseTreeBankXML(xmlString);
           const updatedSentence = newData[0];
-
           if (!updatedSentence) {
             throw new Error('No <sentence> found after XML edit.');
           }
 
-          // DO NOT ALLOW CHANGING <sentence id>
           const originalId = String(window.xmlEditingSentenceId || window.currentIndex);
           const newId      = String(updatedSentence.id);
-
           if (newId !== originalId) {
             throw new Error(
               `Changing <sentence> id is not allowed in this editor. ` +
               `Please keep id="${originalId}".`
             );
           }
-          // === CYCLE DETECTION ===
+
+          // cycle detection (unchanged from your version)
           if (updatedSentence) {
             const words = updatedSentence.words;
-
             for (const w of words) {
-              const wid = String(w.id);
+              const wid     = String(w.id);
               const newHead = String(w.head);
-
               if (detectCycleForXML(words, wid, newHead)) {
-                throw new Error("Cannot Create a Cycle");
+                throw new Error('Cannot Create a Cycle');
               }
             }
           }
 
-          if (!updatedSentence) {
-            throw new Error('No <sentence> found after XML edit.');
-          }
-
-          // Find that sentence in the global treebankData by id
           const oldIdx = window.treebankData.findIndex(
             s => String(s.id) === originalId
           );
@@ -328,50 +349,48 @@ export function setupXMLTool() {
             window.treebankData[oldIdx] = updatedSentence;
           }
 
-
-          // Cache display copy for Cancel + XML panel
           window.currentXMLText = xmlString;
           window.originalXMLText = xmlString
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
 
-          // Refresh XML panel
           const escaped = window.originalXMLText;
           window.xmlInternalUpdate = true;
           xmlDisplay.innerHTML = highlightXML(formatXML(escaped));
           window.xmlInternalUpdate = false;
 
-          console.log('[XML EDIT] Updated sentence id:', updatedSentence.id);
-
-          // Re-render sentence/tree without triggering the “unsaved edits” guard
-          safeDisplaySentence(updatedSentence.id, { skipXMLGuard: true });
+          // Re-render sentence/tree without XML guard
+          await safeDisplaySentence(updatedSentence.id, { skipXMLGuard: true });
 
           showToast('XML updated successfully.');
 
           if (headWarnings && headWarnings.length) {
-            const ids = headWarnings.map(h => h.wordId).join(', ');
+            const ids   = headWarnings.map(h => h.wordId).join(', ');
             const count = headWarnings.length;
             const msg =
               count === 1
                 ? `Warning: word ${ids} had an invalid head; it was reset to 0 (root).`
                 : `Warning: words ${ids} had invalid heads; they were reset to 0 (root).`;
-            showToast(msg, false, true); // yellow warning
+            showToast(msg, false, true);
           }
 
           success = true;
-
-
         } catch (e) {
           console.error('[XML EDIT] Confirm failed:', e);
           showToast(`XML Edit failed: ${e.message}`, true);
         } finally {
+          const editBtn    = document.getElementById('xml-edit');
+          const confirmBtn = document.getElementById('xml-confirm');
+          const cancelBtn  = document.getElementById('xml-cancel');
+
           if (success) {
             xmlDisplay.contentEditable = false;
             xmlDisplay.classList.remove('editing');
-            editBtn.style.display = 'inline-block';
-            confirmBtn.style.display = 'none';
-            cancelBtn.style.display = 'none';
+            if (editBtn)    editBtn.style.display = 'inline-block';
+            if (confirmBtn) confirmBtn.style.display = 'none';
+            if (cancelBtn)  cancelBtn.style.display = 'none';
+
             window.xmlDirty = false;
             takeSnapshot(xmlDisplay);
 
@@ -382,12 +401,12 @@ export function setupXMLTool() {
 
             enterReadOnly();
           } else {
-            // Stay in edit mode on error
+            // stay in edit mode on error / cancel
             xmlDisplay.contentEditable = true;
             xmlDisplay.classList.add('editing');
-            editBtn.style.display = 'none';
-            confirmBtn.style.display = 'inline-block';
-            cancelBtn.style.display = 'inline-block';
+            if (editBtn)    editBtn.style.display = 'none';
+            if (confirmBtn) confirmBtn.style.display = 'inline-block';
+            if (cancelBtn)  cancelBtn.style.display = 'inline-block';
           }
         }
       });
@@ -454,15 +473,20 @@ export function formatXML(xmlString) {
     let trimmed = line.trim();
     if (!trimmed) return ''; // skip empty lines
 
-    // Decrease indent after closing tag
-    if (trimmed.match(/^&lt;\/[^>]+&gt;$/)) indentLevel--;
+    // Decrease indent after closing tag, but never below 0
+    if (/^&lt;\/[^>]+&gt;$/.test(trimmed)) {
+      indentLevel = Math.max(indentLevel - 1, 0);
+    }
 
-    // Apply indentation
-    const spaces = '&nbsp;'.repeat(indentLevel * 2);
+    // Use a non-negative indent level for spacing
+    const thisIndent = Math.max(indentLevel, 0);
+    const spaces = '&nbsp;'.repeat(thisIndent * 2);
     const indentedLine = spaces + trimmed;
 
     // Increase indent after opening tag that’s not self-closing
-    if (trimmed.match(/^&lt;[^/!?][^>]*[^/]&gt;$/)) indentLevel++;
+    if (/^&lt;[^/!?][^>]*[^/]&gt;$/.test(trimmed)) {
+      indentLevel++;
+    }
 
     return indentedLine;
   });
@@ -776,6 +800,32 @@ export function discardXmlEdits() {
     xmlDisplay.removeEventListener('input', xmlDisplay._limiter);
     delete xmlDisplay._limiter;
   }
+}
+
+/**
+ * Find duplicate numeric word IDs inside a <sentence>.
+ * Returns a sorted array of duplicate id numbers, e.g. [4, 9].
+ */
+function findDuplicateWordIds(sentenceEl) {
+  const wordEls = Array.from(sentenceEl.querySelectorAll("word"));
+  const seen = new Set();
+  const dupes = new Set();
+
+  for (const w of wordEls) {
+    const rawId = (w.getAttribute("id") || "").trim();
+    if (!rawId) continue;
+
+    const num = Number(rawId);
+    if (!Number.isFinite(num)) continue;   // ignore non-numeric ids
+
+    if (seen.has(num)) {
+      dupes.add(num);
+    } else {
+      seen.add(num);
+    }
+  }
+
+  return Array.from(dupes).sort((a, b) => a - b);
 }
 
 /**
