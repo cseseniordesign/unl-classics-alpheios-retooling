@@ -564,10 +564,13 @@ export function setupSentenceTool() {
 
     // Reset all toolbar button states
     allToolButtons.forEach(btn => btn.classList.remove('active'));
+    allToolButtons.forEach(btn => btn.style.backgroundColor = '#4e6476');
+    sentenceBtn.style.backgroundColor = 'green';
 
     if (wasActive) {
       // Leaving Sentence tools
       sentenceBtn.classList.remove('active');
+      sentenceBtn.style.backgroundColor = '#4e6476';
       toolBody.innerHTML =
         `<p>Please select a tool from the bar above that you would like to use.</p>`;
       exitReadOnly();
