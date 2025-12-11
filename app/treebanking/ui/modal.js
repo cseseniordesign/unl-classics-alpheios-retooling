@@ -69,7 +69,7 @@ export function showConfirmDialog(message, options = {}) {
 
     const onKey = (e) => {
       if (e.key === "Escape") {
-        cleanup(false);
+        return; // Let modal handle this (can change behavior later if desired)
       } else if (e.key === "Enter") {
         cleanup(true);
       }

@@ -387,21 +387,32 @@ export function setupRelationTool() {
   // Public closer so other tools can shut Relation off if needed
   window.closeRelationTool = function () {
     relationBtn.classList.remove("active");
+    relationBtn.style.backgroundColor = '#4e6476';
     document.body.classList.remove("mode-relation");
     window.isRelationActive = false;
-    toolBody.innerHTML =
-      '<p>Please select a tool from the bar above that you would like to use.</p>';
+
+    // Back to treebanking mode UI
+    if (window.treebankModeHTML) {
+      toolBody.innerHTML = window.treebankModeHTML;
+    } else {
+      toolBody.innerHTML =
+        '<p>Treebanking mode: click a word or node to edit dependencies.</p>';
+    }
   };
+
 
   const handler = () => {
     const wasActive = relationBtn.classList.contains("active");
 
     // Clear all active toolbar buttons
     allButtons.forEach(btn => btn.classList.remove("active"));
+    allButtons.forEach(btn => btn.style.backgroundColor = '#4e6476');
+    relationBtn.style.backgroundColor = 'green';
 
     if (wasActive) {
       // We were on Relation → turn it off
       window.closeRelationTool();
+      relationBtn.style.backgroundColor = '#4e6476';
       return;
     }
 

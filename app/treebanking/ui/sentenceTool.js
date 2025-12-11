@@ -564,13 +564,21 @@ export function setupSentenceTool() {
 
     // Reset all toolbar button states
     allToolButtons.forEach(btn => btn.classList.remove('active'));
+    allToolButtons.forEach(btn => btn.style.backgroundColor = '#4e6476');
+    sentenceBtn.style.backgroundColor = 'green';
 
     if (wasActive) {
-      // Leaving Sentence tools
+      // Leaving Sentence tools → back to treebanking mode
       sentenceBtn.classList.remove('active');
-      toolBody.innerHTML =
-        `<p>Please select a tool from the bar above that you would like to use.</p>`;
+      sentenceBtn.style.backgroundColor = '#4e6476';
       exitReadOnly();
+
+      if (window.treebankModeHTML) {
+        toolBody.innerHTML = window.treebankModeHTML;
+      } else {
+        toolBody.innerHTML =
+          `<p>Treebanking mode: click a word or node to edit dependencies.</p>`;
+      }
       return;
     }
 
