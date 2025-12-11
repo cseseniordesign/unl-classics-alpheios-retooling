@@ -28,8 +28,15 @@ export function setupMorphTool() {
     window.isMorphActive = false;
     morphBtn.classList.remove('active');
     morphBtn.style.backgroundColor = '#4e6476';
-    toolBody.innerHTML =
-      `<p>Please select a tool from the bar above that you would like to use.</p>`;
+    document.body.classList.remove('mode-morph');
+
+    // Back to treebanking mode UI
+    if (window.treebankModeHTML) {
+      toolBody.innerHTML = window.treebankModeHTML;
+    } else {
+      toolBody.innerHTML =
+        `<p>Treebanking mode: click a word or node to edit dependencies.</p>`;
+    }
   };
 
   morphBtn.addEventListener('click', () => {
@@ -65,8 +72,14 @@ export function setupMorphTool() {
       document.body.classList.remove('mode-morph');
       // Do NOT clear selection here – it may be reused by Relation tool
       morphBtn.style.backgroundColor = '#4e6476';
-      toolBody.innerHTML =
-        `<p>Please select a tool from the bar above that you would like to use.</p>`;
+
+      // Back to treebanking mode UI
+      if (window.treebankModeHTML) {
+        toolBody.innerHTML = window.treebankModeHTML;
+      } else {
+        toolBody.innerHTML =
+          `<p>Treebanking mode: click a word or node to edit dependencies.</p>`;
+      }
     }
   });
 

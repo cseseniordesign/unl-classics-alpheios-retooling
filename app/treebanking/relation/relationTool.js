@@ -390,9 +390,16 @@ export function setupRelationTool() {
     relationBtn.style.backgroundColor = '#4e6476';
     document.body.classList.remove("mode-relation");
     window.isRelationActive = false;
-    toolBody.innerHTML =
-      '<p>Please select a tool from the bar above that you would like to use.</p>';
+
+    // Back to treebanking mode UI
+    if (window.treebankModeHTML) {
+      toolBody.innerHTML = window.treebankModeHTML;
+    } else {
+      toolBody.innerHTML =
+        '<p>Treebanking mode: click a word or node to edit dependencies.</p>';
+    }
   };
+
 
   const handler = () => {
     const wasActive = relationBtn.classList.contains("active");

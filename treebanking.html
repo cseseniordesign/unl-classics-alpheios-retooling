@@ -147,6 +147,20 @@
                 <button id="xml" type="button">xml</button>
             </div>
             <div id="tool-body">
+                <div id="treebank-mode-banner" class="sidebar-banner treebank-mode">
+                    <div class="banner-title">Treebanking – Change Head Mode</div>
+                    <p id="treebank-mode-instructions">
+                        Click a node in the tree to select a dependent, then click another node to set its head.
+                    </p>
+
+                    <div id="treebank-selected-node" class="selected-node-row hidden">
+                        <div class="label">Changing head for:</div>
+                        <div class="value">
+                            <span id="tb-node-token"></span>
+                            <span id="tb-node-meta"></span>
+                        </div>
+                    </div>
+                </div>
                 <div id="morph-container"></div>
             </div>
         </div>

@@ -10,6 +10,67 @@ import { createTable } from '../table/tableRender.js';
 import { recomputeDirty, discardXmlEdits } from '../xml/xmlTool.js';
 import { showConfirmDialog } from './modal.js';
 
+// ---------------------------------------------------------------------------
+// Treebank mode banner helpers
+// ---------------------------------------------------------------------------
+
+// Capture the initial Treebanking-mode UI so tools can restore it later
+if (!window.treebankModeHTML) {
+  const toolBody = document.getElementById('tool-body');
+  if (toolBody) {
+    window.treebankModeHTML = toolBody.innerHTML;
+  }
+}
+
+function updateTreebankSelectionBanner(wordId) {
+  const rowEl    = document.getElementById("treebank-selected-node");
+  const tokenEl  = document.getElementById("tb-node-token");
+  const metaEl   = document.getElementById("tb-node-meta");
+
+  if (!rowEl || !tokenEl || !metaEl) return;
+
+  const sentences = Array.isArray(window.treebankData) ? window.treebankData : [];
+  const currentSentence = sentences.find(s => s.id === String(window.currentIndex));
+  const word = currentSentence?.words?.find(w => String(w.id) === String(wordId));
+
+  if (!word) {
+    rowEl.classList.add("hidden");
+    tokenEl.textContent = "";
+    metaEl.textContent  = "";
+    return;
+  }
+
+  // Main token text
+  tokenEl.textContent = word.form || "(blank)";
+
+  // Build a compact meta line:  #ID · lemma · POS · relation
+  const lemma  = word._displayLemma || word.lemma || "";
+  const postag = (word._displayPostag || word.postag || "").split(/[\s-]/)[0] || "";
+  const rel    = word.relation || "";
+
+  const bits = [`#${word.id}`];
+  if (lemma)  bits.push(lemma);
+  if (postag) bits.push(postag);
+  if (rel)    bits.push(rel);
+
+  metaEl.textContent = bits.join(" · ");
+
+  rowEl.classList.remove("hidden");
+}
+
+function clearTreebankSelectionBanner() {
+  const rowEl    = document.getElementById("treebank-selected-node");
+  const tokenEl  = document.getElementById("tb-node-token");
+  const metaEl   = document.getElementById("tb-node-meta");
+
+  if (!rowEl || !tokenEl || !metaEl) return;
+
+  rowEl.classList.add("hidden");
+  tokenEl.textContent = "";
+  metaEl.textContent  = "";
+}
+
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: displaySentence
@@ -79,6 +140,9 @@ export async function displaySentence(index) {
   updateNavigationButtons(index);
   updateSentenceSelector(index);
 
+  // Clear any "changing head for" banner when switching sentences
+  clearTreebankSelectionBanner();
+
   // Locate the sentence matching the given ID
   const sentence = data.find(s => s.id === `${index}`);
   if (!sentence) {
@@ -143,8 +207,11 @@ export function handleWordClick(wordId, word) {
     ? d3.select(`.node[id="${wordId}"]`)
     : null;
 
-    // 1) Morph tool active → select + show morph (no head changes)
+  // 1) Morph tool active → select + show morph (no head changes)
   if (window.isMorphActive) {
+    // This is not change-head mode → hide banner row
+    clearTreebankSelectionBanner();
+
     // Clear previous selection
     document.querySelectorAll(".token.selected")
       .forEach(t => t.classList.remove("selected"));
@@ -175,6 +242,9 @@ export function handleWordClick(wordId, word) {
 
   // 2) Relation tool active → select + show relation (no head changes)
   if (window.isRelationActive) {
+    // This is not change-head mode → hide banner row
+    clearTreebankSelectionBanner();
+
     // Clear previous selection
     document.querySelectorAll(".token.selected")
       .forEach(t => t.classList.remove("selected"));
@@ -220,6 +290,9 @@ export function handleWordClick(wordId, word) {
     if (nodeSel && !nodeSel.empty()) nodeSel.classed("selected", true);
 
     window.currentSelectedWordId = wordId;
+
+    // Update the right-hand banner with the dependent we are changing
+    updateTreebankSelectionBanner(wordId);
     return;
   }
 
@@ -329,6 +402,9 @@ function resetSelection() {
   // Clear selection state
   selectedWordId = null;
   window.currentSelectedWordId = null;
+
+  // Hide the "changing head for" banner row
+  clearTreebankSelectionBanner();
 }
 
 // Make it available to other modules (XML tool, etc.)

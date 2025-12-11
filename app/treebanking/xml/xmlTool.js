@@ -68,12 +68,19 @@ export function setupXMLTool() {
     // Reset all toolbar button states
     allToolButtons.forEach(btn => btn.classList.remove('active'));
 
-    if (wasActive) {
-      // --- Exit XML mode ---
+  if (wasActive) {
+      // --- Exit XML mode → back to treebanking mode ---
       xmlBtn.classList.remove('active');
       xmlBtn.style.backgroundColor = '#4e6476';
-      toolBody.innerHTML = `<p>Please select a tool from the bar above that you would like to use.</p>`;
       exitReadOnly();
+
+      if (window.treebankModeHTML) {
+        toolBody.innerHTML = window.treebankModeHTML;
+      } else {
+        toolBody.innerHTML =
+          `<p>Treebanking mode: click a word or node to edit dependencies.</p>`;
+      }
+      return;
     } else {
       // --- Activate XML mode ---
       xmlBtn.classList.add('active');

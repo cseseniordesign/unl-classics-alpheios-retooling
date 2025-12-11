@@ -1221,3 +1221,47 @@ body.mode-relation #tool-body {
 .app-modal-buttons .btn-primary:hover {
   background: #394a59;
 }
+
+
+.sidebar-banner.treebank-mode {
+  font-family: Inter, -apple-system, system-ui, "Segoe UI",
+               Helvetica, Arial, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: #333;
+
+  border-left: 3px solid var(--hover-teal);
+  background: rgba(48, 191, 191, 0.08);
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+}
+
+.sidebar-banner .banner-title {
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+}
+
+#treebank-selected-node .label {
+  font-weight: 500;
+  margin-top: 0.35rem;
+}
+
+#treebank-selected-node .value {
+  margin-top: 0.1rem;
+  font-size: 0.85rem;
+  opacity: 0.9;                  
+}
+
+#tb-node-token {
+  font-weight: 600;
+  margin-right: 0.4rem;
+}
+
+#tb-node-meta {
+  opacity: 0.75;
+}
+
+.hidden {
+  display: none !important;
+}
