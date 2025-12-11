@@ -160,9 +160,12 @@ let autoSaveTimer = null;
  * --------------------------------------------------------------------------
  */
 export function buildXML() {
+  const textDirection = localStorage.getItem("textDirection") || "";
+  const textLangauge = localStorage.getItem("textLanguage") || "";
+
   if (!window.treebankData) return "";
 
-  let xmlOut = '<?xml version="1.0" encoding="UTF-8"?>\n<treebank>\n';
+  let xmlOut = '<?xml version="1.0" encoding="UTF-8"?>\n<treebank direction=\"' + textDirection + '\"\n          xml:lang=\"'+ textLangauge +'\">\n';
   for (const s of window.treebankData) {
     xmlOut += `  <sentence id="${s.id}">\n`;
     for (const w of s.words) {

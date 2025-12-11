@@ -8,6 +8,14 @@ export default function parseTreeBankXML(xmlString) {
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(xmlString, "application/xml");
 
+  // Set global textDirection and textLanguage variables
+  const root = xmlDoc.documentElement;
+  const textDirection = root.getAttribute("direction");
+  const textLanguage = root.getAttribute("xml:lang");
+  localStorage.setItem("textDirection", textDirection);
+  localStorage.setItem("textLanguage", textLanguage);
+  
+
   // Select *all* <sentence> elements
   const sentences = Array.from(xmlDoc.querySelectorAll("sentence"));
   if (!sentences.length) {
