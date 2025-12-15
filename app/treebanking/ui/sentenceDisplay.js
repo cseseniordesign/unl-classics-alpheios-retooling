@@ -82,14 +82,10 @@ function clearTreebankSelectionBanner() {
  * @returns {Promise<void>} Resolves after loading data and rendering the selected sentence and its tree.
  */
 export async function displaySentence(index) {
-  // Get the URL parameter for the input sentence
-  const params = new URLSearchParams(window.location.search);
-  const sentenceInput = params.get("sentence");
-  
-  // displays sentence from input page and returns (does not render tree yet)
+  const sentenceInput = window.sessionStorage.getItem("userInput");
   if (sentenceInput) {
     document.getElementById("input-sentence").textContent = sentenceInput;
-    window.rawSentence = sentenceInput; // global variable to store input sentence
+    window.rawSentence = sentenceInput;
     return;
   }
 

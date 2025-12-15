@@ -11,6 +11,7 @@ document.getElementById("editBtn").addEventListener("click", sendSentence);
  */
 function sendSentence() {
   const input = document.getElementById("input-text").value.trim();
+
   if (!input) {
     showToast("Please input a sentence.");
     return;
@@ -31,6 +32,7 @@ function sendSentence() {
   localStorage.setItem("textDirection", direction.value);
   localStorage.setItem("textLanguage", language.value);
 
-  // redirect to treebanking page and pass the sentence through the URL
-  window.location.href = "treebanking.html?sentence=" + encodeURIComponent(input);
+  // pass the sentence and redirect to treebanking page
+  window.sessionStorage.setItem("userInput", input);
+  window.location.href = "treebanking.html";
 }
