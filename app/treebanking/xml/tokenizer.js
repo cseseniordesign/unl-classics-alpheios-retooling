@@ -4,11 +4,12 @@ import parseTreeBankXML from "./parser.js";
  * --------------------------------------------------------------------------
  * FUNCTION: tokenizer
  * --------------------------------------------------------------------------
- * Connects to Perseids LLT services (outputs segmented and tokenized XML) and 
- * parses user input into a normalized XML and array object for treebanking
+ * Connects to Perseids LLT services (outputs segmented and tokenized XML), 
+ * parses user input into a normalized XML and returns an array object of 
+ * parsed sentences
  * 
  * @param {string} input - user input sentence
- * @returns {string, Array<Object>} - normalized XML (.xml) and parsed sentences (.xmlObj)
+ * @returns {Array<Object>} - parsed sentences
  */
 export async function tokenizer(input) {
   const encoded = encodeURIComponent(input);
@@ -34,10 +35,15 @@ export async function tokenizer(input) {
   const newXML = normalizeXML(xmlText);
   const parsedSentences = parseTreeBankXML(newXML);
 
-  return { 
-    xml: newXML, 
-    xmlObj: parsedSentences
-  };
+  parsedSentences.forEach(sentence => {
+    sentence.words.forEach(word => {
+      if (word.head === "" || word.head === undefined) {
+        word.head = null;
+      }
+    });
+  });
+
+  return parsedSentences;
 }
 
 /**
@@ -45,7 +51,7 @@ export async function tokenizer(input) {
  * FUNCTION: normalizeXML
  * --------------------------------------------------------------------------
  * Parses xml string from LLT services and builds newly structured XML with 
- * language, text direction, and morphology attributes
+ * morphology attributes
  * 
  * @param {string} xmlString - XML string from LLT services
  * @returns {string} - normalized XML string for treebanking
@@ -59,10 +65,6 @@ function normalizeXML(xmlString) {
  
   const root = xmlDoc.createElement("treebank");
   xmlDoc.appendChild(root);
-
-  // add language and direction attributes
-  root.setAttribute("lang", "");
-  root.setAttribute("direction", "");
 
   const sentences = source.getElementsByTagName("s");
 

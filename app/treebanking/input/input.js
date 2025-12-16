@@ -8,6 +8,9 @@ document.getElementById("editBtn").addEventListener("click", sendSentence);
  * FUNCTION: sendSentence
  * --------------------------------------------------------------------------
  * Sends input sentence to the treebanking page
+ * 
+ * @param {}
+ * @returns {} 
  */
 function sendSentence() {
   const input = document.getElementById("input-text").value.trim();
@@ -33,6 +36,6 @@ function sendSentence() {
   localStorage.setItem("textLanguage", language.value);
 
   // pass the sentence and redirect to treebanking page
-  window.sessionStorage.setItem("userInput", input);
+  sessionStorage.setItem("userInput", input);
   window.location.href = "treebanking.html";
 }
