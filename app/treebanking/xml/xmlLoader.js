@@ -66,6 +66,8 @@ export async function loadTreebankData(xmlContent) {
       localStorage.setItem("xmlContent", xmlContent);
       const parsed = parseTreeBankXML(xmlContent);
       localStorage.setItem("treebankData", JSON.stringify(parsed));
+      // clear any previous user input
+      sessionStorage.removeItem("userInput");
       return window.treebankData;
     } catch (err) {
       console.error('Error parsing uploaded XML:', err);
