@@ -35,7 +35,9 @@ function sendSentence() {
   localStorage.setItem("textDirection", direction.value);
   localStorage.setItem("textLanguage", language.value);
 
+  // store user input
+  window.sessionStorage.setItem("userInput", input);
+
   // pass the sentence and redirect to treebanking page
-  sessionStorage.setItem("userInput", input);
   window.location.href = "treebanking.html";
 }
