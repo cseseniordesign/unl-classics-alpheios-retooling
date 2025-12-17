@@ -40,6 +40,11 @@ export function colorForPOS(w) {
  * @returns {void}
  */
 export function fitTreeToView(svg, gx, container, zoom, margin) {
+  // Never auto-fit user input trees
+  if (window.appMode === "user-input") {
+    return; 
+  }
+
   // --- SAFETY GUARDS ---
   if (!svg || !gx || !container || !zoom || !margin) return;
   if (!gx.node()) return; // prevent crash if gx cleared or detached
@@ -126,9 +131,40 @@ export function fitTreeToView(svg, gx, container, zoom, margin) {
       lastHeight = currentHeight;
     }, 250); // wait until resizing stops
   });
+}
 
-  // Re-sync highlights after nodes are redrawn
-  setupWordHoverSync();
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: positionUserInputTree
+ * --------------------------------------------------------------------------
+ * Positions the user-input dependency tree with the root at top-center.
+ * Uses zoom.transform so existing controls (focus, center, pan, zoom)
+ * remain fully functional.
+ * 
+ * @param {Object} svg - D3 selection of SVG element.
+ * @param {Object} gx - D3 selection of the inner group (tree content).
+ * @param {HTMLElement} container - DOM element containing the SVG.
+ * @param {Object} zoom - D3 zoom behavior object.
+ * @param {Object} margin - Margins for positioning.
+ * @returns {void}
+ */
+export function positionUserInputTree(svg, gx, container, zoom, margin) {
+  if (!svg || !gx || !container || !zoom) return;
+  if (!gx.node()) return;
+
+  const width = container.clientWidth || 800;
+
+  // Desired position: top-center
+  const tx = (width / 2) - 50;
+  const ty = (margin.top) - 50;
+
+  svg
+    .transition()
+    .duration(0) // no animation for initial placement
+    .call(
+      zoom.transform,
+      d3.zoomIdentity.translate(tx, ty)
+    );
 }
 
 /**  
