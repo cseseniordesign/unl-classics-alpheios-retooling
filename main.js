@@ -7,12 +7,13 @@ import { setupXMLTool } from './app/treebanking/xml/xmlTool.js';
 import { setupMorphTool } from './app/treebanking/morph/morphTool.js';
 import { setupSentenceSelector } from './app/treebanking/ui/navigation.js';
 import { setupResizeHandle, displaySentence } from './app/treebanking/ui/sentenceDisplay.js';
-import { compactTree, expandTree, fitTreeToView, focusOnNode } from './app/treebanking/tree/treeUtils.js';
+import { compactTree, expandTree, fitTreeToView, focusOnNode, positionUserInputTree } from './app/treebanking/tree/treeUtils.js';
 import { saveCurrentTreebank } from './app/treebanking/xml/saveXML.js';
 import { undoButton, redoButton } from './app/treebanking/xml/undo.js';
 import { createTable, switchToTree } from './app/treebanking/table/tableRender.js';
 import { setupSentenceTool } from './app/treebanking/ui/sentenceTool.js';
 import { setupRelationTool } from './app/treebanking/relation/relationTool.js';
+import { tokenizer } from './app/treebanking/xml/tokenizer.js';
 
 window.root = null;
 window.svg = null;
@@ -20,6 +21,7 @@ window.gx = null;
 window.idParentPairs = null;
 window.verticalSpacing = 1;
 window.displaySentence = displaySentence;
+window.appMode = "";
 
 export var isTableVisible = false;
 
@@ -133,16 +135,36 @@ function setupTreeButtons() {
     INITIALIZATION ENTRY POINT
    ============================================================================ */
 document.addEventListener('DOMContentLoaded', async () => {
+  let initializedFromUserInput = false;
+
+  const userInput = sessionStorage.getItem("userInput");
+ 
   // --- Load and render ---
-  const raw = localStorage.getItem("treebankData");
-  if (!raw) { 
-    //console.warn("No treebank data found");
-    //return;
-    await loadTreebankData();
+  if (userInput) {
+    // Parse user input 
+    const parsedSentences = await tokenizer(userInput);
+    window.treebankData = parsedSentences;
+    window.appMode = "userInput";
+
+    initializedFromUserInput = true;
+
+    // Clear any previous XML upload to avoid mixing pipelines
+    localStorage.removeItem("xmlContent");
   }
-  else {
-    const data = JSON.parse(raw);
-    window.treebankData = data;
+
+  if (!initializedFromUserInput) {
+    // Clear previous user input
+    sessionStorage.removeItem("userInput");
+
+    const raw = localStorage.getItem("treebankData");
+    if (!raw) { 
+      await loadTreebankData();
+    }
+    else {
+      const data = JSON.parse(raw);
+      window.treebankData = data;
+      window.appMode = "uploadXML";
+   }
   }
   await displaySentence(1);
   // --- Initialize UI ---
