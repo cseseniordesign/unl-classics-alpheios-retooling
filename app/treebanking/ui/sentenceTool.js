@@ -1,6 +1,6 @@
 import { displaySentence } from './sentenceDisplay.js';
 import { saveState } from '../xml/undo.js';
-import { discardXmlEdits, exitReadOnly } from '../xml/xmlTool.js';
+import { discardXmlEdits, exitReadOnly, enterReadOnly } from '../xml/xmlTool.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
 import { colorForPOS } from '../tree/treeUtils.js';
 import { showConfirmDialog } from './modal.js';
@@ -585,9 +585,9 @@ export function setupSentenceTool() {
     // Entering Sentence tools
     sentenceBtn.classList.add('active');
 
-    // If we were editing XML, discard safely and exit read-only mode
+    // If we were editing XML, discard safely
     discardXmlEdits();
-    exitReadOnly();
+    enterReadOnly();
 
     // Build the Sentence tools container shell
     toolBody.innerHTML = `

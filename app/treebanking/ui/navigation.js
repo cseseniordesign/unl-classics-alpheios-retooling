@@ -1,7 +1,6 @@
-import { createTable } from "../table/tableRender.js";
 import { clearStacks } from "../xml/undo.js";
 import { displaySentence, safeDisplaySentence } from '../ui/sentenceDisplay.js';
-import { recomputeDirty, getCurrentSentenceXML } from '../xml/xmlTool.js';
+import { setupEHotkey, setupEscapeHotkey, setupWHotkey } from '../ui/hotKeys.js';
 
 /**
  * --------------------------------------------------------------------------
@@ -30,6 +29,8 @@ export function updateNavigationButtons(index) {
 export function setupSentenceSelector() {
   clearStacks();
   setupEscapeHotkey();
+  setupWHotkey();
+  setupEHotkey();
   const select = document.getElementById('sentence-select');
   if (!select) return;
 
@@ -74,51 +75,3 @@ export function updateSentenceSelector(index) {
   if (select) select.value = index;
 }
 
-// --------------------------------------------------------------------------
-// Global Escape hotkey: exit tools back to treebanking mode
-// --------------------------------------------------------------------------
-function setupEscapeHotkey() {
-  // Make sure we only install this once
-  if (window._treebankEscapeReady) return;
-  window._treebankEscapeReady = true;
-
-  window.addEventListener(
-    'keydown',
-    (e) => {
-      if (e.key !== 'Escape') return;
-
-      // 1) If a modal is open, do NOTHING here.
-      //    (modal.js will decide what to do)
-      const overlay = document.getElementById('app-modal-overlay');
-      if (overlay && !overlay.hidden) {
-        return;
-      }
-
-      // 2) If a toolbar tab is active, ESC = "go back to treebanking mode"
-      const active = document.querySelector('#toolbar button.active');
-      if (
-        active &&
-        ['morph', 'relation', 'sentence-tools', 'xml'].includes(active.id)
-      ) {
-        active.click();          // uses existing button logic
-        e.preventDefault();
-        e.stopPropagation();
-        return;
-      }
-
-      // 3) Otherwise, ESC = "deselect current node/token" in treebanking mode
-      if (typeof window.resetSelection === 'function') {
-        const hasTokenSel = document.querySelector('.token.selected');
-        const hasNodeSel  = document.querySelector('.node.selected');
-        const hasId       = !!window.currentSelectedWordId;
-
-        if (hasTokenSel || hasNodeSel || hasId) {
-          window.resetSelection();
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }
-    },
-    true // capture so it runs early, but we still check the modal first
-  );
-}

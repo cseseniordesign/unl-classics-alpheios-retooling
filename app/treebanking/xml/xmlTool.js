@@ -447,7 +447,6 @@ export function setupXMLTool() {
             }
             discardXmlEdits();
           }
-          exitReadOnly();
         });
       }
     });
@@ -455,13 +454,20 @@ export function setupXMLTool() {
     window.xmlListenersAttached = true;
   }
 
-  // --- Auto-clear read-only when XML tab becomes inactive ---
-  const observer = new MutationObserver(() => {
-    if (!xmlBtn.classList.contains('active')) {
-      exitReadOnly();
-    }
-  });
-  observer.observe(xmlBtn, { attributes: true, attributeFilter: ['class'] });
+// --- Auto-clear read-only when XML tab becomes inactive ---
+const observer = new MutationObserver(() => {
+  const xmlActive = xmlBtn.classList.contains('active');
+  // Is *some other* toolbar button active (morph, relation, sentence, etc.)?
+  const otherActive = document.querySelector('#toolbar button.active:not(#xml)');
+
+  // Only exit read-only if:
+  //  - XML is not active, AND
+  //  - no other tool is active (plain treebanking mode)
+  if (!xmlActive && !otherActive) {
+    exitReadOnly();
+  }
+});
+observer.observe(xmlBtn, { attributes: true, attributeFilter: ['class'] });
 }
 
 /**
