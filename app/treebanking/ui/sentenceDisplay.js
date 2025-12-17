@@ -82,20 +82,13 @@ function clearTreebankSelectionBanner() {
  * @returns {Promise<void>} Resolves after loading data and rendering the selected sentence and its tree.
  */
 export async function displaySentence(index) {
-  // const sentenceInput = window.sessionStorage.getItem("userInput");
-  // if (sentenceInput) {
-  //   document.getElementById("input-sentence").textContent = sentenceInput;
-  //   window.rawSentence = sentenceInput;
-  //   const results = await tokenizer(sentenceInput);
-  //   console.log(results[0].words[0]);
-  //   return;
-  // }
+  // Check whether the sentence comes from XML or user input
+  window.appMode = window.sessionStorage.getItem("userInput") ? "userInput" : "uploadXML";
 
   index = Number(index);
   if (!Number.isFinite(index)) index = 1;
 
   const tokenizedSentence = document.getElementById('tokenized-sentence');
-  // if (!tokenizedSentence) return;
 
   // Whenever we change sentences, completely reset tool state.
   if (window.isMorphActive && typeof window.closeMorphTool === "function") {
