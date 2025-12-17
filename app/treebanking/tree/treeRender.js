@@ -1,5 +1,7 @@
 import { colorForPOS, fitTreeToView } from './treeUtils.js';
 import {handleWordClick} from '../ui/sentenceDisplay.js'
+import { positionUserInputTree } from './treeUtils.js';
+import { setupWordHoverSync } from './hoverSync.js';
 window.selectedWordId = null; // keeps track of first clicked node
 
 /**
@@ -13,9 +15,19 @@ window.selectedWordId = null; // keeps track of first clicked node
  * @param {string|number} sentenceId - ID of the sentence to visualize.
  * @returns {void} Runs synchronously to render the dependency tree for the specified sentence.
  */
-export function createNodeHierarchy(sentenceId) {
-  const data = window.treebankData;
-  if (!data) return;
+export function createNodeHierarchy(sentenceId) { // yesterday
+  if (!window.treebankData || !Array.isArray(window.treebankData)) {
+    console.warn("No treebank data found.");
+    return;
+  }
+
+  const data = window.treebankData.length > 0 
+    ? (isEmptyDependencyTree(window.treebankData)
+        ? collapsedTreeView(window.treebankData)          // user input/empty dependencies
+        : dependencyFilteredTreeView(window.treebankData)) // uploaded XML or partially annotated
+    : null; 
+
+  if (!data || data.length === 0) return;
 
   // Locate the specific sentence object using its ID
   const sentence = data.find(s => s.id === `${sentenceId}`);
@@ -82,9 +94,16 @@ export function createNodeHierarchy(sentenceId) {
     });
   svg.call(zoom);
 
-  // Adjust zoom level and centering to fit tree neatly in view
-  fitTreeToView(svg, gx, container, zoom, margin);
+   // Adjust zoom level and centering to fit tree neatly in view
+  if (window.appMode == "userInput") {
+    positionUserInputTree(svg, gx, container, zoom, margin);
+  } else if (window.appMode == "uploadXML") {
+    fitTreeToView(svg, gx, container, zoom, margin);
+  }
+  // Re-sync highlights after nodes are redrawn
+  setupWordHoverSync();
 }
+
 
 // ---------------------------------------------------------------------------
 // FUNCTION: fastRefreshTree
@@ -402,7 +421,7 @@ export function hideTree() {
 
 /**
  * --------------------------------------------------------------------------
- * FUNCTION: hideTree
+ * FUNCTION: displayTree
  * --------------------------------------------------------------------------
  * Resumes displaying the current tree
  *
@@ -418,4 +437,76 @@ export function displayTree() {
     document.getElementById("focus-selection").style.display = 'flex';
     document.getElementById("center").style.display = 'flex';
     document.getElementById("sandbox").style.overflowY = '';
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: isEmptyDependencyTree
+ * --------------------------------------------------------------------------
+ * Checks if every word in every sentence has a null head, meaning the 
+ * dependency tree is empty.
+ * 
+ * @param {Array} treebankData - Array of sentence objects
+ * @returns {boolean} - True if tree is empty, false otherwise
+ */
+function isEmptyDependencyTree(treebankData) {
+  return treebankData.every(sentence =>
+    sentence.words.every(word => word.head === null)
+  );
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: collapsedTreeView
+ * --------------------------------------------------------------------------
+ * Produces a collapsed tree view for all sentences:only the sentence structure 
+ * without any words.
+ * 
+ * @param {Array} treebankData - Array of sentence objects
+ * @returns {Array} - New array with sentences containing empty words
+ */
+function collapsedTreeView(treebankData) {
+  return treebankData.map(sentence => ({
+    ...sentence,
+    words: [],
+  }));
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: getActiveWords
+ * --------------------------------------------------------------------------
+ * Returns only the words that are active in the dependency tree: words that 
+ * either have a head or are heads of other words.
+ * 
+ * @param {Object} sentence - Sentence object with words
+ * @returns {Array} - Filtered array of active words
+ */
+function getActiveWords(sentence) {
+  const heads = new Set(
+    sentence.words
+      .filter(w => w.head !== null)
+      .map(w => w.head)
+  );
+
+  return sentence.words.filter(
+    w => w.head !== null || heads.has(w.id)
+  );
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: dependencyFilteredTreeView
+ * --------------------------------------------------------------------------
+ * Produces a filtered tree view containing only active words
+ * (those with dependencies or that are heads of other words).
+ * 
+ * @param {Array} treebankData - Array of sentence objects
+ * @returns {Array} - New array with sentences filtered by active words
+ */
+function dependencyFilteredTreeView(treebankData) {
+  return treebankData.map(sentence => ({
+    ...sentence,
+    words: getActiveWords(sentence)
+  }));
 }
