@@ -1,4 +1,5 @@
 import parseTreeBankXML from "./parser.js";
+import { getLanguage } from "../input/language.js";
 
 /**
  * --------------------------------------------------------------------------
@@ -65,6 +66,9 @@ function normalizeXML(xmlString) {
  
   const root = xmlDoc.createElement("treebank");
   xmlDoc.appendChild(root);
+  
+  root.setAttribute("xml:lang", getLanguage());
+  root.setAttribute("direction", localStorage.getItem("textDirection") || "");
 
   const sentences = source.getElementsByTagName("s");
 

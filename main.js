@@ -14,6 +14,7 @@ import { createTable, switchToTree } from './app/treebanking/table/tableRender.j
 import { setupSentenceTool } from './app/treebanking/ui/sentenceTool.js';
 import { setupRelationTool } from './app/treebanking/relation/relationTool.js';
 import { tokenizer } from './app/treebanking/xml/tokenizer.js';
+import { setLanguage } from "./app/treebanking/input/language.js";
 
 window.root = null;
 window.svg = null;
@@ -136,7 +137,7 @@ function setupTreeButtons() {
    ============================================================================ */
 document.addEventListener('DOMContentLoaded', async () => {
   let initializedFromUserInput = false;
-
+  setLanguage(localStorage.getItem("textLanguage") || "grc");
   const userInput = sessionStorage.getItem("userInput");
  
   // --- Load and render ---

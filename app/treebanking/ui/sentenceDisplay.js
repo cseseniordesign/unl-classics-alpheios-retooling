@@ -9,6 +9,7 @@ import { isTableVisible } from '../../../main.js';
 import { createTable } from '../table/tableRender.js';
 import { recomputeDirty, discardXmlEdits } from '../xml/xmlTool.js';
 import { showConfirmDialog } from './modal.js';
+import { getLanguage, isMorpheusSupported } from '../input/language.js';
 
 // ---------------------------------------------------------------------------
 // Treebank mode banner helpers
@@ -190,7 +191,10 @@ export async function displaySentence(index) {
 let selectedWordId = null; // keeps track of the first click(dependent word)
 
 export function handleWordClick(wordId, word) {
-  fetchMorphology(word, "grc").then(console.log);
+  const lang = getLanguage();
+  if (isMorpheusSupported(lang)) {
+    fetchMorphology(word, lang).then(console.log);
+  }
 
   const tokenEl = document.querySelector(`button[data-word-id="${wordId}"]`) ||
                   document.querySelector(`.token[data-word-id="${wordId}"]`);

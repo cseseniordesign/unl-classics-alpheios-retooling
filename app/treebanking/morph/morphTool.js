@@ -4,6 +4,7 @@ import { colorForPOS } from '../tree/treeUtils.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
 import { fetchMorphology } from './morpheus.js';
 import { showConfirmDialog } from '../ui/modal.js';
+import { isMorpheusSupported, getLanguage } from '../input/language.js';
 
 /**
  * --------------------------------------------------------------------------
@@ -768,10 +769,8 @@ async function attachMorpheusSuggestions(word, toolBody) {
   if (word._morpheusLoaded) return;
   word._morpheusLoaded = true;
 
-  const lang =
-    window.treebankLang ||
-    window.treeLanguage ||
-    'grc';
+  const lang = getLanguage();
+  if (!isMorpheusSupported(lang)) return;
 
   const surface =
     (word.form && String(word.form).trim()) || '';

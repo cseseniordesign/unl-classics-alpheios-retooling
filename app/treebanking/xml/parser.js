@@ -1,3 +1,5 @@
+import { setLanguage } from "../input/language.js";
+
 /** Parses a full Treebank XML containing multiple <sentence> elements.
  * Returns a structured array of sentence objects, each with its own words.
  *
@@ -12,6 +14,11 @@ export default function parseTreeBankXML(xmlString) {
   const root = xmlDoc.documentElement;
   const textDirection = root.getAttribute("direction");
   const textLanguage = root.getAttribute("xml:lang");
+
+  if (textLanguage) setLanguage(textLanguage);
+  if (textDirection) localStorage.setItem("textDirection", textDirection);
+  if (textLanguage) localStorage.setItem("textLanguage", textLanguage);
+  
   localStorage.setItem("textDirection", textDirection);
   localStorage.setItem("textLanguage", textLanguage);
   
