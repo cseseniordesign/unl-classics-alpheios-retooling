@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<treebank xmlns="http://body.alpheios.net/namespaces/treebank/1.7" 
+          version="2.0" 
+          lang="not-a-language-code-123">
+          
+    <sentence id="s1">
+        <word id="first" form="arma" lemma="arma" postag="n-p---na-" />
+        
+        <word id="2" lemma="virumque" postag="n-s---ma-" />
+        
+        <comment>This is valid.</comment>
+    </sentence>
+
+</treebank>

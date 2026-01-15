@@ -1,52 +1,114 @@
 import parseTreeBankXML from './parser.js';
+import { validateXML } from "../libs/xmllint/index-browser.mjs"; 
+
+
+/**
+ * Checks the XML for the xml:lang attribute and validates the code.
+ * @param {Document} xmlDoc - The parsed XML DOM document
+ * @returns {true|null} - True, or null if invalid
+ */
+function validateLanguage(xmlDoc) {
+    const root = xmlDoc.documentElement;
+    
+    // Check for xml:lang (standard) or lang (fallback)
+    const lang = root.getAttribute("xml:lang") || root.getAttribute("lang");
+
+    if (!lang) {
+        alert("Validation Error: Missing 'xml:lang' attribute in <treebank>.");
+        return null;
+    }
+    if (!isRealISOLanguage(lang)) {
+      alert(`Validation Error: '${lang}' Unsupported language code in XML. Please use valid code eg.('grc','lat'). `)
+      return null;
+    }
+    return true;
+}
+
+/**
+ * checks to see if the code is in the valid languages json
+ */
+async function isRealISOLanguage(code) {
+    try {
+        const response = await fetch("/assets/languages.json")
+        const languageCodes = await response.json();
+        return languageCodes.some(langObj => langObj.Id.toLowerCase() === code);
+    } catch (error) {
+       console.error("Could not load language database:", error);
+    }
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: validate
+ * --------------------------------------------------------------------------
+ * Validates XML content against the provided XSD schema.
+ */
+async function validate(xmlContent) {
+  const schema = await fetch("/app/treebanking/schemas/treebank-1.7.xsd").then(r => r.text());
+  const result = await validateXML({
+    xml: xmlContent,
+    schema
+  });
+
+  if (result.errors && result.errors.length > 0) {
+    console.error("Validation errors:", result.errors);
+    return false;
+  }
+  return true;
+}
 
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: handleFileUpload
  * --------------------------------------------------------------------------
- * Takes the xml file, reads it and stringifies it
- *
- * Calls loadTreeBankData to load and parse the treebank information
- * Changes the url to the treebanking webpage 
- * 
+ * Handles file upload, validates XML against schema, then loads treebank data.
  */
 export function handleFileUpload() {
-    const fileInput = document.getElementById("file");
-    const file = fileInput.files[0];
+  const fileInput = document.getElementById("file");
+  const file = fileInput.files[0];
+  if (!file) return;
 
-    if (!file) return;
+  if (!file.name.toLowerCase().endsWith(".xml")) {
+    alert("Please upload an XML file.");
+    fileInput.value = "";
+    return;
+  }
 
-    // Check it's XML
-    if (!file.name.toLowerCase().endsWith(".xml")) {
-        alert("Please upload an XML file.");
+  const reader = new FileReader();
+
+  reader.onload = async function (event) {
+    const xmlInput = event.target.result;
+
+    // Validate XML
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(xmlInput, "text/xml");
+    const langCode = validateLanguage(xmlDoc);
+
+    if (!langCode) {
         fileInput.value = "";
         return;
     }
 
-    const reader = new FileReader();
+    const isValid = await validate(xmlInput);
+    if (!isValid) {
+      alert("File not valid.");
+      fileInput.value = "";
+      return;
+    }
 
-    reader.onload = function (event) {
-        const xmlContent = event.target.result; // <--- raw XML content as STRING
-        // load the treebank data and open up treebanking webpage
-        loadTreebankData(xmlContent);
-        window.location.href = "./treebanking.html";
-    };
+    // If valid, parse and open treebank window   
+    loadTreebankData(xmlInput);
+    window.location.href = "./treebanking.html";
+  };
 
-    reader.onerror = function () {
-        alert("Error reading file.");
-    };
-
-    reader.readAsText(file, 'UTF-8');
+  reader.readAsText(file, "UTF-8");
 }
 
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: loadTreebankData
  * --------------------------------------------------------------------------
- * Loads and parses the Treebank XML file only once, then caches it globally.
- *
- * @returns {Promise<Array<Object>>} Resolves once XML is fetched and parsed into an array of sentence objects.
- *          Each sentence has { id, words: [...] }.
+ * Loads and parses the Treebank XML file.
  */
 export async function loadTreebankData(xmlContent) {
   if (!xmlContent) {
@@ -62,12 +124,10 @@ export async function loadTreebankData(xmlContent) {
     }
   } else {
     try {
-      // Use the raw XML string directly
       localStorage.setItem("xmlContent", xmlContent);
       const parsed = parseTreeBankXML(xmlContent);
       localStorage.setItem("treebankData", JSON.stringify(parsed));
-      // clear any previous user input
-      sessionStorage.removeItem("userInput");
+      window.treebankData = parsed;
       return window.treebankData;
     } catch (err) {
       console.error('Error parsing uploaded XML:', err);
@@ -76,4 +136,5 @@ export async function loadTreebankData(xmlContent) {
   }
 }
 
+// Expose globally for inline HTML calls
 window.handleFileUpload = handleFileUpload;

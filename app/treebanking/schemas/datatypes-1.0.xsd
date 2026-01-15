@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+    elementFormDefault="qualified"
+    attributeFormDefault="unqualified" 
+    targetNamespace="http://alpheios.net/namespaces/datatypes/1"
+    xmlns:alphdt1="http://alpheios.net/namespaces/datatypes/1"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    vc:minVersion="1.1" xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"> 
+
+
+    <xs:annotation>
+        <xs:documentation>
+            The CURIE and link datatypes in this schema are based upon 
+            (and taken almost vertabim from) data types in the RDFA/XHTML schemas. 
+            We are redefining them rather than importing them for simplicity and 
+            because of namespacing issues with the xhtml and rdfa-a schemas.
+        </xs:documentation>
+    </xs:annotation>
+    
+    <xs:import namespace="http://www.w3.org/1999/xlink" schemaLocation="http://www.w3.org/1999/xlink.xsd"/>  
+    
+    <!-- Simple sequential element identifier attribute -->
+    <xs:simpleType name="NSeqType">
+        <xs:restriction base="xs:positiveInteger"/>
+    </xs:simpleType>
+    
+    <xs:simpleType name="CitePrefixType">
+        <xs:annotation>
+            <xs:documentation>
+                The citeprefix attribute is used to declare the definition of a 
+                CURIE prefix for a resource reference in cite attribute.
+                See http://www.w3.org/TR/rdfa-syntax/#s_curies for a discussion of CURIEs
+            </xs:documentation>
+        </xs:annotation>
+        <xs:list itemType="alphdt1:PrefixItemType"/>
+    </xs:simpleType>
+    
+    <xs:simpleType name="PrefixItemType">
+        <xs:annotation>
+            <xs:documentation>
+                This should be restricted to a whitespace-separated NCNAME: xsd:anyURI pair
+                leaving as xs:string for now until I can figure out how to do that.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string"/>
+    </xs:simpleType>
+    
+    <xs:simpleType name="CiteType">
+        <xs:restriction base="alphdt1:URIorSafeCURIEsType"/>
+    </xs:simpleType>
+    
+    <xs:simpleType name="CURIEType">
+        <xs:annotation>
+            <xs:documentation>
+                Taken from http://www.w3.org/MarkUp/SCHEMA/xhtml-datatypes-1.xsd
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:pattern value="(([\i-[:]][\c-[:]]*)?:)?.+"/>
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+    <xs:simpleType name="CURIEsType">
+        <xs:annotation>
+            <xs:documentation>
+                Taken from http://www.w3.org/MarkUp/SCHEMA/xhtml-datatypes-1.xsd
+            </xs:documentation>
+        </xs:annotation>
+        <xs:list itemType="alphdt1:CURIEType"/>
+    </xs:simpleType>
+    
+    <xs:simpleType name="SafeCURIEType">
+        <xs:annotation>
+            <xs:documentation>
+                Taken from http://www.w3.org/MarkUp/SCHEMA/xhtml-datatypes-1.xsd
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:pattern value="\[(([\i-[:]][\c-[:]]*)?:)?.+\]"/>
+            <xs:minLength value="3"/>
+        </xs:restriction>
+    </xs:simpleType>
+    
+    <xs:simpleType name="SafeCURIEsType">
+        <xs:annotation>
+            <xs:documentation>
+                Taken from http://www.w3.org/MarkUp/SCHEMA/xhtml-datatypes-1.xsd
+            </xs:documentation>
+        </xs:annotation>
+        <xs:list itemType="alphdt1:SafeCURIEType"/>
+    </xs:simpleType>
+    
+    <xs:simpleType name="URIorSafeCURIEType">
+        <xs:annotation>
+            <xs:documentation>
+                Taken from http://www.w3.org/MarkUp/SCHEMA/xhtml-datatypes-1.xsd
+            </xs:documentation>
+        </xs:annotation>
+        <xs:union memberTypes="xs:anyURI alphdt1:SafeCURIEType"/>
+    </xs:simpleType>
+    
+    <xs:simpleType name="URIorSafeCURIEsType">
+        <xs:annotation>
+            <xs:documentation>
+                Taken from http://www.w3.org/MarkUp/SCHEMA/xhtml-datatypes-1.xsd
+            </xs:documentation>
+        </xs:annotation>
+        <xs:list itemType="alphdt1:URIorSafeCURIEType"/>
+    </xs:simpleType>
+    
+    <xs:group name="LinkContentType">
+        <xs:annotation>
+            <xs:documentation>
+                Taken from http://www.w3.org/MarkUp/SCHEMA/xhtml-rdfa-2.xsd link.content
+            </xs:documentation>
+        </xs:annotation>
+        <xs:sequence/>
+    </xs:group>
+    
+    <xs:complexType name="LinkType">
+        <xs:annotation>
+            <xs:documentation>
+                Type for modeling external links.
+            </xs:documentation>
+        </xs:annotation>
+        <xs:group ref="alphdt1:LinkContentType"/>
+        <xs:attributeGroup ref="alphdt1:LinkAttList"/>
+    </xs:complexType>
+    
+    <xs:attributeGroup name="LinkAttList">
+        <xs:annotation>
+            <xs:documentation>
+                Subset of Xlink Attributes for simple xlink types
+            </xs:documentation>
+        </xs:annotation>
+        <xs:attribute name="charset" type="xs:string"/>
+        <xs:attribute ref="xlink:type" fixed="simple"/>
+        <xs:attribute ref="xlink:href" use="required"/>
+        <xs:attribute ref="xlink:role" use="required"/>
+        <xs:attribute ref="xlink:title" use="optional"/>
+    </xs:attributeGroup>
+    
+    <!-- Language code attribute -->
+    <xs:simpleType name="LanguageCodeType">
+        <xs:annotation>
+            <xs:documentation>
+                Taken from http://www.w3.org/MarkUp/SCHEMA/xhtml-datatypes-1.xsd
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:language"/>
+    </xs:simpleType>
+    
+    <!-- Language direction attribute -->
+    <xs:simpleType name="LanguageDirType">
+        <xs:annotation>
+            <xs:documentation>
+                Type of language direction attribute: rtl or ltr
+            </xs:documentation>
+        </xs:annotation>
+        <xs:restriction base="xs:string">
+            <xs:pattern value="rtl"></xs:pattern>
+            <xs:pattern value="ltr"></xs:pattern>
+        </xs:restriction>
+    </xs:simpleType>
+    
+</xs:schema>

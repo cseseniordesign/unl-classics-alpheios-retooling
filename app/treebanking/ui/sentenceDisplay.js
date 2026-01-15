@@ -119,6 +119,11 @@ export async function displaySentence(index) {
     window.resetSelection();
   }
 
+  if (!tokenizedSentence) {
+        // If the element isn't found, stop here so we don't crash the script
+        console.warn("Display target 'tokenized-sentence' not found. Waiting for DOM...");
+        return; 
+    }
   // Clear previously displayed sentence text
   tokenizedSentence.textContent = '';
 
