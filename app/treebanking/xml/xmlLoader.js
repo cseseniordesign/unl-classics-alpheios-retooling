@@ -2,12 +2,29 @@ import parseTreeBankXML from './parser.js';
 import { validateXML } from "../libs/xmllint/index-browser.mjs"; 
 
 
+function captureTreebankMeta(xmlDoc) {
+  const root = xmlDoc?.documentElement;
+  if (!root || root.nodeName !== "treebank") return;
+
+  const meta = {
+    version: root.getAttribute("version") || null,
+    format: root.getAttribute("format") || null,
+    xmlLang: (root.getAttribute("xml:lang") || root.getAttribute("lang") || "").toLowerCase() || null,
+    direction: root.getAttribute("direction") || null,
+    xmlnsSaxon: root.getAttribute("xmlns:saxon") || null,
+  };
+
+  window.treebankMeta = meta;
+  localStorage.setItem("treebankMeta", JSON.stringify(meta));
+}
+
+
 /**
  * Checks the XML for the xml:lang attribute and validates the code.
  * @param {Document} xmlDoc - The parsed XML DOM document
  * @returns {true|null} - True, or null if invalid
  */
-function validateLanguage(xmlDoc) {
+async function validateLanguage(xmlDoc) {
     const root = xmlDoc.documentElement;
     
     // Check for xml:lang (standard) or lang (fallback)
@@ -17,9 +34,10 @@ function validateLanguage(xmlDoc) {
         alert("Validation Error: Missing 'xml:lang' attribute in <treebank>.");
         return null;
     }
-    if (!isRealISOLanguage(lang)) {
-      alert(`Validation Error: '${lang}' Unsupported language code in XML. Please use valid code eg.('grc','lat'). `)
-      return null;
+    const ok = await isRealISOLanguage(lang.toLowerCase());
+    if (!ok) {
+        alert(`Validation Error: '${lang}' Unsupported language code in XML. Please use valid code eg.('grc','lat'). `);
+        return null;
     }
     return true;
 }
@@ -31,7 +49,7 @@ async function isRealISOLanguage(code) {
     try {
         const response = await fetch("/assets/languages.json")
         const languageCodes = await response.json();
-        return languageCodes.some(langObj => langObj.Id.toLowerCase() === code);
+        return languageCodes.some(langObj => langObj.Id.toLowerCase() === code.toLowerCase());
     } catch (error) {
        console.error("Could not load language database:", error);
     }
@@ -82,7 +100,8 @@ export function handleFileUpload() {
     // Validate XML
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(xmlInput, "text/xml");
-    const langCode = validateLanguage(xmlDoc);
+    const langCode = await validateLanguage(xmlDoc);
+    captureTreebankMeta(xmlDoc);
 
     if (!langCode) {
         fileInput.value = "";
@@ -96,7 +115,8 @@ export function handleFileUpload() {
       return;
     }
 
-    // If valid, parse and open treebank window   
+    // If valid, parse and open treebank window and capture meta
+    captureTreebankMeta(xmlDoc);   
     loadTreebankData(xmlInput);
     window.location.href = "./treebanking.html";
   };
@@ -116,6 +136,8 @@ export async function loadTreebankData(xmlContent) {
     try {
       const response = await fetch('../../assets/treebank.xml');
       const xmlText = await response.text();
+      const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
+      captureTreebankMeta(xmlDoc);
       window.treebankData = parseTreeBankXML(xmlText);
       return window.treebankData;
     } catch (err) {

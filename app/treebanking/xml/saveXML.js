@@ -152,6 +152,31 @@
 let lastXML = "";
 let autoSaveTimer = null;
 
+function getTreebankMetaForSave() {
+  let meta = window.treebankMeta || {};
+  const stored = localStorage.getItem("treebankMeta");
+  if (stored) {
+    try { meta = { ...meta, ...JSON.parse(stored) }; } catch (_) {}
+  }
+
+  const direction = meta.direction || localStorage.getItem("textDirection") || "ltr";
+  const xmlLang = (meta.xmlLang || localStorage.getItem("textLanguage") || "grc").toLowerCase();
+
+  const version = meta.version || "1.5";
+
+  // required, unknown languages get a predictable placeholder:
+  const format = meta.format || `morph${xmlLang}`;
+
+  const xmlnsSaxon = meta.xmlnsSaxon || "http://saxon.sf.net/";
+
+  return { xmlnsSaxon, direction, xmlLang, version, format };
+}
+
+function buildTreebankOpenTag() {
+  const m = getTreebankMetaForSave();
+  return `<treebank xmlns:saxon="${m.xmlnsSaxon}" xml:lang="${m.xmlLang}" version="${m.version}" direction="${m.direction}" format="${m.format}">`;
+}
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: buildXML
@@ -164,8 +189,7 @@ export function buildXML() {
   const textLangauge = localStorage.getItem("textLanguage") || "";
 
   if (!window.treebankData) return "";
-
-  let xmlOut = '<?xml version="1.0" encoding="UTF-8"?>\n<treebank direction=\"' + textDirection + '\"\n          xml:lang=\"'+ textLangauge +'\">\n';
+  let xmlOut = `<?xml version="1.0" encoding="UTF-8"?>\n${buildTreebankOpenTag()}\n`;
   for (const s of window.treebankData) {
     xmlOut += `  <sentence id="${s.id}">\n`;
     for (const w of s.words) {
