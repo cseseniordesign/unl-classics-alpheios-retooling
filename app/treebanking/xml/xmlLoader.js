@@ -13,7 +13,6 @@ function captureTreebankMeta(xmlDoc) {
     direction: root.getAttribute("direction") || null,
     xmlnsSaxon: root.getAttribute("xmlns:saxon") || null,
   };
-
   window.treebankMeta = meta;
   localStorage.setItem("treebankMeta", JSON.stringify(meta));
 }
@@ -39,6 +38,8 @@ async function validateLanguage(xmlDoc) {
         alert(`Validation Error: '${lang}' Unsupported language code in XML. Please use valid code eg.('grc','lat'). `);
         return null;
     }
+    //set the window language to the lang attribute if its valid
+    window.treeBankLang = lang;
     return true;
 }
 

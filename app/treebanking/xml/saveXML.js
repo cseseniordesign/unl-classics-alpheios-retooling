@@ -160,7 +160,7 @@ function getTreebankMetaForSave() {
   }
 
   const direction = meta.direction || localStorage.getItem("textDirection") || "ltr";
-  const xmlLang = (meta.xmlLang || localStorage.getItem("textLanguage") || "grc").toLowerCase();
+  const xmlLang = (localStorage.getItem("textLanguage") || "grc").toLowerCase();
 
   const version = meta.version || "1.5";
 
@@ -187,7 +187,7 @@ function buildTreebankOpenTag() {
 export function buildXML() {
   const textDirection = localStorage.getItem("textDirection") || "";
   const textLangauge = localStorage.getItem("textLanguage") || "";
-
+  console.log("lang" + textLangauge);
   if (!window.treebankData) return "";
   let xmlOut = `<?xml version="1.0" encoding="UTF-8"?>\n${buildTreebankOpenTag()}\n`;
   for (const s of window.treebankData) {

@@ -16,12 +16,7 @@ import { setupRelationTool } from './app/treebanking/relation/relationTool.js';
 import { tokenizer } from './app/treebanking/xml/tokenizer.js';
 import { setLanguage } from "./app/treebanking/input/language.js"; 
 
-//import { handleFileUpload } from './app/treebanking/xml/xmlLoader.js';
-// expose it globally so inline onchange works
 window.handleFileUpload = handleFileUpload;
-/*document.getElementById('file')
-  .addEventListener('change', handleFileUpload);*/
-
 
 window.root = null;
 window.svg = null;
@@ -166,6 +161,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     sessionStorage.removeItem("userInput");
 
     const raw = localStorage.getItem("treebankData");
+    console.log("hello");
+    console.log(raw);
     
     if (!raw) { 
       await loadTreebankData();
