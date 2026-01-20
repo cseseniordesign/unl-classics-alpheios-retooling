@@ -55,14 +55,7 @@ function setupRedoButton() {
 }
 
 
-function handleExit() {
-  const exit = document.querySelector("#exit");
-  exit.addEventListener("click", ()=> {
-    if(confirm("Are you sure you want to exit?") == true){
-      window.location = '/index.html'
-    }
-  });
-}
+
 /**  
  *
  * ------------------------------------------------------------------------
