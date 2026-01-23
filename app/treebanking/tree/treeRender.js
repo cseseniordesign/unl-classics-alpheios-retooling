@@ -21,11 +21,15 @@ export function createNodeHierarchy(sentenceId) { // yesterday
     return;
   }
 
-  const data = window.treebankData.length > 0 
-    ? (isEmptyDependencyTree(window.treebankData)
-        ? collapsedTreeView(window.treebankData)          // user input/empty dependencies
-        : dependencyFilteredTreeView(window.treebankData)) // uploaded XML or partially annotated
-    : null; 
+  const isEmptyTree = isEmptyDependencyTree(window.treebankData);
+
+  const data = window.treebankData;
+  // const data = window.treebankData.length > 0 
+  //   ? (isEmptyTree
+  //       ? collapsedTreeView(window.treebankData)
+  //       : dependencyFilteredTreeView(window.treebankData))
+  //   : null; 
+
 
   if (!data || data.length === 0) return;
 
@@ -450,9 +454,10 @@ export function displayTree() {
  * @returns {boolean} - True if tree is empty, false otherwise
  */
 function isEmptyDependencyTree(treebankData) {
-  return treebankData.every(sentence =>
+  const result = treebankData.every(sentence =>
     sentence.words.every(word => word.head === null)
   );
+  return result;
 }
 
 /**

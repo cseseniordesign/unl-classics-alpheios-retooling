@@ -83,6 +83,10 @@ async function validate(xmlContent) {
  * Handles file upload, validates XML against schema, then loads treebank data.
  */
 export function handleFileUpload() {
+
+  localStorage.removeItem("xmlContent");
+  localStorage.removeItem("treebankData");
+
   const fileInput = document.getElementById("file");
   const file = fileInput.files[0];
   if (!file) return;
@@ -119,6 +123,11 @@ export function handleFileUpload() {
     // If valid, parse and open treebank window and capture meta
     captureTreebankMeta(xmlDoc);   
     loadTreebankData(xmlInput);
+
+    const stored = JSON.parse(localStorage.getItem("treebankData"));
+
+    fileInput.value = "";
+
     window.location.href = "./treebanking.html";
   };
 

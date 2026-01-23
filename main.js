@@ -57,7 +57,12 @@ function handleExit() {
   const exit = document.querySelector("#exit");
   exit.addEventListener("click", ()=> {
     if(confirm("Are you sure you want to exit?") == true){
-      window.location = '/index.html'
+      localStorage.removeItem("xmlContent");
+      localStorage.removeItem("treebankData");
+      sessionStorage.removeItem("userInput");  // ← ADD THIS LINE
+      window.uploadedFileHandle = null;
+      window.treebankData = null;
+      window.location = '/index.html';
     }
   });
 }
@@ -166,12 +171,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   if (!initializedFromUserInput) {
-    // Clear previous user input
     sessionStorage.removeItem("userInput");
-
+    
     const raw = localStorage.getItem("treebankData");
-    console.log("hello");
-    console.log(raw);
     
     if (!raw) { 
       await loadTreebankData();
@@ -180,8 +182,9 @@ document.addEventListener('DOMContentLoaded', async () => {
       const data = JSON.parse(raw);
       window.treebankData = data;
       window.appMode = "uploadXML";
-   }
+    }
   }
+
   if (window.treebankData) {
     await displaySentence(1);
   }

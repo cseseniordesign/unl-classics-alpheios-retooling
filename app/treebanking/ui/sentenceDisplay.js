@@ -148,7 +148,7 @@ export async function displaySentence(index) {
   }
 
   // Render tokens inline above the tree 
-    sentence.words.forEach((word) => {
+  sentence.words.forEach((word) => {
     const button = document.createElement("button");
     button.textContent = word.form + " ";
     button.classList.add("token");
@@ -159,8 +159,8 @@ export async function displaySentence(index) {
     // Add click interaction for Morph, Relation, and Focus modes
     button.addEventListener("click", (event) => handleWordClick(word.id,word.form));
 
-  tokenizedSentence.appendChild(button);
-});
+    tokenizedSentence.appendChild(button);
+  }); 
 
   // Generate and display the D3 dependency tree
   createNodeHierarchy(index);
