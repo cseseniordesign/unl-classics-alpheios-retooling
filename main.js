@@ -67,6 +67,68 @@ function handleExit() {
   });
 }
 
+function setupSelectorButton() {
+    const button = document.getElementById("selector");
+    if (button) {
+        button.addEventListener("click", function() {
+            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+        });
+    }
+}
+
+function setupHistoryButton() {
+    const button = document.getElementById("history");
+    if (button) {
+        button.addEventListener("click", function() {
+            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+        });
+    }
+}
+
+function setupCommentButton() {
+    const button = document.getElementById("comment");
+    if (button) {
+        button.addEventListener("click", function() {
+            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+        });
+    }
+}
+
+function setupSettingsButton() {
+    const button = document.getElementById("settings");
+    if (button) {
+        button.addEventListener("click", function() {
+            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+        });
+    }
+}
+
+function setupQuestionsButton() {
+    const button = document.getElementById("questions");
+    const modal = document.getElementById('questionsModal');
+    const close = document.querySelector('.close');
+    
+    if (button && modal && close) {
+        // Open modal on button click
+        button.addEventListener("click", function() {
+            modal.style.display = 'block';
+        });
+        
+        // Close modal on X click
+        close.addEventListener("click", function() {
+            modal.style.display = 'none';
+        });
+    }
+}
+
+function setupLanguageButton() {
+    const button = document.getElementById("language");
+    if (button) {
+        button.addEventListener("click", function() {
+            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+        });
+    }
+}
 
 /**  
  *
