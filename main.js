@@ -103,26 +103,17 @@ function setupSettingsButton() {
     }
 }
 
-function setupQuestionsButton() {
-    const button = document.getElementById("questions");
-    const modal = document.getElementById('questionsModal');
-    const close = document.querySelector('.close');
-    
-    if (button && modal && close) {
-        // Open modal on button click
+function setupLanguageButton() {
+    const button = document.getElementById("language");
+    if (button) {
         button.addEventListener("click", function() {
-            modal.style.display = 'block';
-        });
-        
-        // Close modal on X click
-        close.addEventListener("click", function() {
-            modal.style.display = 'none';
+            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
         });
     }
 }
 
-function setupLanguageButton() {
-    const button = document.getElementById("language");
+function setupaTButton() {
+    const button = document.getElementById("aT");
     if (button) {
         button.addEventListener("click", function() {
             alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
@@ -267,4 +258,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupUndoButton();
   setupRedoButton();
   setupSentenceTool();  
+  setupSelectorButton();
+  setupHistoryButton();
+  setupCommentButton();
+  setupSettingsButton();
+  setupLanguageButton();
+  setupaTButton();
 });
