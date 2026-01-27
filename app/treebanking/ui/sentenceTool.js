@@ -559,33 +559,43 @@ export function setupSentenceTool() {
 
   if (!sentenceBtn || !toolBody) return;
 
-  sentenceBtn.addEventListener('click', () => {
+  // Expose a real close() so other tools can safely shut this tab off.
+  window.closeSentenceTool = function closeSentenceTool() {
+    const sentenceBtn = document.getElementById('sentence-tools');
+    const toolBody = document.getElementById('tool-body');
+
+    if (!sentenceBtn || !sentenceBtn.classList.contains('active')) return;
+
+    sentenceBtn.classList.remove('active');
+    sentenceBtn.style.backgroundColor = '#4e6476';
+
+    // Sentence tool is allowed to be read-only, so exiting MUST unlock the tree.
+    if (typeof exitReadOnly === "function") exitReadOnly();
+
+    if (toolBody) {
+      toolBody.innerHTML = window.treebankModeHTML
+        || `<p>Treebanking mode: click a word or node to edit dependencies.</p>`;
+    }
+  };
+
+  let lastHoverAt = 0;
+
+  const handler = () => {
     const wasActive = sentenceBtn.classList.contains('active');
 
-    // Reset all toolbar button states
+    if (wasActive) {
+      window.closeSentenceTool();
+      return;
+    }
+
+    // Reset all toolbar button states (only when ENTERING)
     allToolButtons.forEach(btn => btn.classList.remove('active'));
     allToolButtons.forEach(btn => btn.style.backgroundColor = '#4e6476');
     sentenceBtn.style.backgroundColor = 'green';
 
-    if (wasActive) {
-      // Leaving Sentence tools → back to treebanking mode
-      sentenceBtn.classList.remove('active');
-      sentenceBtn.style.backgroundColor = '#4e6476';
-      exitReadOnly();
-
-      if (window.treebankModeHTML) {
-        toolBody.innerHTML = window.treebankModeHTML;
-      } else {
-        toolBody.innerHTML =
-          `<p>Treebanking mode: click a word or node to edit dependencies.</p>`;
-      }
-      return;
-    }
-
     // Entering Sentence tools
     sentenceBtn.classList.add('active');
-
-    // If we were editing XML, discard safely
+    if (typeof window.closeXmlTool === "function") window.closeXmlTool();
     discardXmlEdits();
     enterReadOnly();
 
@@ -626,5 +636,15 @@ export function setupSentenceTool() {
 
     // Default mode = merge
     setMode('merge');
+  };
+
+  sentenceBtn.addEventListener("mouseenter", () => {
+    lastHoverAt = Date.now();
+    handler();
+  });
+
+  sentenceBtn.addEventListener("click", (e) => {
+    if (e?.isTrusted && (Date.now() - lastHoverAt) < 500) return;
+    handler();
   });
 }

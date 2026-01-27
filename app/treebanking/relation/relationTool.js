@@ -1,4 +1,5 @@
 import { triggerAutoSave } from "../xml/saveXML.js";
+import { colorForPOS } from "../tree/treeUtils.js";
 
 /**
  * Relation tool with nested Aux submenu.
@@ -211,23 +212,28 @@ function applyRelationChange(word, base, auxVariant, suffixKey) {
   triggerAutoSave();
 }
 
-/** Render relation editor for a single word into toolBody. */
+/** Render relation editor for a single word into a container. */
 function renderRelationEditor(word, toolBody) {
   if (!word || !toolBody) return;
+
+  const postag = word._displayPostag || word.postag || "";
+  const wordColor = colorForPOS({ postag });
 
   const { base, auxVariant, suffixKey } = parseRelation(word.relation);
   let currentBase   = base;
   let currentAux    = auxVariant;
   let currentSuffix = suffixKey;
 
-  const menuItems      = buildMenuItems();
-  const mainLabel      = labelForMain(currentBase, currentAux);
-  const suffixLabel    = labelForSuffix(currentSuffix);
+  const menuItems   = buildMenuItems();
+  const mainLabel   = labelForMain(currentBase, currentAux);
+  const suffixLabel = labelForSuffix(currentSuffix);
 
   toolBody.innerHTML = `
     <div class="relation-tool">
       <p class="morph-form">
-        ${word.form || ""}
+        <span class="relation-word" style="color:${wordColor}">
+          ${word.form || ""}
+        </span>
         <span class="morph-id" style="color:#9aa3ad">
           ${window.currentIndex}-${word.id}
         </span>
@@ -262,7 +268,6 @@ function renderRelationEditor(word, toolBody) {
     </div>
   `;
 
-  // --- grab elements ---
   const mainDropdown   = toolBody.querySelector(".rel-dropdown-main");
   const mainButton     = mainDropdown?.querySelector(".rel-button");
   const mainLabelEl    = mainDropdown?.querySelector(".rel-button-label");
@@ -281,7 +286,6 @@ function renderRelationEditor(word, toolBody) {
   function updateMainLabel() {
     mainLabelEl.textContent = labelForMain(currentBase, currentAux);
   }
-
   function updateSuffixLabel() {
     suffixLabelEl.textContent = labelForSuffix(currentSuffix);
   }
@@ -304,7 +308,6 @@ function renderRelationEditor(word, toolBody) {
     if (open) closeSuffixMenu(); else openSuffixMenu();
   }
 
-  // --- main dropdown behaviour ---
   mainButton.addEventListener("click", evt => {
     evt.stopPropagation();
     toggleMainMenu();
@@ -339,7 +342,6 @@ function renderRelationEditor(word, toolBody) {
     closeMainMenu();
   });
 
-  // --- suffix dropdown behaviour ---
   suffixButton.addEventListener("click", evt => {
     evt.stopPropagation();
     toggleSuffixMenu();
@@ -351,7 +353,6 @@ function renderRelationEditor(word, toolBody) {
 
     let key = item.dataset.key || "";
 
-    // don't allow suffix without main relation
     if ((currentBase === "---" || !currentBase) && key) {
       showToast("Choose a main relation before adding a suffix.", "warn");
       key = "";
@@ -363,7 +364,7 @@ function renderRelationEditor(word, toolBody) {
     closeSuffixMenu();
   });
 
-  // --- close both when clicking outside ---
+  // close both when clicking outside THIS container
   function handleDocClick(evt) {
     if (!toolBody.contains(evt.target)) {
       closeMainMenu();
@@ -380,18 +381,15 @@ export function setupRelationTool() {
   const allButtons  = document.querySelectorAll("#toolbar button");
   if (!relationBtn || !toolBody) return;
 
-  // avoid double-setup
   if (window.relationToolInitialized) return;
   window.relationToolInitialized = true;
 
-  // Public closer so other tools can shut Relation off if needed
   window.closeRelationTool = function () {
     relationBtn.classList.remove("active");
     relationBtn.style.backgroundColor = '#4e6476';
     document.body.classList.remove("mode-relation");
     window.isRelationActive = false;
 
-    // Back to treebanking mode UI
     if (window.treebankModeHTML) {
       toolBody.innerHTML = window.treebankModeHTML;
     } else {
@@ -400,72 +398,102 @@ export function setupRelationTool() {
     }
   };
 
+  function ensureRelationPanelScaffold() {
+    // If already present, do nothing
+    if (document.getElementById("relation-pinned") && document.getElementById("relation-hover")) return;
+
+    toolBody.innerHTML = `
+      <div id="relation-panel">
+        <div id="relation-pinned" class="relation-slot">
+          <p style="padding:8px;">Click a word to edit its dependency relation.</p>
+        </div>
+        <div id="relation-hover" class="relation-slot"></div>
+      </div>
+    `;
+  }
 
   const handler = () => {
     const wasActive = relationBtn.classList.contains("active");
 
-    // Clear all active toolbar buttons
     allButtons.forEach(btn => btn.classList.remove("active"));
     allButtons.forEach(btn => btn.style.backgroundColor = '#4e6476');
-    relationBtn.style.backgroundColor = 'green';
 
     if (wasActive) {
-      // We were on Relation → turn it off
       window.closeRelationTool();
-      relationBtn.style.backgroundColor = '#4e6476';
       return;
     }
 
-    // We are switching *to* Relation from some other tool.
-    // Let other tools clean up their own state if they expose closers.
-    if (typeof window.closeMorphTool === "function") {
-      window.closeMorphTool();
-    }
-    if (typeof window.closeSentenceTool === "function") {
-      window.closeSentenceTool();
-    }
-    if (typeof window.exitReadOnly === "function") {
-      // XML tool's "leave edit mode"
-      window.exitReadOnly();
-    }
+    // switching *to* Relation: close others
+    if (typeof window.closeMorphTool === "function") window.closeMorphTool();
+    if (typeof window.closeSentenceTool === "function") window.closeSentenceTool();
+    if (typeof window.exitReadOnly === "function") window.exitReadOnly();
 
-    // Activate Relation
+    // Activate
     relationBtn.classList.add("active");
+    relationBtn.style.backgroundColor = "green";
     document.body.classList.add("mode-relation");
     window.isRelationActive = true;
 
-    // If a word is already selected, immediately show its relation info
+    // Build panel slots
+    ensureRelationPanelScaffold();
+
+    // If a word is already selected, pin it immediately
     const selectedToken = document.querySelector(".token.selected");
     if (selectedToken && Array.isArray(window.treebankData)) {
-        const wordId = selectedToken.dataset.wordId;
-
-        const currentSentence = window.treebankData.find(
-            s => s.id === `${window.currentIndex}`
-        );
-        const wordObj = currentSentence?.words.find(
-            w => String(w.id) === String(wordId)
-        );
-
-        if (wordObj) {
-        // Use your existing renderer
-            renderRelationEditor(wordObj, toolBody);
-            return; // we’re done, don’t overwrite with “Click a word…”
-        }
+      const wordId = selectedToken.dataset.wordId;
+      const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+      const wordObj = currentSentence?.words?.find(w => String(w.id) === String(wordId));
+      if (wordObj) {
+        const pinned = document.getElementById("relation-pinned");
+        const hover  = document.getElementById("relation-hover");
+        if (hover) hover.innerHTML = "";
+        if (pinned) renderRelationEditor(wordObj, pinned);
+        return;
+      }
     }
 
-    // Fallback if nothing is selected yet
-    toolBody.innerHTML =
-        '<p style="padding:8px;">Click a word to edit its dependency relation.</p>';
+    // otherwise keep default prompt (already in scaffold)
   };
 
-  // Single click handler
-  relationBtn.addEventListener("click", handler);
+  let lastHoverAt = 0;
 
-  // Called from sentenceDisplay / tree click
-  window.renderRelationInfo = function (word) {
-    // Guard based on the button state, not a stale flag
+  relationBtn.addEventListener("mouseenter", () => {
+    lastHoverAt = Date.now();
+    handler();
+  });
+
+  relationBtn.addEventListener("click", (e) => {
+    if (e?.isTrusted && (Date.now() - lastHoverAt) < 500) return;
+    handler();
+  });
+
+  // Slot-aware renderer called from sentenceDisplay / hoverSync
+  window.renderRelationInfo = function (word, opts = {}) {
     if (!relationBtn.classList.contains("active")) return;
-    renderRelationEditor(word, toolBody);
+    if (!word) return;
+
+    // Make sure scaffold exists (tree re-render / toolBody changes can wipe it)
+    ensureRelationPanelScaffold();
+
+    const slot = (opts && opts.slot === "hover") ? "hover" : "pinned";
+    const pinned = document.getElementById("relation-pinned");
+    const hover  = document.getElementById("relation-hover");
+    const root   = (slot === "hover") ? hover : pinned;
+
+    if (!root) return;
+
+    // If we're showing HOVER preview and pinned is only the prompt,
+    // hide the prompt so it doesn't show above the hover editor.
+    if (slot === "hover" && pinned) {
+      const pinnedHasEditor = pinned.querySelector(".relation-tool");
+      const pinnedHasSelection = !!document.querySelector(".token.selected");
+      if (!pinnedHasEditor && !pinnedHasSelection) {
+        pinned.innerHTML = "";
+      }
+    }
+
+    renderRelationEditor(word, root);
   };
+
   window.renderRelationEditor = window.renderRelationInfo;
 }

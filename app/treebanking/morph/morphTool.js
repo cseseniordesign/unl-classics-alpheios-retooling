@@ -26,6 +26,7 @@ export function setupMorphTool() {
   // Allow other code to close Morph (e.g., when sentence changes)
   window.closeMorphTool = function () {
     if (!window.isMorphActive) return;
+
     window.isMorphActive = false;
     morphBtn.classList.remove('active');
     morphBtn.style.backgroundColor = '#4e6476';
@@ -40,50 +41,86 @@ export function setupMorphTool() {
     }
   };
 
-  morphBtn.addEventListener('click', () => {
+  const handler = () => {
     const wasActive = window.isMorphActive;
+
+    // If we're about to OPEN Morph, make sure we fully exit tools that can lock the tree
+    if (!wasActive) {
+      // Close XML + Sentence (these are the ones that use enterReadOnly)
+      window.closeXmlTool();
+      window.closeSentenceTool();
+
+      // Relation/Morph should be interactive in the tree
+      window.exitReadOnly();
+    }
+
+    // Reset toolbar visuals
     allToolButtons.forEach(btn => btn.classList.remove('active'));
-    allToolButtons.forEach(btn => btn.style.backgroundColor = '#4e6476');
+    allToolButtons.forEach(btn => (btn.style.backgroundColor = '#4e6476'));
+
     window.isMorphActive = !wasActive;
 
     if (window.isMorphActive) {
-      document.body.classList.add('mode-morph');
       morphBtn.classList.add('active');
       morphBtn.style.backgroundColor = 'green';
 
-      // If a word is already selected, immediately show its morph info
-      const selectedToken = document.querySelector(".token.selected");
-      if (selectedToken && Array.isArray(window.treebankData) &&
-          typeof window.renderMorphInfo === "function") {
+      toolBody.innerHTML = `
+        <div id="morph-panel">
+          <div id="morph-pinned" class="morph-slot">
+            <p style="padding:8px;">Click a word to view morphological info.</p>
+          </div>
+          <div id="morph-hover" class="morph-slot"></div>
+        </div>
+      `;
+
+      // If a word is already selected, render it into the PINNED slot
+      const selectedToken = document.querySelector('.token.selected');
+      if (
+        selectedToken &&
+        Array.isArray(window.treebankData) &&
+        typeof window.renderMorphInfo === 'function'
+      ) {
         const wordId = selectedToken.dataset.wordId;
         const currentSentence = window.treebankData.find(
           s => s.id === `${window.currentIndex}`
         );
-        const word = currentSentence?.words.find(w => w.id === wordId);
+        const word = currentSentence?.words?.find(w => w.id === wordId);
+
         if (word) {
-          window.renderMorphInfo(word);
-          return;
+          // renderMorphInfo must support { slot: "pinned" }
+          window.renderMorphInfo(word, { slot: 'pinned' });
         }
       }
-
-      // Fallback when nothing is selected
-      toolBody.innerHTML =
-        `<p style="padding:8px;">Click a word to view morphological info.</p>`;
     } else {
       document.body.classList.remove('mode-morph');
-      // Do NOT clear selection here – it may be reused by Relation tool
       morphBtn.style.backgroundColor = '#4e6476';
 
-      // Back to treebanking mode UI
-      if (window.treebankModeHTML) {
-        toolBody.innerHTML = window.treebankModeHTML;
-      } else {
+      // Only restore treebank UI if no OTHER tool is active
+      const anotherToolActive = Array.from(allToolButtons).some(
+        btn => btn !== morphBtn && btn.classList.contains('active')
+      );
+
+      if (!anotherToolActive) {
         toolBody.innerHTML =
+          window.treebankModeHTML ||
           `<p>Treebanking mode: click a word or node to edit dependencies.</p>`;
       }
     }
+  };
+
+  let lastHoverAt = 0;
+
+  morphBtn.addEventListener('mouseenter', () => {
+    lastHoverAt = Date.now();
+    handler();
   });
 
+  morphBtn.addEventListener('click', (e) => {
+    if (e?.isTrusted && (Date.now() - lastHoverAt) < 500) return;
+    handler();
+  });
+
+  // Ensure global binding (if other code calls it)
   window.renderMorphInfo = renderMorphInfo;
 
   // When any form checkbox changes, collapse all expanded morph entries
@@ -486,30 +523,36 @@ function removeForm(word, index) {
 // PUBLIC: renderMorphInfo(word) — keep your top card intact,
 // then append "Create new form" + user-forms list underneath
 // ---------------------------------------------------------
-function renderMorphInfo(word) {
+function renderMorphInfo(word, opts = {}) {
   if (!window.isMorphActive) return;
-  const toolBody = document.getElementById('tool-body');
-  if (!toolBody || !word) return;
 
-  // ensure we have original XML snapshot
+  const slot = (opts && opts.slot === "hover") ? "hover" : "pinned";
+
+  const pinnedEl = document.getElementById("morph-pinned");
+  const hoverEl  = document.getElementById("morph-hover");
+  const promptEl = document.getElementById("morph-prompt");
+
+  // Fall back safely (but prefer slots)
+  const root = (slot === "hover") ? hoverEl : pinnedEl;
+  if (!root || !word) return;
+
+  // Hide prompt as soon as we have *any* content to show (hover OR pinned)
+  if (promptEl) promptEl.style.display = "none";
+
   ensureDocumentSnapshot(word);
 
-  if (typeof word.activeForm !== 'number') {
+  if (typeof word.activeForm !== "number") {
     word.activeForm = -1;
   }
 
-  // --- Render top "document" card using the same card builder ---
   const lemma  = word._doc.lemma;
   const postag = word._doc.postag;
   const posColor = colorForTag(postag);
 
-  const documentForm = {
-    lemma: lemma,
-    postag: postag,
-    source: 'document'
-  };
+  const documentForm = { lemma, postag, source: "document" };
 
-  toolBody.innerHTML = `
+  // Base card (always)
+  root.innerHTML = `
     <div class="morph-container">
       <p class="morph-form">
         ${word.form}
@@ -521,24 +564,23 @@ function renderMorphInfo(word) {
     </div>
   `;
 
-  const lemmaEl = toolBody.querySelector('.morph-lemma');
+  const lemmaEl = root.querySelector(".morph-lemma");
   if (lemmaEl) lemmaEl.style.color = posColor;
 
-  const mc = toolBody.querySelector('.morph-container');
+  const mc = root.querySelector(".morph-container");
   if (mc) enableMorphEntryExpansion(mc);
 
-  // Append creation/editor + list BELOW the top card 
-  appendCreateAndUserForms(word, toolBody);
+  appendCreateAndUserForms(word, root);
+  attachMorpheusSuggestions(word, root);
 
-  // Kick off Morpheus suggestions (async)
-  attachMorpheusSuggestions(word, toolBody);
-
-  // Force all morph entries to start collapsed after forms are rebuilt
-  document.querySelectorAll('.morph-entry').forEach(entry => {
-    entry.classList.remove('expanded');
-    entry.dataset.expanded = 'false';
-    entry.querySelector('.morph-details')?.remove();
-    entry.querySelector('.morph-divider')?.remove();
+  // Collapse entries (scoped)
+  root.querySelectorAll(".morph-entry").forEach(entry => {
+    entry.classList.remove("expanded");
+    entry.dataset.expanded = "false";
+    const details = entry.querySelector(".morph-details");
+    if (details) details.remove();
+    const divider = entry.querySelector(".morph-divider");
+    if (divider) divider.remove();
   });
 }
 

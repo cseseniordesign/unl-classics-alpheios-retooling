@@ -14,7 +14,7 @@ import { getLanguage, isMorpheusSupported } from '../input/language.js';
 // ---------------------------------------------------------------------------
 // Treebank mode banner helpers
 // ---------------------------------------------------------------------------
-
+window.selectedWordId = window.selectedWordId ?? null;
 // Capture the initial Treebanking-mode UI so tools can restore it later
 if (!window.treebankModeHTML) {
   const toolBody = document.getElementById('tool-body');
@@ -192,9 +192,6 @@ export async function displaySentence(index) {
  * handles changing head when two nodes are selected or displays morph info
  * if morph tab is active
  */
-
-let selectedWordId = null; // keeps track of the first click(dependent word)
-
 export function handleWordClick(wordId, word) {
   const lang = getLanguage();
   if (isMorpheusSupported(lang)) {
@@ -207,78 +204,63 @@ export function handleWordClick(wordId, word) {
     ? d3.select(`.node[id="${wordId}"]`)
     : null;
 
-  // 1) Morph tool active → select + show morph (no head changes)
-  if (window.isMorphActive) {
-    // This is not change-head mode → hide banner row
-    clearTreebankSelectionBanner();
+  const toolBody = document.getElementById('tool-body');
+  // If Morph/Relation is open, update the side panel,
+  // but DO NOT interrupt the normal head-change click flow.
+  if ((window.isMorphActive || window.isRelationActive) && Array.isArray(window.treebankData)) {
+    const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+    const w = currentSentence && currentSentence.words
+      ? currentSentence.words.find(x => String(x.id) === String(wordId))
+      : null;
 
-    // Clear previous selection
-    document.querySelectorAll(".token.selected")
-      .forEach(t => t.classList.remove("selected"));
-    if (typeof d3 !== 'undefined') {
-      d3.selectAll(".node.selected").classed("selected", false);
+    if (w) {
+      if (window.isMorphActive) window.renderMorphInfo(w);
+      if (window.isRelationActive) window.renderRelationInfo(w);
     }
+  }
 
-    // Highlight current token + node
-    if (tokenEl) tokenEl.classList.add("selected");
-    if (nodeSel && !nodeSel.empty()) nodeSel.classed("selected", true);
+  const newHeadId = wordId;
 
-    // Remember which word is selected
-    window.currentSelectedWordId = wordId;
-
-    // Show morph info for this word
-    if (typeof window.renderMorphInfo === "function" &&
-        Array.isArray(window.treebankData)) {
-      const currentSentence = window.treebankData.find(
-        s => s.id === `${window.currentIndex}`
-      );
-      const w = currentSentence?.words.find(w => w.id === wordId);
-      if (w) {
-        window.renderMorphInfo(w);
-      }
-    }
+  if (String(selectedWordId) === String(newHeadId)) {
+    const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
+    const node = document.querySelector(`.node[id="${wordId}"]`);
+    if (node) node.classList.remove("selected");
+    if (btn) btn.classList.remove("selected");
+    resetSelection();
     return;
   }
 
-  // 2) Relation tool active → select + show relation (no head changes)
-  if (window.isRelationActive) {
-    // This is not change-head mode → hide banner row
-    clearTreebankSelectionBanner();
+  // If we are about to perform a head change (meaning: we already have a dependent),
+  // and a tool is open, clear the tool panel so it doesn't fight head-change.
+  const aboutToChangeHead = (selectedWordId !== null && String(selectedWordId) !== String(newHeadId));
 
-    // Clear previous selection
-    document.querySelectorAll(".token.selected")
-      .forEach(t => t.classList.remove("selected"));
-    if (typeof d3 !== 'undefined') {
-      d3.selectAll(".node.selected").classed("selected", false);
+  if (aboutToChangeHead) {
+    if (window.isMorphActive) {
+      const pinned = document.getElementById("morph-pinned");
+      const hover  = document.getElementById("morph-hover");
+
+      // Keep the panel structure intact so hover rendering still has a place to go
+      if (pinned) pinned.innerHTML = "";
+      if (hover)  hover.innerHTML = "";
     }
 
-    // Highlight current token + node
-    if (tokenEl) tokenEl.classList.add("selected");
-    if (nodeSel && !nodeSel.empty()) nodeSel.classed("selected", true);
+    if (window.isRelationActive) {
+      const pinned = document.getElementById("relation-pinned");
+      const hover  = document.getElementById("relation-hover");
 
-    // Remember which word is selected
-    window.currentSelectedWordId = wordId;
-
-    // Show relation info for this word
-    if (typeof window.renderRelationInfo === "function" &&
-        Array.isArray(window.treebankData)) {
-      const currentSentence = window.treebankData.find(
-        s => s.id === `${window.currentIndex}`
-      );
-      const w = currentSentence?.words.find(w => w.id === wordId);
-      if (w) {
-        window.renderRelationInfo(w);
-      }
+      if (pinned) pinned.innerHTML =  "";
+      if (hover)  hover.innerHTML = "";
     }
-    return;
   }
 
-  // 3) Read-only → do nothing
-  if (window.isReadOnly) return;
+  const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+  //gets dependent node (first selected node)
 
-  // 4) Default: dependency reassignment (two-click head changing)
+  // If no dependent has been selected yet, this click is the dependent selection.
+  // Let your existing selection/highlight logic run (wherever you set selectedWordId),
+  // but do NOT do head-change work yet.
   if (!selectedWordId) {
-    selectedWordId = wordId;
+    selectedWordId = String(wordId);
 
     // Clear any previous visual selection
     document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
@@ -286,28 +268,17 @@ export function handleWordClick(wordId, word) {
       d3.selectAll(".node.selected").classed("selected", false);
     }
 
+    // Highlight the dependent (first click)
     if (tokenEl) tokenEl.classList.add("selected");
     if (nodeSel && !nodeSel.empty()) nodeSel.classed("selected", true);
 
-    window.currentSelectedWordId = wordId;
+    window.currentSelectedWordId = String(wordId);
 
-    // Update the right-hand banner with the dependent we are changing
+    // Restore treebank banner 
     updateTreebankSelectionBanner(wordId);
+
     return;
   }
-
-  //remove highlight if same word clicked twice and reset selection
-  const newHeadId = wordId;
-  if(selectedWordId === newHeadId) {
-    const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
-    const node = document.querySelector(`.node[id="${wordId}"]`);
-    node.classList.remove("selected"),btn.classList.remove("selected");
-    resetSelection();
-    return;
-  }
-
-  const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
-  //gets dependent node (first selected node)
   const dependent = currentSentence.words.find(word => word.id === selectedWordId);
   //gets indepenent node (second selected node)
   const independent = currentSentence.words.find(word => word.id === newHeadId);
@@ -315,6 +286,11 @@ export function handleWordClick(wordId, word) {
   //remove highlight when second word is selected
   const btnNewHead = document.querySelector(`button[data-word-id="${newHeadId}"]`);
   if (btnNewHead) btnNewHead.classList.remove("highlight");
+
+  if (!dependent || !independent) {
+    resetSelection();
+    return;
+  }
 
   saveState();
   if (createsCycle(currentSentence.words, selectedWordId, newHeadId)) {
@@ -391,20 +367,47 @@ export function setupResizeHandle() {
  * resets the first selected word 
  */
 function resetSelection() {
-  // Clear any selected token(s) in the sentence bar
-  document.querySelectorAll(".token.selected").forEach(t => t.classList.remove("selected"));
+  // Clear any selected/highlighted token(s) in the sentence bar
+  document
+    .querySelectorAll(".token.selected, .token.highlight")
+    .forEach(t => t.classList.remove("selected", "highlight"));
 
-  // Clear any selected node(s) in the tree
+  // ALSO clear button-based tokens (your code often selects buttons)
+  document
+    .querySelectorAll('button.selected, button.highlight, button[data-word-id].selected, button[data-word-id].highlight')
+    .forEach(b => b.classList.remove("selected", "highlight"));
+
+  // Clear any selected/highlighted node(s) in the tree
   if (typeof d3 !== 'undefined') {
     d3.selectAll(".node.selected").classed("selected", false);
+    d3.selectAll(".node.highlight").classed("highlight", false);
+  } else {
+    document.querySelectorAll(".node.selected, .node.highlight")
+      .forEach(n => n.classList.remove("selected", "highlight"));
   }
 
   // Clear selection state
-  selectedWordId = null;
+  selectedWordId = null;                 
   window.currentSelectedWordId = null;
+
+  // If you also track this globally anywhere:
+  if ("selectedWordId" in window) window.selectedWordId = null;
 
   // Hide the "changing head for" banner row
   clearTreebankSelectionBanner();
+
+  if (window.isMorphActive) {
+    const pinned = document.getElementById("morph-pinned");
+    const hover  = document.getElementById("morph-hover");
+    if (pinned) pinned.innerHTML = `<p style="padding:8px;">Click a word to view morphological info.</p>`;
+    if (hover)  hover.innerHTML = "";
+  }
+  if (window.isRelationActive) {
+    const pinned = document.getElementById("relation-pinned");
+    const hover  = document.getElementById("relation-hover");
+    if (pinned) pinned.innerHTML = `<p style="padding:8px;">Click a word to edit its dependency relation.</p>`;
+    if (hover)  hover.innerHTML = "";
+  }
 }
 
 // Make it available to other modules (XML tool, etc.)

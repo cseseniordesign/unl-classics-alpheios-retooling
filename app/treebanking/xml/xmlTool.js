@@ -62,24 +62,46 @@ export function setupXMLTool() {
   const allToolButtons = document.querySelectorAll('#toolbar button');
   if (!xmlBtn || !toolBody) return;
 
-  xmlBtn.addEventListener('click', () => {
+  // ------------------------------------------------------------
+  // CLOSE FUNCTION: other tools + ESC can call this to exit XML
+  // ------------------------------------------------------------
+  window.closeXmlTool = function closeXmlTool() {
+    // If we're editing and dirty, do NOT auto-close silently.
+    // Let your existing "other tabs prompt about unsaved XML" logic handle it.
+    // So: only close if not editing OR not dirty.
+    const xmlDisplay = document.getElementById('xml-display');
+    const isEditing = !!(xmlDisplay && xmlDisplay.classList.contains('editing'));
+    if (isEditing && window.xmlDirty) return;
+
+    xmlBtn.classList.remove('active');
+    xmlBtn.style.backgroundColor = '#4e6476';
+
+    // Make sure XML edit UI is not left in weird state
+    discardXmlEdits();
+
+    // IMPORTANT: unlock the tree (unless Sentence tool wants it locked)
+    const sentenceBtn = document.getElementById('sentence-tools');
+    const sentenceActive = sentenceBtn?.classList.contains('active');
+    if (!sentenceActive) exitReadOnly();
+
+    if (window.treebankModeHTML) {
+      toolBody.innerHTML = window.treebankModeHTML;
+    } else {
+      toolBody.innerHTML =
+        `<p>Treebanking mode: click a word or node to edit dependencies.</p>`;
+    }
+  };
+
+  let lastHoverAt = 0;
+
+  const handler = () => {
     const wasActive = xmlBtn.classList.contains('active');
 
     // Reset all toolbar button states
     allToolButtons.forEach(btn => btn.classList.remove('active'));
 
-  if (wasActive) {
-      // --- Exit XML mode → back to treebanking mode ---
-      xmlBtn.classList.remove('active');
-      xmlBtn.style.backgroundColor = '#4e6476';
-      exitReadOnly();
-
-      if (window.treebankModeHTML) {
-        toolBody.innerHTML = window.treebankModeHTML;
-      } else {
-        toolBody.innerHTML =
-          `<p>Treebanking mode: click a word or node to edit dependencies.</p>`;
-      }
+    if (wasActive) {
+      window.closeXmlTool();
       return;
     } else {
       // --- Activate XML mode ---
@@ -423,6 +445,16 @@ export function setupXMLTool() {
       enterReadOnly();
       document.body.classList.remove('mode-morph');
     }
+  };
+
+  xmlBtn.addEventListener("mouseenter", () => {
+    lastHoverAt = Date.now();
+    handler(); 
+  });
+
+  xmlBtn.addEventListener("click", (e) => {
+    if (e?.isTrusted && (Date.now() - lastHoverAt) < 500) return;
+    handler(e);
   });
 
   // --- Ensure other tabs prompt about unsaved XML ---
@@ -454,22 +486,23 @@ export function setupXMLTool() {
     window.xmlListenersAttached = true;
   }
 
-// --- Auto-clear read-only when XML tab becomes inactive ---
-const observer = new MutationObserver(() => {
-  const xmlActive = xmlBtn.classList.contains('active');
-  // Is *some other* toolbar button active (morph, relation, sentence, etc.)?
-  const otherActive = document.querySelector('#toolbar button.active:not(#xml)');
+  // --- Auto-clear read-only when XML tab becomes inactive ---
+  // Read-only should stay ONLY if Sentence tools are active.
+  // Morph/Relation should be interactive.
+  const observer = new MutationObserver(() => {
+    const xmlActive = xmlBtn.classList.contains('active');
+    const sentenceBtn = document.getElementById('sentence-tools');
+    const sentenceActive = sentenceBtn?.classList.contains('active');
 
-  // Only exit read-only if:
-  //  - XML is not active, AND
-  //  - no other tool is active (plain treebanking mode)
-  if (!xmlActive && !otherActive) {
-    exitReadOnly();
-  }
-});
-observer.observe(xmlBtn, { attributes: true, attributeFilter: ['class'] });
+    // When XML is not active anymore, XML should not be able to keep the tree read-only.
+    // Sentence tool is the only other tool that intentionally keeps read-only.
+    if (!xmlActive) {
+      const sentenceActive = document.querySelector('#toolbar button#sentence-tools.active');
+      if (!sentenceActive) exitReadOnly();
+    }
+
+  });
 }
-
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: formatXML
@@ -568,6 +601,32 @@ export function updateXMLIfActive() {
   const xmlBtn = document.getElementById('xml');
   const toolBody = document.getElementById('tool-body');
 
+  // Expose a real close() so other tools can safely shut XML off.
+  window.closeXMLTool = function closeXMLTool() {
+    const xmlBtn = document.getElementById('xml');
+    const toolBody = document.getElementById('tool-body');
+
+    if (!xmlBtn || !xmlBtn.classList.contains('active')) return;
+
+    // If XML editor is open and dirty, discard (same behavior as your switch-away guard)
+    try {
+      if (window.xmlDirty && typeof discardXmlEdits === "function") {
+        discardXmlEdits();
+      }
+    } catch {}
+
+    xmlBtn.classList.remove('active');
+    xmlBtn.style.backgroundColor = '#4e6476';
+
+    // XML is the one that locks the tree; closing must unlock.
+    exitReadOnly();
+
+    if (toolBody) {
+      toolBody.innerHTML = window.treebankModeHTML
+        || `<p>Treebanking mode: click a word or node to edit dependencies.</p>`;
+    }
+  };
+
   // Only refresh if the XML tab is currently active (visibly toggled)
   if (!xmlBtn || !toolBody || !xmlBtn.classList.contains('active')) {
     return;
@@ -653,6 +712,10 @@ export function exitReadOnly() {
     .style('pointer-events', 'all')
     .style('opacity', 1);
 }
+
+// Make read-only helpers available to other tools that call window.exitReadOnly()
+window.enterReadOnly = enterReadOnly;
+window.exitReadOnly  = exitReadOnly;
 
 function showToast(message, isError = false, isWarning = false) {
   const toast = document.getElementById('toast');

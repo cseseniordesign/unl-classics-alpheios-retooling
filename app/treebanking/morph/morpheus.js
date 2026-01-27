@@ -47,7 +47,7 @@ export async function fetchMorphology(word, lang) {
       const bodyRaw = ann?.Body;
       if (!bodyRaw) return;
 
-      // 🔴 THIS is the important bit:
+      // THIS is the important bit:
       // Body can be a single object OR an array, where each Body = one lemma
       const bodies = Array.isArray(bodyRaw) ? bodyRaw : [bodyRaw];
 

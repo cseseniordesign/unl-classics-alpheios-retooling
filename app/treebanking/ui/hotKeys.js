@@ -2,7 +2,6 @@ import { handleWordClick } from './sentenceDisplay.js';
 
 
 export function setupEscapeHotkey() {
-  // Make sure we only install this once
   if (window._treebankEscapeReady) return;
   window._treebankEscapeReady = true;
 
@@ -12,38 +11,28 @@ export function setupEscapeHotkey() {
       if (e.key !== 'Escape') return;
 
       // 1) If a modal is open, do NOTHING here.
-      //    (modal.js will decide what to do)
       const overlay = document.getElementById('app-modal-overlay');
-      if (overlay && !overlay.hidden) {
-        return;
-      }
+      if (overlay && !overlay.hidden) return;
 
-      // 2) If a toolbar tab is active, ESC = "go back to treebanking mode"
-      const active = document.querySelector('#toolbar button.active');
-      if (
-        active &&
-        ['morph', 'relation', 'sentence-tools', 'xml'].includes(active.id)
-      ) {
-        active.click();          // uses existing button logic
+      // 2) ESC = ALWAYS deselect (even if a toolbar tab is open)
+      const hasTokenSel = !!document.querySelector(
+        '.token.selected, .token.highlight, button.selected, button.highlight, button[data-word-id].selected, button[data-word-id].highlight'
+      );
+      const hasNodeSel  = !!document.querySelector('.node.selected, .node.highlight');
+      const hasId       = !!window.currentSelectedWordId;
+      const hasFirstClick =
+        window.selectedWordId !== null && window.selectedWordId !== undefined;
+
+      if (hasTokenSel || hasNodeSel || hasId || hasFirstClick) {
+        if (typeof window.resetSelection === 'function') {
+          window.resetSelection();
+        }
+
         e.preventDefault();
         e.stopPropagation();
-        return;
-      }
-
-      // 3) Otherwise, ESC = "deselect current node/token" in treebanking mode
-      if (typeof window.resetSelection === 'function') {
-        const hasTokenSel = document.querySelector('.token.selected');
-        const hasNodeSel  = document.querySelector('.node.selected');
-        const hasId       = !!window.currentSelectedWordId;
-
-        if (hasTokenSel || hasNodeSel || hasId) {
-          window.resetSelection();
-          e.preventDefault();
-          e.stopPropagation();
-        }
       }
     },
-    true 
+    true
   );
 }
 

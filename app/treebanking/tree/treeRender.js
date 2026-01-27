@@ -262,30 +262,6 @@ export function drawNodes(gx, rootHierarchy) {
         .attr('ry', 3)
         .attr('class', 'text-bg');
     });
-
-  // --- Enable clicking nodes to show morphological info ---
-  nodes.on("click", function (event, d) {
-    if (!window.isMorphActive) return;
-
-    // Clear all previous highlights first
-    d3.selectAll(".node").classed("selected", false);
-    document.querySelectorAll(".token").forEach(t => t.classList.remove("selected"));
-
-    // Highlight this node and its corresponding token
-    d3.select(this).classed("selected", true);
-    const token = document.querySelector(`.token[data-word-id='${d.data.id}']`);
-    if (token) token.classList.add("selected");
-
-    // Show morphological info
-    const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
-    const word = currentSentence?.words?.find(w => w.id === d.data.id);
-
-    if (word && typeof window.renderMorphInfo === 'function') {
-      const toolBody = document.getElementById("tool-body");
-      toolBody.innerHTML = "";
-      window.renderMorphInfo(word);
-    }
-  });
 }
 
 /**
