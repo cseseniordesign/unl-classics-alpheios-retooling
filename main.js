@@ -15,8 +15,10 @@ import { setupSentenceTool } from './app/treebanking/ui/sentenceTool.js';
 import { setupRelationTool } from './app/treebanking/relation/relationTool.js';
 import { tokenizer } from './app/treebanking/xml/tokenizer.js';
 import { setLanguage } from "./app/treebanking/input/language.js"; 
-
+import {setupSelector} from "./app/treebanking/xml/selector.js";
 window.handleFileUpload = handleFileUpload;
+window.batchSelection = new Set();
+window.selectorInputValue = "";
 
 window.root = null;
 window.svg = null;
@@ -67,14 +69,6 @@ function handleExit() {
   });
 }
 
-function setupSelectorButton() {
-    const button = document.getElementById("selector");
-    if (button) {
-        button.addEventListener("click", function() {
-            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
-        });
-    }
-}
 
 function setupHistoryButton() {
     const button = document.getElementById("history");
@@ -258,7 +252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupUndoButton();
   setupRedoButton();
   setupSentenceTool();  
-  setupSelectorButton();
+  setupSelector();
   setupHistoryButton();
   setupCommentButton();
   setupSettingsButton();

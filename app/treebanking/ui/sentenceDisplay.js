@@ -159,6 +159,8 @@ export async function displaySentence(index) {
     // Add click interaction for Morph, Relation, and Focus modes
     button.addEventListener("click", (event) => handleWordClick(word.id,word.form));
 
+    // checks to see if it receives the select classlist?
+
     tokenizedSentence.appendChild(button);
   }); 
 
@@ -195,7 +197,7 @@ export async function displaySentence(index) {
 export function handleWordClick(wordId, word) {
   const lang = getLanguage();
   if (isMorpheusSupported(lang)) {
-    fetchMorphology(word, lang).then(console.log);
+    fetchMorphology(word, lang);
   }
 
   const tokenEl = document.querySelector(`button[data-word-id="${wordId}"]`) ||
@@ -219,7 +221,54 @@ export function handleWordClick(wordId, word) {
     }
   }
 
-  const newHeadId = wordId;
+  
+  const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+  const newHeadId = String(wordId);
+
+  //Check if the "Selector" tool is active or if we have multiple selected words
+  const selectedElements = document.querySelectorAll(".token.selected, .node.selected");
+  
+  // Get unique IDs of all selected words
+  const selectedIds = new Set();
+  selectedElements.forEach(el => {
+    const id = el.dataset.wordId || el.id;
+    if (id) selectedIds.add(String(id));
+  });
+
+  //Logic for when we have multiple selections
+  if (selectedIds.size > 0) {
+    // If the user clicks one of the already selected words, do nothing or reset
+    if (selectedIds.has(newHeadId)) {
+        resetSelection();
+        return;
+    }
+
+    saveState();
+    let changesMade = false;
+
+    selectedIds.forEach(depId => {
+        const dependent = currentSentence.words.find(w => String(w.id) === String(depId));
+        
+        if (dependent && String(dependent.id) !== newHeadId) {
+            // Prevent cycles for each word being moved
+            if (!createsCycle(currentSentence.words, depId, newHeadId)) {
+                dependent.head = newHeadId;
+                changesMade = true;
+            } else {
+                console.warn(`Cycle detected for word ${depId}. Skipping.`);
+            }
+        }
+    });
+
+    if (changesMade) {
+        triggerAutoSave();
+        createNodeHierarchy(window.currentIndex);
+    }
+    resetSelection();
+    return; 
+  }
+
+  //const newHeadId = wordId;
 
   if (String(selectedWordId) === String(newHeadId)) {
     const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
@@ -253,7 +302,7 @@ export function handleWordClick(wordId, word) {
     }
   }
 
-  const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+  
   //gets dependent node (first selected node)
 
   // If no dependent has been selected yet, this click is the dependent selection.

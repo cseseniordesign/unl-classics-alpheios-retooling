@@ -8,7 +8,7 @@
 
 export function setupSelector() {
   const selectBtn = document.getElementById("selector");
-  selectBtn.addEventListener("click", handleSelectClick);
+  selectBtn.addEventListener("mouseover", handleSelectClick);
 }
 
 /**
@@ -39,7 +39,7 @@ function handleSelectClick() {
   // Handle the "Turn Off" toggle
   if (wasActive) {
     window.closeSelector();
-    return; // Stop execution here
+    return; 
   }
 
   // Clear other buttons first
@@ -91,26 +91,36 @@ function handleSelectClick() {
  */
 
 function handleTokens() {
-   const tokenInput = document.querySelector(".token-input");
+  const tokenInput = document.querySelector(".token-input");
   const tokens = document.querySelectorAll(".token");
-  tokenInput.addEventListener("input", ()=>{
-    const tokensArr = tokenInput.value.split(" ");
+  if (window.selectorInputValue) {
+    tokenInput.value += window.selectorInputValue;
+    updateSelection(tokenInput.value);
+  }
+  tokenInput.addEventListener("input", () => {
+    // Save the raw string to persistence
+    window.selectorInputValue = tokenInput.value;
+    updateSelection(tokenInput.value);
+  });
+
+  function updateSelection(currentValue) {
+    const tokensArr = currentValue.split(" ").filter(t => t !== "");
+    window.batchSelection.clear();
+
     tokens.forEach(token => {
-      if (tokensArr.includes(token.textContent.trim())) {
-        const id = token.dataset.wordId;
-        //the selected classlist sets the background to yellow
+      const id = token.dataset.wordId;
+      const text = token.textContent.trim();
+
+      if (tokensArr.includes(text)) {
+        window.batchSelection.add(id); // Store the ID for the movement logic
         token.classList.add("selected");
-        // get corresponding node and add class list selected
         const node = document.querySelector(`.node[id="${id}"]`);
-        node.classList.add("selected");
-      }
-      //checks if words are removed from the input
-      else if (!tokensArr.includes(token.textContent.trim()) && token.classList.contains("selected")) {
-        const id = token.dataset.wordId;
+        if (node) d3.select(node).classed("selected", true);
+      } else {
         token.classList.remove("selected");
         const node = document.querySelector(`.node[id="${id}"]`);
-        node.classList.remove("selected");
+        if (node) d3.select(node).classed("selected", false);
       }
     });
-  });
+  }
 }
