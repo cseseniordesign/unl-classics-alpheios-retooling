@@ -233,13 +233,29 @@ export async function saveCurrentTreebank() {
     }
 
     // If user already opened/uploaded a file, reuse its handle
-    if (window.uploadedFileHandle) {
+    if (window.uploadedFileHandle && typeof window.uploadedFileHandle.createWritable === "function") {
       const writable = await window.uploadedFileHandle.createWritable();
       await writable.write(xmlOut);
       await writable.close();
       console.log("Saved to existing file handle.");
+} else {
+  // Safari/Firefox don't support showSaveFilePicker — fall back to download
+  if (typeof window.showSaveFilePicker !== "function") {
+    const blob = new Blob([xmlOut], { type: "application/xml;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "treebank.xml";
+    document.body.appendChild(a); // Safari likes it attached
+    a.click();
+    a.remove();
+
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    console.log("Saved via download fallback (no file handle available).");
     } else {
-      // Otherwise ask the user where to save
+      // Chrome/Edge path
       const handle = await window.showSaveFilePicker({
         suggestedName: "treebank.xml",
         types: [{
@@ -254,6 +270,7 @@ export async function saveCurrentTreebank() {
       window.uploadedFileHandle = handle; // remember for next saves
       console.log("File saved and handle stored for future autosaves.");
     }
+  }
 
     lastXML = xmlOut;
 
@@ -344,3 +361,4 @@ export function triggerAutoSave() {
 
 // Expose for manual testing in browser console
 window.triggerAutoSave = triggerAutoSave;
+window.saveCurrentTreebank = saveCurrentTreebank;
