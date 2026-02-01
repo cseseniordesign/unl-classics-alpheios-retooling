@@ -36,6 +36,38 @@ export function recomputeDirty(xmlDisplay) {
   // So: do NOT touch xmlDirty here.
 }
 
+function normalizeSentenceForTree(sentence) {
+  if (!sentence || !Array.isArray(sentence.words)) return;
+
+  sentence.words.forEach(w => {
+    // Tree renderers almost never like null heads.
+    // "0" is the safest ROOT head value.
+    if (w.head === null || w.head === undefined || String(w.head).toLowerCase() === "null" || String(w.head) === "") {
+      w.head = "0";
+    } else {
+      w.head = String(w.head);
+    }
+
+    // Keep relation as a string (allow blank if you're allowing blank)
+    if (w.relation === null || w.relation === undefined || String(w.relation).toLowerCase() === "null") {
+      w.relation = "";
+    } else {
+      w.relation = String(w.relation);
+    }
+  });
+}
+
+function syncIdParentPairsFromSentence(sentence) {
+  if (!sentence || !Array.isArray(sentence.words)) return;
+
+  // Only do this if your app uses idParentPairs in rendering (many builds do).
+  window.idParentPairs = sentence.words.map(w => ({
+    id: String(w.id),
+    parentId: (w.head === null || w.head === undefined || String(w.head) === "") ? "0" : String(w.head),
+    relation: String(w.relation ?? "")
+  }));
+}
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: setupXMLTool
@@ -380,6 +412,12 @@ export function setupXMLTool() {
             window.treebankData[oldIdx] = updatedSentence;
           }
 
+          normalizeSentenceForTree(updatedSentence);
+          syncIdParentPairsFromSentence(updatedSentence);
+
+          // If your D3 build caches root/links, clear it so the rebuild can't reuse stale refs
+          window.root = null;
+
           window.currentXMLText = xmlString;
           window.originalXMLText = xmlString
             .replace(/&/g, '&amp;')
@@ -392,7 +430,34 @@ export function setupXMLTool() {
           window.xmlInternalUpdate = false;
 
           // Re-render sentence/tree without XML guard
-          await safeDisplaySentence(updatedSentence.id, { skipXMLGuard: true });
+          const targetSentenceId = String(updatedSentence.id);
+
+          // Keep global sentence pointer in sync (a lot of code reads window.currentIndex)
+          window.currentIndex = targetSentenceId;
+
+          // Clear any selection state that could interfere with redraw
+          if (typeof window.resetSelection === "function") {
+            window.resetSelection();
+          }
+
+          // IMPORTANT: temporarily unlock while we redraw (some render paths early-return in read-only)
+          const wasReadOnly = !!window.isReadOnly;
+          if (wasReadOnly && typeof window.exitReadOnly === "function") {
+            window.exitReadOnly();
+          }
+
+          await safeDisplaySentence(targetSentenceId, { skipXMLGuard: true });
+
+          // Force rebuild of the D3 tree (covers cases where safeDisplaySentence updates tokens but not SVG)
+          if (typeof window.createNodeHierarchy === "function") {
+            // Most consistent with the rest of your app:
+            window.createNodeHierarchy(window.currentIndex);
+          }
+
+          // Restore read-only because XML tool should keep the tree locked
+          if (wasReadOnly && typeof window.enterReadOnly === "function") {
+            window.enterReadOnly();
+          }
 
           showToast('XML updated successfully.');
 
@@ -459,28 +524,111 @@ export function setupXMLTool() {
 
   // --- Ensure other tabs prompt about unsaved XML ---
   if (!window.xmlListenersAttached) {
-    allToolButtons.forEach(btn => {
-      if (btn.id !== 'xml') {
-        btn.addEventListener('click', async (e) => {
-          recomputeDirty(document.getElementById('xml-display'));
-          if (window.xmlDirty) {
-            const ok = await showConfirmDialog(
-              "You have unsaved XML changes. Discard them?",
-              {
-                titleText: "Discard XML changes?",
-                okText: "Discard",
-                cancelText: "Cancel"
-              }
-            );
-            if (!ok) {
-              e.preventDefault();
-              e.stopImmediatePropagation();
-              return;
-            }
-            discardXmlEdits();
-          }
-        });
+
+    async function attemptLeaveXml(openNextToolFn) {
+      const display = document.getElementById('xml-display');
+      recomputeDirty(display);
+
+      if (!window.xmlDirty) {
+        openNextToolFn();
+        return;
       }
+
+      // Step 1: Offer SAVE
+      const save = await showConfirmDialog(
+        "You have unsaved edits in the XML editor.\n\nDo you want to save before leaving?",
+        {
+          titleText: "Unsaved XML changes",
+          okText: "Save",
+          cancelText: "Don't save"
+        }
+      );
+
+      if (save) {
+        // Trigger your existing confirm/save flow
+        const confirmBtn = document.getElementById('xml-confirm');
+        if (confirmBtn) confirmBtn.click();
+
+        // Give the confirm handler a moment to run and potentially set xmlDirty=false
+        await new Promise(r => setTimeout(r, 0));
+
+        const display2 = document.getElementById('xml-display');
+        recomputeDirty(display2);
+
+        // If still dirty, the save likely failed (schema error, parse error, etc.)
+        // Stay in XML edit mode.
+        if (window.xmlDirty) {
+          xmlBtn.classList.add('active');
+          xmlBtn.style.backgroundColor = 'green';
+          return;
+        }
+
+        // Saved successfully → leave
+        closeXmlTool();
+        openNextToolFn();
+        return;
+      }
+
+      // Step 2: If user chose "Don't save", confirm DISCARD vs STAY
+      const discard = await showConfirmDialog(
+        "Discard your unsaved XML edits and leave the XML tab?",
+        {
+          titleText: "Discard changes?",
+          okText: "Discard",
+          cancelText: "Stay"
+        }
+      );
+
+      if (!discard) {
+        // Stay in XML
+        xmlBtn.classList.add('active');
+        xmlBtn.style.backgroundColor = 'green';
+        return;
+      }
+
+      // Discard + leave
+      discardXmlEdits();
+      closeXmlTool();
+      openNextToolFn();
+    }
+
+    allToolButtons.forEach(btn => {
+      if (btn.id === 'xml') return;
+
+      // HOVER switching (tabs open on mouseenter)
+      btn.addEventListener('mouseenter', async (e) => {
+        if (!xmlBtn.classList.contains('active')) return;
+
+        const display = document.getElementById('xml-display');
+        recomputeDirty(display);
+        if (!window.xmlDirty) return;
+
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        e.stopPropagation();
+
+        await attemptLeaveXml(() => {
+          // re-fire the hover open
+          btn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
+        });
+      }, true);
+
+      // CLICK switching
+      btn.addEventListener('click', async (e) => {
+        if (!xmlBtn.classList.contains('active')) return;
+
+        const display = document.getElementById('xml-display');
+        recomputeDirty(display);
+        if (!window.xmlDirty) return;
+
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        e.stopPropagation();
+
+        await attemptLeaveXml(() => {
+          btn.click();
+        });
+      }, true);
     });
 
     window.xmlListenersAttached = true;
@@ -577,11 +725,22 @@ export function getCurrentSentenceXML() {
   const data = window.treebankData?.find(s => s.id === `${window.currentIndex}`);
   if (!data) return '&lt;!-- No sentence loaded --&gt;';
 
-  // Construct XML with line breaks, preferring active display values
   const words = data.words.map(w => {
-    const lemma  = w._displayLemma  ?? w.lemma;
-    const postag = w._displayPostag ?? w.postag;
-    return `  &lt;word id="${w.id}" form="${w.form}" lemma="${lemma}" postag="${postag}" relation="${w.relation}" head="${w.head}" /&gt;`;
+    const lemma  = w._displayLemma  ?? w.lemma ?? "";
+    const postag = w._displayPostag ?? w.postag ?? "";
+
+    // IMPORTANT: prevent "null" from being printed into XML
+    const head =
+      (w.head === null || w.head === undefined || String(w.head).toLowerCase() === "null" || String(w.head) === "" || String(w.head) === "0")
+        ? ""
+        : String(w.head);
+
+    const relation =
+      (w.relation === null || w.relation === undefined || String(w.relation).toLowerCase() === "null")
+        ? ""
+        : String(w.relation);
+
+    return `  &lt;word id="${w.id}" form="${w.form}" lemma="${lemma}" postag="${postag}" relation="${relation}" head="${head}" /&gt;`;
   }).join('\n');
 
   const xml = `&lt;sentence id="${data.id}"&gt;\n${words}\n&lt;/sentence&gt;`;

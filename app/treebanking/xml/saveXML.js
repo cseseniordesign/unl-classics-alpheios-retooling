@@ -195,8 +195,8 @@ export function buildXML() {
     for (const w of s.words) {
       const lemma  = (w._displayLemma  || w.lemma  || '').replace(/"/g, '&quot;');
       const postag = (w._displayPostag || w.postag || '').replace(/"/g, '&quot;');
-      const relation = w.relation || "";
-      const head = w.head || "0";
+      const relation = (w.relation ?? "");
+      const head = (w.head === null || w.head === undefined) ? "" : String(w.head);
       xmlOut += `    <word id="${w.id}" form="${w.form}" lemma="${lemma}" postag="${postag}" relation="${relation}" head="${head}" />\n`;
     }
     xmlOut += '  </sentence>\n';
