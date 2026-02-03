@@ -210,7 +210,8 @@ a {
   font-weight: bold;
   border: none;
   margin-top: 5%;
-  margin-right: 250px;
+  margin-right: 180px;
+  position: relative;
 }
 
 #input-manipulation label {
@@ -245,9 +246,9 @@ a {
 }
 
 #toast {
-  position: fixed;
-  top: 245px;        /* fixed vertical position */
-  right: 350px;       /* fixed from right */
+  position: absolute;
+  top: 235.5px;        /* fixed vertical position */
+  right: 355px;       /* fixed from right */
   background-color: #e85146;
   color: white;
   padding: 10px 16px;

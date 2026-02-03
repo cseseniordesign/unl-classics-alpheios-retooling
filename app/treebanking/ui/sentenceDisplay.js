@@ -83,9 +83,6 @@ function clearTreebankSelectionBanner() {
  * @returns {Promise<void>} Resolves after loading data and rendering the selected sentence and its tree.
  */
 export async function displaySentence(index) {
-  // Check whether the sentence comes from XML or user input
-  window.appMode = window.sessionStorage.getItem("userInput") ? "userInput" : "uploadXML";
-
   index = Number(index);
   if (!Number.isFinite(index)) index = 1;
 
