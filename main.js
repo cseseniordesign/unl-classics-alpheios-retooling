@@ -7,7 +7,7 @@ import { setupXMLTool } from './app/treebanking/xml/xmlTool.js';
 import { setupMorphTool } from './app/treebanking/morph/morphTool.js';
 import { setupSentenceSelector } from './app/treebanking/ui/navigation.js';
 import { setupResizeHandle, displaySentence } from './app/treebanking/ui/sentenceDisplay.js';
-import { compactTree, expandTree, fitTreeToView, focusOnNode, positionUserInputTree } from './app/treebanking/tree/treeUtils.js';
+import { compactTree, expandTree, fitTreeToView, focusOnNode } from './app/treebanking/tree/treeUtils.js';
 import { saveCurrentTreebank } from './app/treebanking/xml/saveXML.js';
 import { undoButton, redoButton } from './app/treebanking/xml/undo.js';
 import { createTable, switchToTree } from './app/treebanking/table/tableRender.js';
