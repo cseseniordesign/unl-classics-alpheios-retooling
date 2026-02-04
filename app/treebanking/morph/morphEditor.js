@@ -1,83 +1,106 @@
-import { ensureFormsArray, composeUserPostag } from './morphHelpers.js';
+import { ensureFormsArray, composeUserPostag, parseMorphTag } from './morphHelpers.js';
 import { applyActiveSelectionToWord, renderUserFormsList } from './morphTool.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
 
 // Inline editor that appears under the button and closes on save
-export function renderCreateEditorBelow(word, toolBody) {
-ensureFormsArray(word);
+export function renderCreateEditorBelow(word, toolBody, opts = {}) {
+    const seedForm = opts.seedForm || null;
+    ensureFormsArray(word);
 
-// Only one editor at a time
-toolBody.querySelector('.morph-editor-inline')?.remove();
+    // Only one editor at a time
+    toolBody.querySelector('.morph-editor-inline')?.remove();
 
-const host = document.createElement('div');
-host.className = 'morph-editor-inline';
-host.style.marginTop = '12px';
-host.innerHTML = `
-    <div class="field">
-    <label>Lemma</label>
-    <input id="nf-lemma" type="text" value="${(word.lemma || '').trim()}" />
-    </div>
+    const host = document.createElement('div');
+    host.className = 'morph-editor-inline';
+    host.style.marginTop = '12px';
+    host.innerHTML = `
+        <div class="field">
+        <label>Lemma</label>
+        <input id="nf-lemma" type="text" value="${(
+            (seedForm?.lemma || word._displayLemma || word._doc?.lemma || word.lemma || word.form || '').trim()
+        )}"/>
+        </div>
 
-    <div class="field">
-    <label>Part of Speech</label>
-    <select id="nf-pos">
-        <option value="">— choose —</option>
-        <option value="n">noun</option>
-        <option value="a">adjective</option>
-        <option value="v">verb</option>
-        <option value="p">pronoun</option>
-        <option value="l">article</option>
-        <option value="d">adverb</option>
-        <option value="c">conjunction</option>
-        <option value="r">adposition</option>
-        <option value="m">numeral</option>
-        <option value="i">interjection</option>
-        <option value="u">punctuation</option>
-    </select>
-    </div>
+        <div class="field">
+        <label>Part of Speech</label>
+        <select id="nf-pos">
+            <option value="">— choose —</option>
+            <option value="n">noun</option>
+            <option value="a">adjective</option>
+            <option value="v">verb</option>
+            <option value="p">pronoun</option>
+            <option value="l">article</option>
+            <option value="d">adverb</option>
+            <option value="c">conjunction</option>
+            <option value="r">adposition</option>
+            <option value="m">numeral</option>
+            <option value="i">interjection</option>
+            <option value="u">punctuation</option>
+        </select>
+        </div>
 
-    <div id="nf-dynamic"></div>
+        <div id="nf-dynamic"></div>
 
-    <div class="morph-actions">
-    <button id="nf-reset" class="btn btn-reset" type="button">Reset</button>
-    <button id="nf-cancel" class="btn btn-cancel" type="button">Cancel</button>
-    <button id="nf-save"  class="btn btn-save"  type="button">Save</button>
-    </div>
-`;
-toolBody.querySelector('.morph-container')?.appendChild(host);
-
-const nfLemma = host.querySelector('#nf-lemma');
-const nfPos   = host.querySelector('#nf-pos');
-const nfDyn   = host.querySelector('#nf-dynamic');
-
-// Option maps
-const PERSON = [["",  "---"], ["1", "1st"], ["2", "2nd"], ["3", "3rd"]];
-const TENSE  = { "": "---", p:"present", i:"imperfect", r:"perfect", l:"plusquamperfect", f:"future", a:"aorist" };
-const MOOD   = { "": "---", i:"indicative", s:"subjunctive", o:"optative", n:"infinitive", m:"imperative", p:"participle" };
-const VOICE  = { "": "---", a:"active", e:"medio-passive", p:"passive" };
-const NUMBER = { "": "---", s:"singular", p:"plural", d:"dual" };
-const GENDER = { "": "---", m:"masculine", f:"feminine", n:"neuter", c:"common" };
-const CASES  = { "": "---", n:"nominative", g:"genitive", d:"dative", a:"accusative", v:"vocative" };
-const DEGREE = { "": "---", p:"positive", c:"comparative", s:"superlative" };
-
-const buildSelect = (id, map) => {
-    const sel = document.createElement('select');
-    sel.id = id;
-
-    const entries = Array.isArray(map) ? map : Object.entries(map);
-
-    entries.forEach(([v, l]) => {
-        const o = document.createElement('option');
-        o.value = v;
-        o.textContent = l;
-        sel.appendChild(o);
+        <div class="morph-actions">
+        <button id="nf-reset" class="btn btn-reset" type="button">Reset</button>
+        <button id="nf-cancel" class="btn btn-cancel" type="button">Cancel</button>
+        <button id="nf-save"  class="btn btn-save"  type="button">Save</button>
+        </div>
+    `;
+    toolBody.querySelector('.morph-container')?.appendChild(host);
+    // Scroll the new editor into view so the click feels responsive
+    requestAnimationFrame(() => {
+    host.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
     });
 
-    sel.className = 'cf-select';
-    sel.style.width = '100%';
-    sel.value = "";            // force default to '---' when present
-    return sel;
-};
+    const nfLemma = host.querySelector('#nf-lemma');
+    const nfPos   = host.querySelector('#nf-pos');
+    const nfDyn   = host.querySelector('#nf-dynamic');
+
+    const initialLemma = (seedForm?.lemma || word._displayLemma || word._doc?.lemma || word.lemma || word.form || '').trim();
+
+    function resetEditorToBlankCreate() {
+    // lemma stays prefilled
+    nfLemma.value = initialLemma;
+
+    // POS goes back to blank (— choose —)
+    nfPos.value = '';
+
+    // remove all the dynamic selects
+    nfDyn.innerHTML = '';
+
+    // clear validation UI if you use it
+    host.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
+    }
+
+    // Option maps
+    const PERSON = [["",  "---"], ["1", "1st"], ["2", "2nd"], ["3", "3rd"]];
+    const TENSE  = { "": "---", p:"present", i:"imperfect", r:"perfect", l:"plusquamperfect", f:"future", a:"aorist" };
+    const MOOD   = { "": "---", i:"indicative", s:"subjunctive", o:"optative", n:"infinitive", m:"imperative", p:"participle" };
+    const VOICE  = { "": "---", a:"active", e:"medio-passive", p:"passive" };
+    const NUMBER = { "": "---", s:"singular", p:"plural", d:"dual" };
+    const GENDER = { "": "---", m:"masculine", f:"feminine", n:"neuter", c:"common" };
+    const CASES  = { "": "---", n:"nominative", g:"genitive", d:"dative", a:"accusative", v:"vocative" };
+    const DEGREE = { "": "---", p:"positive", c:"comparative", s:"superlative" };
+
+    const buildSelect = (id, map) => {
+        const sel = document.createElement('select');
+        sel.id = id;
+
+        const entries = Array.isArray(map) ? map : Object.entries(map);
+
+        entries.forEach(([v, l]) => {
+            const o = document.createElement('option');
+            o.value = v;
+            o.textContent = l;
+            sel.appendChild(o);
+        });
+
+        sel.className = 'cf-select';
+        sel.style.width = '100%';
+        sel.value = "";            // force default to '---' when present
+        return sel;
+    };
 
 function createLabel(text){
     const l = document.createElement('label');
@@ -225,11 +248,51 @@ function renderDynamicForPOS(pos) {
 
 nfPos.addEventListener('change', e => renderDynamicForPOS(e.target.value));
 
-host.querySelector('#nf-reset').addEventListener('click', () => {
-    nfLemma.value = (word.lemma || '').trim();
-    nfPos.value = '';
-    nfDyn.innerHTML = '';
+    // --- Prefill from clicked form (clone) ---
+    const setSelectIfExists = (selector, val) => {
+    const el = nfDyn.querySelector(selector);
+    if (!el) return;
+    el.value = (val ?? '');
+    };
+
+    if (seedForm?.postag) {
+        const parsed = parseMorphTag(seedForm.postag) || {};
+        const posChar = seedForm.postag[0]?.toLowerCase() || '';
+
+        if (posChar) {
+            // 1) set POS
+            nfPos.value = posChar;
+
+            // 2) render correct dynamic fields
+            renderDynamicForPOS(posChar);
+
+            // 3) VERB special-case: set mood first so layout reveals correct fields
+            if (posChar === 'v') {
+                const moodSel = nfDyn.querySelector('#nf-mood');
+                if (moodSel) {
+                    moodSel.value = parsed.mood || '';
+                    moodSel.dispatchEvent(new Event('change')); // triggers layout update
+                }
+            }
+
+            // 4) fill the rest (only if the field exists for that POS/layout)
+            setSelectIfExists('#nf-person', parsed.person);
+            setSelectIfExists('#nf-num',    parsed.number);
+            setSelectIfExists('#nf-tense',  parsed.tense);
+            setSelectIfExists('#nf-mood',   parsed.mood);
+            setSelectIfExists('#nf-voice',  parsed.voice);
+            setSelectIfExists('#nf-g',      parsed.gender);
+            setSelectIfExists('#nf-case',   parsed.case);
+            setSelectIfExists('#nf-deg',    parsed.degree);
+        }
+    }
+
+host.querySelector('#nf-reset').addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    resetEditorToBlankCreate();
 });
+
 
 // Cancel button: close the inline form editor
 host.querySelector('#nf-cancel').addEventListener('click', () => {
@@ -278,7 +341,6 @@ host.querySelector('#nf-save').addEventListener('click', () => {
         const personEl = nfDyn.querySelector('#nf-person');
         const numEl    = nfDyn.querySelector('#nf-num');
         const tenseEl  = nfDyn.querySelector('#nf-tense');
-        const voiceEl  = nfDyn.querySelector('#nf-voice');
         const genderEl = nfDyn.querySelector('#nf-g');
         const caseEl   = nfDyn.querySelector('#nf-case');
 
@@ -293,7 +355,6 @@ host.querySelector('#nf-save').addEventListener('click', () => {
             if (!fields.person) { missingFields.push('Person'); markInvalid(personEl); }
             if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
             if (!fields.tense)  { missingFields.push('Tense');  markInvalid(tenseEl); }
-            if (!fields.voice)  { missingFields.push('Voice');  markInvalid(voiceEl); }
         }
 
         // ------------------------
@@ -301,7 +362,6 @@ host.querySelector('#nf-save').addEventListener('click', () => {
         // ------------------------
         if (isInf) {
             if (!fields.tense) { missingFields.push('Tense'); markInvalid(tenseEl); }
-            if (!fields.voice) { missingFields.push('Voice'); markInvalid(voiceEl); }
 
         }
 
@@ -313,12 +373,11 @@ host.querySelector('#nf-save').addEventListener('click', () => {
             if (!fields.gender) { missingFields.push('Gender'); markInvalid(genderEl); }
             if (!fields.case)   { missingFields.push('Case');   markInvalid(caseEl); }
             if (!fields.tense)  { missingFields.push('Tense');  markInvalid(tenseEl); }
-            if (!fields.voice)  { missingFields.push('Voice');  markInvalid(voiceEl); }
         }
     }
 
 
-    // For nouns, pronouns, articles
+    // For nouns, articles
     if (['n', 'm', 'l'].includes(posChar)) {
         const numEl = nfDyn.querySelector('#nf-num');
         const gEl   = nfDyn.querySelector('#nf-g');
@@ -331,12 +390,10 @@ host.querySelector('#nf-save').addEventListener('click', () => {
 
     // For pronouns: person, number, gender, case required
     if (posChar === 'p') {
-        const personEl = nfDyn.querySelector('#nf-person');
         const numEl    = nfDyn.querySelector('#nf-num');
         const gEl      = nfDyn.querySelector('#nf-g');
         const cEl      = nfDyn.querySelector('#nf-case');
 
-        if (!fields.person) { missingFields.push('Person'); markInvalid(personEl); }
         if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
         if (!fields.gender) { missingFields.push('Gender'); markInvalid(gEl); }
         if (!fields.case)   { missingFields.push('Case');   markInvalid(cEl); }
@@ -347,12 +404,10 @@ host.querySelector('#nf-save').addEventListener('click', () => {
         const numEl = nfDyn.querySelector('#nf-num');
         const gEl   = nfDyn.querySelector('#nf-g');
         const cEl   = nfDyn.querySelector('#nf-case');
-        const dEl   = nfDyn.querySelector('#nf-deg');
 
         if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
         if (!fields.gender) { missingFields.push('Gender'); markInvalid(gEl); }
         if (!fields.case)   { missingFields.push('Case');   markInvalid(cEl); }
-        if (!fields.degree) { missingFields.push('Degree'); markInvalid(dEl); }
     }
 
     if (missingFields.length > 0) {
@@ -389,7 +444,8 @@ host.querySelector('#nf-save').addEventListener('click', () => {
     triggerAutoSave(); // autosave after creating new form
 
     // Ensure the top (document) checkbox is unticked when user form is active
-    const topCheckbox = toolBody.querySelector('.morph-entry > input[type="checkbox"]');
+    const docEntry = toolBody.querySelector('.morph-entry[data-index="-1"]');
+    const topCheckbox = docEntry?.querySelector('input[type="checkbox"]');
     if (topCheckbox) topCheckbox.checked = false;
 
     // Re-render header card so colors/tags mirror the active form

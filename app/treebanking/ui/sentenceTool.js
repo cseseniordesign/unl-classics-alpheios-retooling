@@ -641,11 +641,6 @@ export function setupSentenceTool() {
     setMode('merge');
   };
 
-  sentenceBtn.addEventListener("mouseenter", () => {
-    lastHoverAt = Date.now();
-    handler();
-  });
-
   sentenceBtn.addEventListener("click", (e) => {
     if (e?.isTrusted && (Date.now() - lastHoverAt) < 500) return;
     handler();

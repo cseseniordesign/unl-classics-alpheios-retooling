@@ -8,7 +8,11 @@
 
 export function setupSelector() {
   const selectBtn = document.getElementById("selector");
-  selectBtn.addEventListener("mouseover", handleSelectClick);
+  if (!selectBtn) return;
+  selectBtn.onmouseover = null;
+
+  // Open/toggle ONLY on click
+  selectBtn.addEventListener("click", handleSelectClick);
 }
 
 /**

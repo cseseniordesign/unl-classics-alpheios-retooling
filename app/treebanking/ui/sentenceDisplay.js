@@ -182,6 +182,10 @@ export async function displaySentence(index) {
   if (typeof window.refreshSentenceToolUI === 'function') {
     window.refreshSentenceToolUI();
   }
+
+  if (typeof window.maybeRunMorphPreselect === "function") {
+    await window.maybeRunMorphPreselect();
+  }
 } 
 
 /**
@@ -493,8 +497,7 @@ export async function safeDisplaySentence(targetId, options = {}) {
     window.resetSelection();
   }
 
-  displaySentence(Number(targetId));
+  await displaySentence(Number(targetId));
   return true;
 }
 window.safeDisplaySentence = safeDisplaySentence;
-
