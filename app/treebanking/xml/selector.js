@@ -74,7 +74,6 @@ function handleSelectClick() {
                 </div>
                 
                 <div class="keyboard-container">
-                  <!-- Keyboard will be rendered here -->
                   <div class="simple-keyboard"></div>
                 </div>              
 
@@ -162,13 +161,45 @@ function initializeKeyboard() {
       onKeyPress: button => {
         console.log("Button pressed:", button);
         
+        const currentLayout = keyboard.options.layoutName;
+        
         // Handle shift toggle
         if (button === "{shift}" || button === "{lock}") {
-          const currentLayout = keyboard.options.layoutName;
-          const shiftToggle = currentLayout === "default" ? "shift" : "default";
+          let shiftToggle;
+          
+          if (currentLayout === "default") {
+            shiftToggle = "shift";
+          } else if (currentLayout === "shift") {
+            shiftToggle = "default";
+          } else if (currentLayout === "diacritics") {
+            shiftToggle = "diacritics-shift";
+          } else if (currentLayout === "diacritics-shift") {
+            shiftToggle = "diacritics";
+          }
           
           keyboard.setOptions({
             layoutName: shiftToggle
+          });
+        }
+        
+        // Handle diacritics toggle
+        if (button === "{diacritics}") {
+          keyboard.setOptions({
+            layoutName: "diacritics"
+          });
+        }
+        
+        // Handle diacritics-shift toggle
+        if (button === "{diacritics-shift}") {
+          keyboard.setOptions({
+            layoutName: "diacritics-shift"
+          });
+        }
+        
+        // Handle return to default
+        if (button === "{default}") {
+          keyboard.setOptions({
+            layoutName: "default"
           });
         }
       },
@@ -191,51 +222,52 @@ function initializeKeyboard() {
 function chooseKeyboard() {
  const language = getLanguage();
  if (language == 'grc') {
-    // GREEK
+    // GREEK with comprehensive diacritics
     return {
       layout: {
         default: [
           "ς ε ρ τ υ θ ι ο π {bksp}",
-          "{lock} α σ δ φ γ η ξ κ λ",
-          "{shift} ζ χ ψ ω β ν μ , . {shift}",
-          "{space}"
+          "α σ δ φ γ η ξ κ λ",
+          "ζ χ ψ ω β ν μ , .",
+          "{diacritics} {space} {shift}"
         ],
         shift: [
           "Σ Ε Ρ Τ Υ Θ Ι Ο Π {bksp}",
-          "{lock} Α Σ Δ Φ Γ Η Ξ Κ Λ",
-          "{shift} Ζ Χ Ψ Ω Β Ν Μ , . {shift}",
-          "{space}"
-        ]
-      },
-      display: {
-        "{bksp}": "⌫",
-        "{shift}": "⇧",
-        "{lock}": "⇪",
-        "{space}": "Space"
-      }
-    };
-  } else if (language == 'lat') {
-    // LATIN
-    return {
-      layout: {
-        default: [
-          "q w e r t y u i o p {bksp}",
-          "{lock} a s d f g h j k l",
-          "{shift} z x c v b n m {shift}",
-          "ā ē ī ō ū {space}"
+          "Α Σ Δ Φ Γ Η Ξ Κ Λ",
+          "Ζ Χ Ψ Ω Β Ν Μ , .",
+          "{diacritics} {space} {shift}"
         ],
-        shift: [
-          "Q W E R T Y U I O P {bksp}",
-          "{lock} A S D F G H J K L",
-          "{shift} Z X C V B N M {shift}",
-          "Ā Ē Ī Ō Ū {space}"
+        diacritics: [
+          "ά έ ή ί ό ύ ώ ϊ ϋ {bksp}",
+          "ἀ ἁ ἂ ἃ ἄ ἅ ἆ ἇ ᾀ ᾁ",
+          "ᾂ ᾃ ᾄ ᾅ ᾆ ᾇ ᾐ ᾑ ᾒ ᾓ",
+          "ᾔ ᾕ ᾖ ᾗ ᾠ ᾡ ᾢ ᾣ ᾤ ᾥ",
+          "ᾦ ᾧ ᾰ ᾱ ᾲ ᾳ ᾴ ᾶ ᾷ ὲ",
+          "ὴ ῂ ῃ ῄ ῆ ῇ ῐ ῑ ῒ ΐ",
+          "ῖ ῗ ῠ ῡ ῢ ΰ ῤ ῥ ῦ ῧ",
+          "ῲ ῳ ῴ ῶ ῷ ὸ ὐ ὑ ὒ ὓ",
+          "ὔ ὕ ὖ ὗ",
+          "{shift} {space} {default}"
+        ],
+        "diacritics-shift": [
+          "Ά Έ Ή Ί Ό Ύ Ώ Ϊ Ϋ {bksp}",
+          "Ἀ Ἁ Ἂ Ἃ Ἄ Ἅ Ἆ Ἇ ᾈ ᾉ",
+          "ᾊ ᾋ ᾌ ᾍ ᾎ ᾏ ᾘ ᾙ ᾚ ᾛ",
+          "ᾜ ᾝ ᾞ ᾟ ᾨ ᾩ ᾪ ᾫ ᾬ ᾭ",
+          "ᾮ ᾯ Ᾰ Ᾱ Ὰ Ά ᾼ Ὲ Έ Ὴ",
+          "Ή ῌ Ῐ Ῑ Ὶ Ί Ῠ Ῡ Ὺ Ύ",
+          "Ῥ ῼ Ὸ Ό Ὑ Ὓ Ὕ Ὗ",
+          "{shift} {space} {default}"
         ]
       },
       display: {
         "{bksp}": "⌫",
         "{shift}": "⇧",
         "{lock}": "⇪",
-        "{space}": "Space"
+        "{space}": "Space",
+        "{diacritics}": "◌́◌̀",
+        "{diacritics-shift}": "◌́◌̀",
+        "{default}": "ABC"
       }
     };
   } else if (language == 'fas') {
@@ -260,6 +292,32 @@ function chooseKeyboard() {
         "{shift}": "⇧",
         "{lock}": "⇪",
         "{space}": "فاصله"
+      }
+    };
+  } else if (language == 'lat') {
+    // Latin keyboard with macrons
+    return {
+      layout: {
+        default: [
+          "q w e r t y u i o p {bksp}",
+          "a s d f g h j k l",
+          "z x c v b n m",
+          "ā ē ī ō ū",
+          "{space} {shift}"
+        ],
+        shift: [
+          "Q W E R T Y U I O P {bksp}",
+          "A S D F G H J K L",
+          "Z X C V B N M",
+          "Ā Ē Ī Ō Ū",
+          "{space} {shift}"
+        ]
+      },
+      display: {
+        "{bksp}": "⌫",
+        "{shift}": "⇧",
+        "{lock}": "⇪",
+        "{space}": "Space"
       }
     };
   } else if (language == 'ara') {
