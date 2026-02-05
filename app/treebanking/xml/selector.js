@@ -1,3 +1,5 @@
+import { getLanguage } from "../input/language.js";
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: setupSelector
@@ -23,6 +25,7 @@ function handleSelectClick() {
   const selectBtn = document.getElementById("selector");
   const wasActive = selectBtn.classList.contains("active");
   const toolBody = document.getElementById("tool-body");
+
   // public closer 
   window.closeSelector = function () {
     selectBtn.classList.remove("active");
@@ -56,12 +59,17 @@ function handleSelectClick() {
   toolBody.innerHTML = `
    <label for="token">by token</label>
                 <div class="input-container">
-                    <input class = "token-input" type="text">
+                    <input id="token-input" class = "token-input" type="text">
                     <div class="checkbox-wrapper">
                         <input type="checkbox">
                     </div>
                 </div>
-                <!--Add keyboard for languages here-->
+                
+                <div class="keyboard-container">
+                  <!-- Keyboard will be rendered here -->
+                  <div class="simple-keyboard"></div>
+                </div>              
+
                 <label for="form">by Form</label>
                 <div class="input-container">
                     <input type="text">
@@ -78,9 +86,223 @@ function handleSelectClick() {
                     <select name="" id=""></select>
                 </div>
                 <p>Found Tokens</p>
-  `
+  `;
+  
   handleTokens();
+  
+  // Wait for DOM to be ready, then check if element exists before initializing
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      const keyboardDiv = document.querySelector('.simple-keyboard');
+      if (keyboardDiv) {
+        console.log('Keyboard div found, initializing...');
+        initializeKeyboard();
+      } else {
+        console.error('Keyboard div not found in DOM!');
+      }
+    });
+  });
 } 
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: initializeKeyboard
+ * --------------------------------------------------------------------------
+ * Initializes the simple-keyboard instance for the token input
+ * --------------------------------------------------------------------------
+ */
+
+function initializeKeyboard() {
+  const tokenInput = document.querySelector(".token-input");
+  const keyboardDiv = document.querySelector('.simple-keyboard');
+  
+  if (!keyboardDiv) {
+    console.error('Cannot initialize: .simple-keyboard element not found');
+    return;
+  }
+  
+  if (!tokenInput) {
+    console.error('Cannot initialize: .token-input element not found');
+    return;
+  }
+  
+  // Check if SimpleKeyboard is available in different ways
+  let KeyboardConstructor = null;
+  
+  if (typeof window.SimpleKeyboard !== 'undefined') {
+    KeyboardConstructor = window.SimpleKeyboard;
+  } else if (typeof SimpleKeyboard !== 'undefined') {
+    KeyboardConstructor = SimpleKeyboard;
+  } else {
+    console.error('SimpleKeyboard library not loaded!');
+    return;
+  }
+  
+  try {
+    console.log('Creating keyboard with constructor:', KeyboardConstructor);
+
+    const keyboardConfig = chooseKeyboard();
+    
+    // Initialize the keyboard - it will automatically find .simple-keyboard
+    const keyboard = new KeyboardConstructor.default({
+      onChange: input => {
+        tokenInput.value = input;
+        // Trigger the input event so handleTokens can process it
+        tokenInput.dispatchEvent(new Event('input'));
+      },
+      onKeyPress: button => {
+        console.log("Button pressed:", button);
+        
+        // Handle shift toggle
+        if (button === "{shift}" || button === "{lock}") {
+          const currentLayout = keyboard.options.layoutName;
+          const shiftToggle = currentLayout === "default" ? "shift" : "default";
+          
+          keyboard.setOptions({
+            layoutName: shiftToggle
+          });
+        }
+      },
+      theme: "hg-theme-default hg-layout-default",
+      layout: keyboardConfig.layout,
+      display: keyboardConfig.display
+    });
+
+    // Update keyboard when input changes (typing directly)
+    tokenInput.addEventListener('input', (event) => {
+      keyboard.setInput(event.target.value);
+    });
+    
+  } catch (error) {
+    console.error('Error initializing keyboard:', error);
+    console.error('Error stack:', error.stack);
+  }
+}
+
+function chooseKeyboard() {
+ const language = getLanguage();
+ if (language == 'grc') {
+    // GREEK
+    return {
+      layout: {
+        default: [
+          "ς ε ρ τ υ θ ι ο π {bksp}",
+          "{lock} α σ δ φ γ η ξ κ λ",
+          "{shift} ζ χ ψ ω β ν μ , . {shift}",
+          "{space}"
+        ],
+        shift: [
+          "Σ Ε Ρ Τ Υ Θ Ι Ο Π {bksp}",
+          "{lock} Α Σ Δ Φ Γ Η Ξ Κ Λ",
+          "{shift} Ζ Χ Ψ Ω Β Ν Μ , . {shift}",
+          "{space}"
+        ]
+      },
+      display: {
+        "{bksp}": "⌫",
+        "{shift}": "⇧",
+        "{lock}": "⇪",
+        "{space}": "Space"
+      }
+    };
+  } else if (language == 'lat') {
+    // LATIN
+    return {
+      layout: {
+        default: [
+          "q w e r t y u i o p {bksp}",
+          "{lock} a s d f g h j k l",
+          "{shift} z x c v b n m {shift}",
+          "ā ē ī ō ū {space}"
+        ],
+        shift: [
+          "Q W E R T Y U I O P {bksp}",
+          "{lock} A S D F G H J K L",
+          "{shift} Z X C V B N M {shift}",
+          "Ā Ē Ī Ō Ū {space}"
+        ]
+      },
+      display: {
+        "{bksp}": "⌫",
+        "{shift}": "⇧",
+        "{lock}": "⇪",
+        "{space}": "Space"
+      }
+    };
+  } else if (language == 'fas') {
+    // PERSIAN/FARSI
+    return {
+      layout: {
+        default: [
+          "ض ص ث ق ف غ ع ه خ ح ج {bksp}",
+          "{lock} ش س ی ب ل ا ت ن م ک",
+          "{shift} ظ ط ز ر ذ د پ و {shift}",
+          "{space}"
+        ],
+        shift: [
+          "ۀ ٌ ٍ ً ُ ِ َ ّ ] [ {bksp}",
+          "{lock} ؤ ئ ي إ أ آ ة » « :",
+          "{shift} ك ژ ٰ ٓ ٔ ؛ ء ، {shift}",
+          "{space}"
+        ]
+      },
+      display: {
+        "{bksp}": "⌫",
+        "{shift}": "⇧",
+        "{lock}": "⇪",
+        "{space}": "فاصله"
+      }
+    };
+  } else if (language == 'ara') {
+    // ARABIC
+    return {
+      layout: {
+        default: [
+          "ض ص ث ق ف غ ع ه خ ح ج {bksp}",
+          "{lock} ش س ي ب ل ا ت ن م ك",
+          "{shift} ئ ء ؤ ر ى ة و ز ظ ط {shift}",
+          "{space}"
+        ],
+        shift: [
+          "َ ً ُ ٌ ِ ٍ ّ ْ ] [ {bksp}",
+          "{lock} \\ ٰ ٓ ٔ لأ أ ـ ، / :",
+          "{shift} ~ } { لإ إ ' × ؛ < > {shift}",
+          "{space}"
+        ]
+      },
+      display: {
+        "{bksp}": "⌫",
+        "{shift}": "⇧",
+        "{lock}": "⇪",
+        "{space}": "مسافة"
+      }
+    };
+  } else {
+    // ENGLISH/DEFAULT
+    return {
+      layout: {
+        default: [
+          "q w e r t y u i o p {bksp}",
+          "{lock} a s d f g h j k l",
+          "{shift} z x c v b n m , . {shift}",
+          "{space}"
+        ],
+        shift: [
+          "Q W E R T Y U I O P {bksp}",
+          "{lock} A S D F G H J K L",
+          "{shift} Z X C V B N M , . {shift}",
+          "{space}"
+        ]
+      },
+      display: {
+        "{bksp}": "⌫",
+        "{shift}": "⇧",
+        "{lock}": "⇪",
+        "{space}": "Space"
+        }
+    };
+  }
+}
 
 /**
  * --------------------------------------------------------------------------
