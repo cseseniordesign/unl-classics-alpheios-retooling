@@ -23,28 +23,19 @@ if (!window.treebankModeHTML) {
   }
 }
 
-function updateTreebankSelectionBanner(wordId) {
-  const rowEl    = document.getElementById("treebank-selected-node");
-  const tokenEl  = document.getElementById("tb-node-token");
-  const metaEl   = document.getElementById("tb-node-meta");
-
-  if (!rowEl || !tokenEl || !metaEl) return;
-
+export function updateTreebankSelectionBanner() {
+  clearTreebankSelectionBanner();
   const sentences = Array.isArray(window.treebankData) ? window.treebankData : [];
   const currentSentence = sentences.find(s => s.id === String(window.currentIndex));
-  const word = currentSentence?.words?.find(w => String(w.id) === String(wordId));
+  const rowEl    = document.getElementById("treebank-selected-node");
+  //const tokenEl  = document.getElementById("tb-node-token");
+  //const metaEl   = document.getElementById("tb-node-meta");
 
-  if (!word) {
-    rowEl.classList.add("hidden");
-    tokenEl.textContent = "";
-    metaEl.textContent  = "";
-    return;
-  }
-
-  // Main token text
-  tokenEl.textContent = word.form || "(blank)";
-
-  // Build a compact meta line:  #ID · lemma · POS · relation
+  const tokens = document.querySelectorAll(".token");
+  tokens.forEach((token)=> {
+    const word = currentSentence?.words?.find(w => String(w.id) === String(token.getAttribute("data-word-id")));
+   if (token.classList.contains("selected")) {
+            // Build a compact meta line:  #ID · lemma · POS · relation
   const lemma  = word._displayLemma || word.lemma || "";
   const postag = (word._displayPostag || word.postag || "").split(/[\s-]/)[0] || "";
   const rel    = word.relation || "";
@@ -53,22 +44,30 @@ function updateTreebankSelectionBanner(wordId) {
   if (lemma)  bits.push(lemma);
   if (postag) bits.push(postag);
   if (rel)    bits.push(rel);
-
-  metaEl.textContent = bits.join(" · ");
-
+  
+  const label = document.querySelector(".label");
+  label.style.display = ("block");
+  const div = document.createElement("div");
+  const name = document.createElement("span");
+  name.textContent = `${word.form}`;
+  name.classList.add("tb-node-token");
+  const value = document.querySelector(".value");
+  const meta = document.createElement("span");
+  meta.textContent = bits.join(" · "); 
+  div.append(name);
+  div.append(meta);
+  value.append(div);
   rowEl.classList.remove("hidden");
+    }
+  })
+  
 }
 
 function clearTreebankSelectionBanner() {
-  const rowEl    = document.getElementById("treebank-selected-node");
-  const tokenEl  = document.getElementById("tb-node-token");
-  const metaEl   = document.getElementById("tb-node-meta");
-
-  if (!rowEl || !tokenEl || !metaEl) return;
-
-  rowEl.classList.add("hidden");
-  tokenEl.textContent = "";
-  metaEl.textContent  = "";
+  const label = document.querySelector(".label");
+  label.style.display = ("none");
+  const value = document.querySelector(".value");
+  value.replaceChildren();
 }
 
 
@@ -83,9 +82,6 @@ function clearTreebankSelectionBanner() {
  * @returns {Promise<void>} Resolves after loading data and rendering the selected sentence and its tree.
  */
 export async function displaySentence(index) {
-  // Check whether the sentence comes from XML or user input
-  window.appMode = window.sessionStorage.getItem("userInput") ? "userInput" : "uploadXML";
-
   index = Number(index);
   if (!Number.isFinite(index)) index = 1;
 
@@ -139,7 +135,7 @@ export async function displaySentence(index) {
 
   // Clear any "changing head for" banner when switching sentences
   clearTreebankSelectionBanner();
-
+  
   // Locate the sentence matching the given ID
   const sentence = data.find(s => s.id === `${index}`);
   if (!sentence) {
@@ -157,7 +153,7 @@ export async function displaySentence(index) {
     button.style.color = colorForPOS(word);   // sentence token font color
 
     // Add click interaction for Morph, Relation, and Focus modes
-    button.addEventListener("click", (event) => handleWordClick(word.id,word.form));
+    button.addEventListener("click", (event) => handleWordClick(event,word.id,word.form));
 
     // checks to see if it receives the select classlist?
 
@@ -185,6 +181,10 @@ export async function displaySentence(index) {
   if (typeof window.refreshSentenceToolUI === 'function') {
     window.refreshSentenceToolUI();
   }
+
+  if (typeof window.maybeRunMorphPreselect === "function") {
+    await window.maybeRunMorphPreselect();
+  }
 } 
 
 /**
@@ -194,7 +194,11 @@ export async function displaySentence(index) {
  * handles changing head when two nodes are selected or displays morph info
  * if morph tab is active
  */
-export function handleWordClick(wordId, word) {
+export function handleWordClick(event,wordId, word) {
+  const value = document.querySelector(".value");
+  if (!window.inSelection) {
+    updateTreebankSelectionBanner();
+  }
   const lang = getLanguage();
   if (isMorpheusSupported(lang)) {
     fetchMorphology(word, lang);
@@ -220,56 +224,60 @@ export function handleWordClick(wordId, word) {
       if (window.isRelationActive) window.renderRelationInfo(w);
     }
   }
-
-  
+ 
+  const isMultiSelect = event.ctrlKey || event.metaKey;
   const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
   const newHeadId = String(wordId);
+  //check if ctrl is down 
+  if (isMultiSelect) {
+    // Toggle logic: just highlight/unhighlight, don't move anything yet
+    if (window.batchSelection.has(wordId)) {
+      window.batchSelection.delete(wordId);
+      document.querySelector(`.token[data-word-id="${wordId}"]`)?.classList.remove("selected");
+      d3.select(`.node[id="${wordId}"]`).classed("selected", false);
+    } else {
+      window.batchSelection.add(wordId);
+      document.querySelector(`.token[data-word-id="${wordId}"]`)?.classList.add("selected");
+      d3.select(`.node[id="${wordId}"]`).classed("selected", true);
+    }
+    updateTreebankSelectionBanner();
+    return; // Exit!
+  }
 
-  //Check if the "Selector" tool is active or if we have multiple selected words
-  const selectedElements = document.querySelectorAll(".token.selected, .node.selected");
+  // EXECUTION PHASE (Plain click - no Ctrl)
   
-  // Get unique IDs of all selected words
-  const selectedIds = new Set();
-  selectedElements.forEach(el => {
-    const id = el.dataset.wordId || el.id;
-    if (id) selectedIds.add(String(id));
-  });
-
-  //Logic for when we have multiple selections
-  if (selectedIds.size > 0) {
-    // If the user clicks one of the already selected words, do nothing or reset
-    if (selectedIds.has(newHeadId)) {
-        resetSelection();
-        return;
+  // Check if we are moving a batch of searched/ctrl-clicked words
+  // We look at the Set (window.batchSelection)
+  if (window.batchSelection.size > 0) {
+    if (window.batchSelection.has(newHeadId)) {
+      resetSelection();
+      window.batchSelection.clear(); // Clear so it doesn't get stuck
+      return;
     }
 
     saveState();
     let changesMade = false;
 
-    selectedIds.forEach(depId => {
-        const dependent = currentSentence.words.find(w => String(w.id) === String(depId));
-        
-        if (dependent && String(dependent.id) !== newHeadId) {
-            // Prevent cycles for each word being moved
-            if (!createsCycle(currentSentence.words, depId, newHeadId)) {
-                dependent.head = newHeadId;
-                changesMade = true;
-            } else {
-                console.warn(`Cycle detected for word ${depId}. Skipping.`);
-            }
+    window.batchSelection.forEach(depId => {
+      const dependent = currentSentence.words.find(w => String(w.id) === String(depId));
+      if (dependent && String(dependent.id) !== newHeadId) {
+        if (!createsCycle(currentSentence.words, depId, newHeadId)) {
+          dependent.head = newHeadId;
+          changesMade = true;
         }
+      }
     });
 
     if (changesMade) {
-        triggerAutoSave();
-        createNodeHierarchy(window.currentIndex);
+      triggerAutoSave();
+      createNodeHierarchy(window.currentIndex);
     }
+    window.batchSelection.clear(); //reset the set after moving
     resetSelection();
     return; 
   }
 
-  //const newHeadId = wordId;
-
+  // Normal Single-Word Treebanking Logic
   if (String(selectedWordId) === String(newHeadId)) {
     const btn = document.querySelector(`button[data-word-id="${wordId}"]`);
     const node = document.querySelector(`.node[id="${wordId}"]`);
@@ -324,7 +332,7 @@ export function handleWordClick(wordId, word) {
     window.currentSelectedWordId = String(wordId);
 
     // Restore treebank banner 
-    updateTreebankSelectionBanner(wordId);
+    updateTreebankSelectionBanner();
 
     return;
   }
@@ -355,7 +363,7 @@ export function handleWordClick(wordId, word) {
   createNodeHierarchy(window.currentIndex);
 
   resetSelection();
-}
+  }
 
 /**
  * --------------------------------------------------------------------------
@@ -444,7 +452,6 @@ function resetSelection() {
 
   // Hide the "changing head for" banner row
   clearTreebankSelectionBanner();
-
   if (window.isMorphActive) {
     const pinned = document.getElementById("morph-pinned");
     const hover  = document.getElementById("morph-hover");
@@ -496,8 +503,7 @@ export async function safeDisplaySentence(targetId, options = {}) {
     window.resetSelection();
   }
 
-  displaySentence(Number(targetId));
+  await displaySentence(Number(targetId));
   return true;
 }
 window.safeDisplaySentence = safeDisplaySentence;
-

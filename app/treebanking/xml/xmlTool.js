@@ -512,13 +512,8 @@ export function setupXMLTool() {
     }
   };
 
-  xmlBtn.addEventListener("mouseenter", () => {
-    lastHoverAt = Date.now();
-    handler(); 
-  });
-
+  // Click tab toggle 
   xmlBtn.addEventListener("click", (e) => {
-    if (e?.isTrusted && (Date.now() - lastHoverAt) < 500) return;
     handler(e);
   });
 
@@ -594,24 +589,6 @@ export function setupXMLTool() {
 
     allToolButtons.forEach(btn => {
       if (btn.id === 'xml') return;
-
-      // HOVER switching (tabs open on mouseenter)
-      btn.addEventListener('mouseenter', async (e) => {
-        if (!xmlBtn.classList.contains('active')) return;
-
-        const display = document.getElementById('xml-display');
-        recomputeDirty(display);
-        if (!window.xmlDirty) return;
-
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        e.stopPropagation();
-
-        await attemptLeaveXml(() => {
-          // re-fire the hover open
-          btn.dispatchEvent(new MouseEvent('mouseenter', { bubbles: true }));
-        });
-      }, true);
 
       // CLICK switching
       btn.addEventListener('click', async (e) => {

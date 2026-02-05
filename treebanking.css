@@ -815,18 +815,19 @@ html, body{
   background-color: #6c8294;
 }
 
-.delete-form {
-  position: absolute;
-  right: 8px;
-  bottom: 6px;
+.delete-form,
+.clone-form{
+  position: static;    
   border: none;
   background: transparent;
   color: #2f2fd1;
   cursor: pointer;
   font-size: 10px;
+  padding: 0;
 }
 
-.delete-form:hover {
+.delete-form:hover,
+.clone-form:hover{
   color: #551A8B;
 }
 
@@ -1258,7 +1259,7 @@ body.mode-relation #tool-body {
   opacity: 0.9;                  
 }
 
-#tb-node-token {
+.tb-node-token {
   font-weight: 600;
   margin-right: 0.4rem;
 }
@@ -1348,4 +1349,76 @@ body.mode-relation #tool-body {
   border-left: 1px solid #ccc;
   padding: 0 15px;
   height: 40px;
+}
+
+.morph-gear-btn{
+  position: absolute;
+  top: 6px;          
+  right: 8px;        
+  z-index: 50;
+
+  width: 32px;
+  height: 32px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+  margin: 0;
+
+  background: transparent;
+  border: 0;
+  border-radius: 8px; 
+  cursor: pointer;
+
+  color: #222;        
+}
+
+.morph-gear-icon{
+  width: 20px;
+  height: 20px;
+  display: block;
+  fill: currentColor;
+}
+
+.morph-gear-btn:hover{
+  background: rgba(0,0,0,0.06);
+}
+
+.morph-gear-btn:active{
+  transform: translateY(1px);
+}
+
+.morph-gear-btn:focus-visible{
+  outline: 2px solid rgba(0,0,0,0.25);
+  outline-offset: 2px;
+}
+
+.morph-gear-icon-stroke{
+  width: 22px !important;
+  height: 22px !important;
+  display: block;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.morph-entry.active {
+  outline: 2px solid rgba(0, 128, 0, 0.35);
+  border-radius: 10px;
+}
+
+.morph-entry { position: relative; }
+
+.form-actions{
+  position: absolute;
+  right: 8px;
+  bottom: 6px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }

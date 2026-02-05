@@ -38,8 +38,9 @@ export async function tokenizer(input) {
 
   parsedSentences.forEach(sentence => {
     sentence.words.forEach(word => {
-      if (word.head === "" || word.head === undefined) {
-        word.head = null;
+      if (word.form === "," || word.form === "." || word.form === "·") {
+        word.head = 0;
+        word.relation = "AuxX";
       }
     });
   });

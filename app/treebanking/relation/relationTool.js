@@ -455,16 +455,9 @@ export function setupRelationTool() {
     // otherwise keep default prompt (already in scaffold)
   };
 
-  let lastHoverAt = 0;
-
-  relationBtn.addEventListener("mouseenter", () => {
-    lastHoverAt = Date.now();
-    handler();
-  });
-
+  // Click tab toggle 
   relationBtn.addEventListener("click", (e) => {
-    if (e?.isTrusted && (Date.now() - lastHoverAt) < 500) return;
-    handler();
+    handler(e);
   });
 
   // Slot-aware renderer called from sentenceDisplay / hoverSync

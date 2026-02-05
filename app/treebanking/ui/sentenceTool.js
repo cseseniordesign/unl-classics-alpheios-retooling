@@ -384,8 +384,9 @@ function performJoinSentences(sourceId, targetId) {
     if (!Number.isNaN(headNum) && headNum !== 0) {
       clone.head = String(headNum + offset);
     } else {
-      // Non-numeric or 0 heads become 0 (root-level)
-      clone.head = '0';
+      // Non-numeric or 0 heads become 0 (root-level) 
+      // removed to not display nodes with unassigned heads (only nodes with punctuation should have head of 0)
+      //clone.head = '0'; 
     }
 
     return clone;
@@ -472,7 +473,8 @@ function performSplitSentence(sentenceId, splitAfter) {
         clone.head = String(headNum);
       }
     } else {
-      clone.head = '0';
+      // removed to not display nodes with unassigned heads (only nodes with punctuation should have head of 0)
+      //clone.head = '0';
     }
 
     return clone;
@@ -498,7 +500,8 @@ function performSplitSentence(sentenceId, splitAfter) {
         clone.head = '0';
       }
     } else {
-      clone.head = '0';
+      // removed to not display nodes with unassigned heads (only nodes with puunctuation should have head of 0)
+      //clone.head = '0';
     }
 
     return clone;
@@ -637,11 +640,6 @@ export function setupSentenceTool() {
     // Default mode = merge
     setMode('merge');
   };
-
-  sentenceBtn.addEventListener("mouseenter", () => {
-    lastHoverAt = Date.now();
-    handler();
-  });
 
   sentenceBtn.addEventListener("click", (e) => {
     if (e?.isTrusted && (Date.now() - lastHoverAt) < 500) return;

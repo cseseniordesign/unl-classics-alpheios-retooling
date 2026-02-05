@@ -6,6 +6,16 @@ import { fetchMorphology } from './morpheus.js';
 import { showConfirmDialog } from '../ui/modal.js';
 import { isMorpheusSupported, getLanguage } from '../input/language.js';
 
+
+// =====================================================
+// GLOBAL Preselect state 
+// =====================================================
+const _storedPreselect = localStorage.getItem("morphPreselectEnabled");
+window.morphPreselectEnabled = (_storedPreselect === "true"); // default false
+
+window._morphPreselectRunning = false;
+window._morphPreselectApplied = window._morphPreselectApplied || new Set();
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: setupMorphTool
@@ -15,10 +25,15 @@ import { isMorpheusSupported, getLanguage } from '../input/language.js';
  * --------------------------------------------------------------------------
  */
 export function setupMorphTool() {
+  if (window.morphToolInitialized) return;
+  window.morphToolInitialized = true;
   const morphBtn = document.getElementById('morph');
   const toolBody = document.getElementById('tool-body');
   const allToolButtons = document.querySelectorAll('#toolbar button');
   if (!morphBtn || !toolBody) return;
+    
+  // make tool-body the positioning parent for the gear dropdown
+  toolBody.style.position = "relative";
 
   // Track on/off state from the toolbar button
   window.isMorphActive = false;
@@ -29,6 +44,8 @@ export function setupMorphTool() {
 
     window.isMorphActive = false;
     morphBtn.classList.remove('active');
+    toolBody.querySelector('#morph-settings-btn')?.remove();
+    toolBody.querySelector('#morph-settings')?.remove();
     morphBtn.style.backgroundColor = '#4e6476';
     document.body.classList.remove('mode-morph');
 
@@ -37,7 +54,7 @@ export function setupMorphTool() {
       toolBody.innerHTML = window.treebankModeHTML;
     } else {
       toolBody.innerHTML =
-        `<p>Treebanking mode: click a word or node to edit dependencies.</p>`;
+                `<p>Treebanking mode: click a word or node to edit dependencies.</p>`;
     }
   };
 
@@ -72,6 +89,48 @@ export function setupMorphTool() {
           <div id="morph-hover" class="morph-slot"></div>
         </div>
       `;
+
+      // --- mount gear + dropdown as children of toolBody (top-right of the tool box) ---
+      toolBody.insertAdjacentHTML("beforeend", `
+        <button id="morph-settings-btn" type="button" class="morph-gear-btn" aria-label="Settings">
+          <svg class="morph-gear-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M19.14,12.94c0.04-0.31,0.06-0.63,0.06-0.94s-0.02-0.63-0.06-0.94l2.03-1.58
+              c0.18-0.14,0.23-0.41,0.12-0.61l-1.92-3.32c-0.11-0.2-0.35-0.28-0.56-0.2l-2.39,0.96
+              c-0.5-0.38-1.04-0.69-1.63-0.94L14.4,2.81C14.36,2.59,14.16,2.43,13.93,2.43h-3.86
+              c-0.23,0-0.43,0.16-0.47,0.38L9.24,5.37C8.65,5.62,8.11,5.93,7.61,6.31L5.22,5.35
+              C5.01,5.27,4.77,5.35,4.66,5.55L2.74,8.87C2.63,9.07,2.68,9.34,2.86,9.48l2.03,1.58
+              C4.85,11.37,4.83,11.69,4.83,12s0.02,0.63,0.06,0.94l-2.03,1.58c-0.18,0.14-0.23,0.41-0.12,0.61
+              l1.92,3.32c0.11,0.2,0.35,0.28,0.56,0.2l2.39-0.96c0.5,0.38,1.04,0.69,1.63,0.94l0.36,2.56
+              c0.04,0.22,0.24,0.38,0.47,0.38h3.86c0.23,0,0.43-0.16,0.47-0.38l0.36-2.56
+              c0.59-0.25,1.13-0.56,1.63-0.94l2.39,0.96c0.21,0.08,0.45,0,0.56-0.2l1.92-3.32
+              c0.11-0.2,0.06-0.47-0.12-0.61L19.14,12.94z M12,15.5c-1.93,0-3.5-1.57-3.5-3.5
+              s1.57-3.5,3.5-3.5s3.5,1.57,3.5,3.5S13.93,15.5,12,15.5z"/>
+          </svg>
+        </button>
+
+        <div id="morph-settings"
+          style="
+            display:none;
+            position:absolute;
+            top:42px;
+            right:6px;
+            z-index:999;
+            background:#fff;
+            border:1px solid #ccc;
+            border-radius:10px;
+            padding:10px;
+            box-shadow:0 4px 14px rgba(0,0,0,0.15);
+            min-width:200px;
+          ">
+          <label style="display:flex; gap:10px; align-items:center; margin:0;">
+            <input type="checkbox" id="morph-preselect-checkbox" />
+            <span>Preselect</span>
+          </label>
+        </div>
+      `);
+
+      wireMorphSettingsUI(toolBody);
+
 
       // If a word is already selected, render it into the PINNED slot
       const selectedToken = document.querySelector('.token.selected');
@@ -108,15 +167,8 @@ export function setupMorphTool() {
     }
   };
 
-  let lastHoverAt = 0;
-
-  morphBtn.addEventListener('mouseenter', () => {
-    lastHoverAt = Date.now();
-    handler();
-  });
-
+  // Click tab toggle 
   morphBtn.addEventListener('click', (e) => {
-    if (e?.isTrusted && (Date.now() - lastHoverAt) < 500) return;
     handler();
   });
 
@@ -136,6 +188,8 @@ export function setupMorphTool() {
 }
 
 export function applyActiveSelectionToWord(word) {
+  const af = Number(word.activeForm);
+  word.activeForm = Number.isFinite(af) ? af : -1;  
   ensureDocumentSnapshot(word);
 
   if (word.activeForm === -1) {
@@ -152,7 +206,10 @@ export function applyActiveSelectionToWord(word) {
     }
   }
   const tok = document.querySelector(`.token[data-word-id="${word.id}"]`);
-  if (tok) tok.style.color = colorForPOS(word); // uses _displayPostag
+  if (tok) {
+    const postag = word._displayPostag ?? word.postag ?? "";
+    tok.style.color = colorForPOS({ postag });
+  }
 
   // Rebuild the tree so node colors update, but keep Morph open
   if (typeof createNodeHierarchy === 'function') {
@@ -169,6 +226,17 @@ export function applyActiveSelectionToWord(word) {
 
 export function renderUserFormsList(word, toolBody) {
   ensureFormsArray(word);
+  // Normalize activeForm
+  const af = Number(word.activeForm);
+  word.activeForm = Number.isFinite(af) ? af : -1;
+
+  // If Preselect is enabled and we have forms, ensure something is selected
+  // (your requirement: pick the first Morpheus form)
+  if (window.morphPreselectEnabled && word.activeForm < 0 && Array.isArray(word.forms) && word.forms.length > 0) {
+    word.activeForm = 0;
+    applyActiveSelectionToWord(word);  // makes tree/token color consistent too
+  }
+
   let list = toolBody.querySelector('.user-forms-list');
   if (!list) {
     list = document.createElement('div');
@@ -176,7 +244,7 @@ export function renderUserFormsList(word, toolBody) {
     toolBody.querySelector('.morph-container')?.appendChild(list);
   }
   list.innerHTML = word.forms.map((f, i) =>
-    userFormCardHTML(f, i, word.activeForm === i)
+    userFormCardHTML(f, i, Number(word.activeForm) === i)
   ).join('');
 
   const mc = toolBody.querySelector('.morph-container');
@@ -233,11 +301,110 @@ export function renderUserFormsList(word, toolBody) {
       triggerAutoSave(); // autosave after deleting a form
     });
   });
+
+    list.querySelectorAll('.clone-form').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+
+      const card = e.target.closest('.user-form');
+      const idx = Number(card.dataset.index);
+
+      // seed from the form you clicked
+      const seedForm = word.forms?.[idx];
+      if (!seedForm) return;
+
+      renderCreateEditorBelow(word, toolBody, { seedForm });
+    });
+  });
 }
 
 // =========================
 // Forms management helpers
 // =========================
+
+export async function preselectMissingMorphForCurrentSentence(toolBody = null) {
+  const sid = String(window.currentIndex);
+  const sentence = window.treebankData?.find(s => String(s.id) === sid);
+  if (!sentence) return;
+
+  const lang = getLanguage();
+  if (!isMorpheusSupported(lang)) {
+    console.warn('[Preselect] Morpheus not supported for', lang);
+    return;
+  }
+
+  let changed = 0;
+
+  for (const word of sentence.words) {
+    // Ensure doc snapshot exists so we can detect "already has morph"
+    ensureDocumentSnapshot(word);
+
+    const docLemma  = (word._doc?.lemma  ?? word.lemma  ?? '').trim();
+    const docPostag = (word._doc?.postag ?? word.postag ?? '').trim();
+
+    const alreadyHasMorph =
+      (typeof word.activeForm === 'number' && word.activeForm >= 0) ||
+      (docLemma !== '' || docPostag !== '');
+
+    if (alreadyHasMorph) continue;
+
+    // Make sure we have morpheus/user forms available
+    ensureFormsArray(word);
+
+    // If we haven't fetched Morpheus yet (or no forms exist), fetch now
+    if (!word._morpheusLoaded || word.forms.length === 0) {
+      await attachMorpheusSuggestions(word, toolBody);
+    }
+    if (!Array.isArray(word.forms) || word.forms.length === 0) continue;
+
+    // Select the FIRST suggestion
+    word.activeForm = 0;
+    applyActiveSelectionToWord(word);
+    changed++;
+  }
+
+  if (changed > 0) {
+    // One refresh at the end (instead of rebuilding per word)
+    if (typeof window.createNodeHierarchy === "function") {
+      window.createNodeHierarchy(window.currentIndex);
+    }
+    if (typeof window.fastRefreshTree === "function") {
+      window.fastRefreshTree();
+    }
+    if (typeof window.updateXMLIfActive === "function") {
+      window.updateXMLIfActive();
+    }
+    triggerAutoSave();
+    console.log(`[Preselect] Applied first morph to ${changed} word(s).`);
+  }
+}
+
+// =====================================================
+// Global hook: call after a sentence is rendered
+// =====================================================
+window.maybeRunMorphPreselect = async function maybeRunMorphPreselect() {
+  if (!window.morphPreselectEnabled) return;
+
+  const sid = String(window.currentIndex);
+
+  // Don’t rerun forever when revisiting the same sentence
+  if (window._morphPreselectApplied.has(sid)) return;
+
+  if (window._morphPreselectRunning) return;
+  window._morphPreselectRunning = true;
+
+  try {
+    const toolBody = document.getElementById("tool-body") || null;
+
+    // Fills ONLY missing morph (your function already does the "only if empty" logic)
+    await preselectMissingMorphForCurrentSentence(toolBody);
+
+    window._morphPreselectApplied.add(sid);
+  } finally {
+    window._morphPreselectRunning = false;
+  }
+};
+
 
 function enableMorphEntryExpansion(scopeEl) {
   // Prevent attaching this listener multiple times to the same container
@@ -245,6 +412,8 @@ function enableMorphEntryExpansion(scopeEl) {
   scopeEl._expansionBound = true;
 
   scopeEl.addEventListener('click', (e) => {
+    // Ignore clicks on buttons/controls inside the card (delete/create/etc)
+    if (e.target.closest('button')) return;
     const entry = e.target.closest('.morph-entry');
     if (!entry || !scopeEl.contains(entry)) return;
 
@@ -374,49 +543,79 @@ function appendCreateAndUserForms(word, toolBody) {
   // Render user forms list
   renderUserFormsList(word, toolBody);
 
-  // Make top card checkbox reflect whether XML/doc is the active one
-  const topCheckbox = toolBody.querySelector('.morph-entry > input[type="checkbox"]');
-  if (topCheckbox) topCheckbox.checked = (word.activeForm === -1);
+  // ---------- Document (top) card wiring ----------
+  const docEntry = toolBody.querySelector('.morph-entry[data-index="-1"]');
+  if (docEntry && !docEntry._docButtonsBound) {
+    docEntry._docButtonsBound = true;
 
-  // Clicking the top checkbox activates the XML/doc form
-  topCheckbox?.addEventListener('change', (e) => {
-    if (e.target.checked) {
-      word.activeForm = -1;
-      applyActiveSelectionToWord(word);
-      window.renderMorphInfo(word);
-      triggerAutoSave(); // autosave after reactivating document form
+    const topCheckbox = docEntry.querySelector('input[type="checkbox"]');
+    if (topCheckbox) {
+      topCheckbox.checked = (Number(word.activeForm) === -1);
+
+      topCheckbox.addEventListener('change', (e) => {
+        if (e.target.checked) {
+          word.activeForm = -1;
+          applyActiveSelectionToWord(word);
+          window.renderMorphInfo(word);
+          triggerAutoSave();
+        }
+      });
     }
-  });
 
-  // Create button (under top card)
+    // Delete doc form
+    const docDeleteBtn = docEntry.querySelector('.delete-form');
+    if (docDeleteBtn) {
+      docDeleteBtn.addEventListener('click', async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const confirmDelete = await showConfirmDialog(
+          'Delete the document form?',
+          {
+            titleText: 'Delete document form?',
+            okText: 'Delete',
+            cancelText: 'Cancel'
+          }
+        );
+        if (!confirmDelete) return;
+
+        removeForm(word, -1);
+        window.renderMorphInfo(word);
+        triggerAutoSave();
+      });
+    }
+
+    // Clone doc form -> opens create editor seeded from doc lemma/postag
+    const docCloneBtn = docEntry.querySelector('.clone-form');
+    if (docCloneBtn) {
+      docCloneBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const seedForm = {
+          // use the doc snapshot so it matches what's on that card
+          lemma: (word._doc?.lemma || word.lemma || word.form || '').trim(),
+          postag: (word._doc?.postag || word.postag || '').trim(),
+          source: 'document'
+        };
+
+        renderCreateEditorBelow(word, toolBody, { seedForm });
+      });
+    }
+  } else if (docEntry) {
+    // Keep checkbox in sync on rerender even if we don't rebind
+    const topCheckbox = docEntry.querySelector('input[type="checkbox"]');
+    if (topCheckbox) topCheckbox.checked = (Number(word.activeForm) === -1);
+  }
+
+  // ---------- Create button (under top card) ----------
   if (!toolBody.querySelector('.morph-create')) {
     const btn = document.createElement('button');
     btn.className = 'morph-create';
     btn.textContent = 'Create New Form';
     toolBody.querySelector('.morph-container')?.appendChild(btn);
+
     btn.addEventListener('click', () => renderCreateEditorBelow(word, toolBody));
-  }
-
-  // --- Enable delete for the top (document) card ---
-  const docDeleteBtn = toolBody.querySelector('.morph-container > .user-form .delete-form');
-  if (docDeleteBtn) {
-    docDeleteBtn.addEventListener('click', async (e) => {
-      e.stopPropagation();
-
-      const confirmDelete = await showConfirmDialog(
-        'Delete the document form?',
-        {
-          titleText: 'Delete document form?',
-          okText: 'Delete',
-          cancelText: 'Cancel'
-        }
-      );
-      if (!confirmDelete) return;
-
-      removeForm(word, -1);          // triggers document clear
-      window.renderMorphInfo(word);  // re-render UI
-      triggerAutoSave();             // autosave after clearing document form
-    });
   }
 }
 
@@ -464,10 +663,32 @@ function userFormCardHTML(form, index, isActive) {
   const cbId = `uf-check-${index}`;
   const src = form.source || 'you';
 
-  // Only allow delete button for "you" and "document" forms
-  const deleteBtn = (src === 'you' || src === 'document')
-    ? `<button class="delete-form" title="Delete this form">Delete Form</button>`
+  // Always allow deleting the document form (index === -1),
+  // and allow deleting "you" forms (and optionally morpheus too later)
+  const canDelete = (src !== '');
+
+  const createBtn = `
+    <button class="clone-form" type="button"
+      title="Create a new form based on this one">
+      Create New
+    </button>
+  `;
+
+  const deleteBtn = canDelete
+    ? `
+      <button class="delete-form" type="button"
+        title="Delete this form">
+        Delete Form
+      </button>
+    `
     : '';
+
+  const actions = `
+    <div class="form-actions">
+      ${createBtn}
+      ${deleteBtn}
+    </div>
+  `;
 
   return `
     <div class="morph-entry user-form${expandedClass}" 
@@ -483,7 +704,7 @@ function userFormCardHTML(form, index, isActive) {
         <p class="morph-source">${src}</p>
         <p class="morph-readout">${readable || shortPOS(form.postag)}</p>
       </div>
-      ${deleteBtn}
+      ${actions}
     </div>
   `;
 }
@@ -541,26 +762,26 @@ function renderMorphInfo(word, opts = {}) {
 
   ensureDocumentSnapshot(word);
 
-  if (typeof word.activeForm !== "number") {
-    word.activeForm = -1;
-  }
+  // Normalize activeForm to a real number (handles "0" coming from XML/storage)
+  const af = Number(word.activeForm);
+  word.activeForm = Number.isFinite(af) ? af : -1;
 
-  const lemma  = word._doc.lemma;
-  const postag = word._doc.postag;
+  const lemma  = (word._doc?.lemma  ?? '').trim();
+  const postag = (word._doc?.postag ?? '').trim();
   const posColor = colorForTag(postag);
 
   const documentForm = { lemma, postag, source: "document" };
 
-  // Base card (always)
+  const hasDocMorph = (lemma !== '' || postag !== '') && postag !== '---------' && lemma !== 'null' && postag !== 'null';
+
+  // Base card
   root.innerHTML = `
     <div class="morph-container">
       <p class="morph-form">
         ${word.form}
         <span class="morph-id" style="color:#9aa3ad">${window.currentIndex}-${word.id}</span>
       </p>
-      ${(word._doc.lemma || word._doc.postag)
-        ? userFormCardHTML(documentForm, -1, word.activeForm === -1)
-        : ''}
+      ${hasDocMorph ? userFormCardHTML(documentForm, -1, word.activeForm === -1) : ''}
     </div>
   `;
 
@@ -603,6 +824,8 @@ function posCharFromMorpheusPOS(posRaw) {
   if (s.startsWith('pron'))         return 'p';
   if (s.startsWith('art'))          return 'l'; // article
   if (s.startsWith('adv'))          return 'd';
+  if (s.startsWith('part') || s.includes('particle')) return 'd'; // treat particles like adverbs (Arethusa-style)
+  if (s.includes('indeclin')) return 'd'; // indeclinable often behaves like particle/adverb for coloring
   if (s.startsWith('conj'))         return 'c';
   if (s.startsWith('prep') ||
       s.includes('preposition'))    return 'r'; // adposition
@@ -807,88 +1030,176 @@ function formFromMorphResult(result, word) {
 async function attachMorpheusSuggestions(word, toolBody) {
   if (!word) return;
 
-  // Only fetch once per word
-  if (word._morpheusLoaded) return;
-  word._morpheusLoaded = true;
+  // prevent concurrent calls (hover + preselect can fire quickly)
+  if (word._morpheusLoading) return;
+
+  // If we already loaded successfully AND we have forms, no need to refetch
+  if (word._morpheusLoaded && Array.isArray(word.forms) && word.forms.length > 0) return;
+
+  word._morpheusLoading = true;
 
   const lang = getLanguage();
-  if (!isMorpheusSupported(lang)) return;
+  if (!isMorpheusSupported(lang)) {
+    word._morpheusLoading = false;
+    return;
+  }
 
-  const surface =
-    (word.form && String(word.form).trim()) || '';
-  const lemma =
-    (word.lemma && String(word.lemma).trim()) || '';
+  const surfaceRaw = (word.form && String(word.form).trim()) || '';
+  const lemmaRaw   = (word.lemma && String(word.lemma).trim()) || '';
 
-  const beforeCount = (word.forms || []).length;
+  // Try a cleaned surface too (punctuation, brackets, quotes can break queries)
+  const cleanedSurface = surfaceRaw.replace(/[·.,;:!?()[\]{}"“”'’]/g, '').trim();
 
   let results = [];
-  let usedQuery = surface || lemma;
+  let usedQuery = '';
 
   try {
-    // 1) Prefer the actual token in the text
-    if (surface) {
-      usedQuery = surface;
-      results = await fetchMorphology(surface, lang);
+    // 1) surface
+    if (surfaceRaw) {
+      usedQuery = surfaceRaw;
+      results = await fetchMorphology(surfaceRaw, lang);
     }
-    // 2) If nothing came back, fall back to the lemma
-    if ((!results || results.length === 0) && lemma) {
-      usedQuery = lemma;
-      results = await fetchMorphology(lemma, lang);
+
+    // 2) cleaned surface
+    if ((!results || results.length === 0) && cleanedSurface && cleanedSurface !== surfaceRaw) {
+      usedQuery = cleanedSurface;
+      results = await fetchMorphology(cleanedSurface, lang);
+    }
+
+    // 3) lemma fallback
+    if ((!results || results.length === 0) && lemmaRaw) {
+      usedQuery = lemmaRaw;
+      results = await fetchMorphology(lemmaRaw, lang);
     }
   } catch (err) {
-    console.error('[Morph] Morpheus fetch failed for', usedQuery, err);
-    word._morpheusLoaded = false; // allow retry later
+    console.error('[Morph] Morpheus fetch failed for', usedQuery || surfaceRaw || lemmaRaw, err);
+    word._morpheusLoading = false;
+    // IMPORTANT: do NOT mark loaded; allow retry later
     return;
   }
 
+  // If still nothing, allow retry later (don’t permanently lock out)
   if (!Array.isArray(results) || results.length === 0) {
-    if (window.morphDebug) {
-      console.log('[Morph] no Morpheus results for', usedQuery);
-    }
+    if (window.morphDebug) console.log('[Morph] no Morpheus results for', usedQuery || surfaceRaw || lemmaRaw);
+    word._morpheusLoading = false;
+    word._morpheusLoaded = false;
     return;
   }
 
-  if (window.morphDebug) {
-    console.log('[Morph] raw Morpheus analyses for', usedQuery, results.length);
-  }
+  // From here: we successfully got results at least once
+  word._morpheusLoaded = true;
 
   ensureFormsArray(word);
 
-  // Existing forms from our list
   const existing = new Set(
     word.forms.map(f => `${(f.lemma || '').trim()}::${f.postag || ''}`)
   );
 
-  // Also block the original XML lemma+postag so Morpheus
-  // doesn't suggest a duplicate of the "document" form.
   const baseLemma  = (word._doc?.lemma  || word.lemma  || '').trim();
   const basePostag = (word._doc?.postag || word.postag || '').trim();
-  if (baseLemma || basePostag) {
-    existing.add(`${baseLemma}::${basePostag}`);
-  }
+  if (baseLemma || basePostag) existing.add(`${baseLemma}::${basePostag}`);
 
   results.forEach(r => {
     const form = formFromMorphResult(r, word);
     if (!form || !form.lemma || !form.postag) return;
 
     const key = `${(form.lemma || '').trim()}::${form.postag}`;
-    if (existing.has(key)) return;        // dedupe exact lemma+postag
+    if (existing.has(key)) return;
 
     existing.add(key);
     word.forms.push(form);
   });
 
-  if (window.morphDebug) {
-    const afterCount = word.forms.length;
-    console.log(
-      '[Morph] attached',
-      afterCount - beforeCount,
-      'new forms for',
-      usedQuery,
-      '(now total:', afterCount, ')'
-    );
+  // If Preselect is enabled and no selection exists yet, select first suggestion
+  const af2 = Number(word.activeForm);
+  word.activeForm = Number.isFinite(af2) ? af2 : -1;
+
+  if (window.morphPreselectEnabled && word.activeForm < 0 && word.forms.length > 0) {
+    word.activeForm = 0;
+    applyActiveSelectionToWord(word);
   }
 
-  // Re-render the user forms list so Morpheus forms appear
-  appendCreateAndUserForms(word, toolBody);
+
+  if (toolBody) {
+    appendCreateAndUserForms(word, toolBody);
+  }
+
+  word._morpheusLoading = false;
+}
+
+function wireMorphSettingsUI(toolBody) {
+  const settingsBtn = toolBody.querySelector('#morph-settings-btn');
+  const settingsBox = toolBody.querySelector('#morph-settings');
+  const preselectCb = toolBody.querySelector('#morph-preselect-checkbox');
+  if (!settingsBtn || !settingsBox || !preselectCb) return;
+
+  // ---- 1) Initialize checkbox from global state (NO forced reset here) ----
+  preselectCb.checked = !!window.morphPreselectEnabled;
+
+  // ---- 2) Toggle dropdown reliably ----
+  settingsBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation(); // prevents outside-close handlers from immediately hiding it
+    const isOpen = settingsBox.style.display === 'block';
+    settingsBox.style.display = isOpen ? 'none' : 'block';
+  });
+
+  // Prevent clicks inside dropdown from bubbling up and closing it
+  settingsBox.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
+
+  // ---- 3) Outside click closes ----
+  if (!window._morphSettingsOutsideCloseBound) {
+    window._morphSettingsOutsideCloseBound = true;
+
+    document.addEventListener('mousedown', (e) => {
+      const toolBody = document.getElementById('tool-body');
+      if (!toolBody) return;
+
+      const btn = toolBody.querySelector('#morph-settings-btn');
+      const box = toolBody.querySelector('#morph-settings');
+      if (!btn || !box) return;
+
+      // Click on button or inside box -> do nothing
+      if (btn.contains(e.target) || box.contains(e.target)) return;
+
+      box.style.display = 'none';
+    });
+  }
+
+  // ---- 4) Preselect toggle ----
+  preselectCb.addEventListener('change', async (e) => {
+    const enabled = !!e.target.checked;
+    window.morphPreselectEnabled = enabled;
+
+    // If we want it to persist across sentence navigation (NOT refresh),
+    // do NOT write localStorage here.
+    // If we *do* want it to persist across refresh, then uncomment:
+    // localStorage.setItem('morphPreselectEnabled', enabled ? 'true' : 'false');
+
+    if (enabled) {
+      await preselectMissingMorphForCurrentSentence(toolBody);
+      try { triggerAutoSave(); } catch {}
+    }
+  });
+}
+
+function shortPOS(postag = '') {
+  const t = (postag || '').toString();
+  const c = t[0]?.toLowerCase() || '';
+  const map = {
+    v: 'verb',
+    n: 'noun',
+    a: 'adjective',
+    d: 'adverb',
+    p: 'pronoun',
+    c: 'conjunction',
+    r: 'adposition',
+    l: 'article',
+    m: 'numeral',
+    i: 'interjection',
+    u: 'punctuation'
+  };
+  return map[c] || t || '';
 }
