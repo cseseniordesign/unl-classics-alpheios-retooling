@@ -1259,7 +1259,7 @@ body.mode-relation #tool-body {
   opacity: 0.9;                  
 }
 
-#tb-node-token {
+.tb-node-token {
   font-weight: 600;
   margin-right: 0.4rem;
 }

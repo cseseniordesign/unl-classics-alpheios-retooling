@@ -1,3 +1,4 @@
+import { updateTreebankSelectionBanner} from '../ui/sentenceDisplay.js'
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: setupSelector
@@ -24,6 +25,7 @@ export function setupSelector() {
  */
 
 function handleSelectClick() {
+  window.inSelection = true;
   const selectBtn = document.getElementById("selector");
   const wasActive = selectBtn.classList.contains("active");
   const toolBody = document.getElementById("tool-body");
@@ -35,8 +37,10 @@ function handleSelectClick() {
     if (window.treebankModeHTML) {
       toolBody.innerHTML = window.treebankModeHTML;
     } else {
+      window.inSelection = false;
       toolBody.innerHTML =
         '<p>Treebanking mode: click a word or node to edit dependencies.</p>';
+        updateTreebankSelectionBanner();
     }
   };
 
@@ -82,6 +86,8 @@ function handleSelectClick() {
                     <select name="" id=""></select>
                 </div>
                 <p>Found Tokens</p>
+                <ul className = "found-tokens">
+                </ul>
   `
   handleTokens();
 } 
@@ -99,12 +105,12 @@ function handleTokens() {
   const tokens = document.querySelectorAll(".token");
   if (window.selectorInputValue) {
     tokenInput.value += window.selectorInputValue;
-    updateSelection(tokenInput.value);
+    updateSelection(tokenInput.value.toLowerCase());
   }
   tokenInput.addEventListener("input", () => {
     // Save the raw string to persistence
     window.selectorInputValue = tokenInput.value;
-    updateSelection(tokenInput.value);
+    updateSelection(tokenInput.value.toLowerCase());
   });
 
   function updateSelection(currentValue) {
@@ -113,9 +119,10 @@ function handleTokens() {
 
     tokens.forEach(token => {
       const id = token.dataset.wordId;
-      const text = token.textContent.trim();
+      const text = token.textContent.trim().toLowerCase();
 
       if (tokensArr.includes(text)) {
+        const foundTokenList = document.querySelector(".found-tokens");
         window.batchSelection.add(id); // Store the ID for the movement logic
         token.classList.add("selected");
         const node = document.querySelector(`.node[id="${id}"]`);
