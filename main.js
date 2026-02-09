@@ -64,7 +64,7 @@ function handleExit() {
       sessionStorage.removeItem("userInput");  // ← ADD THIS LINE
       window.uploadedFileHandle = null;
       window.treebankData = null;
-      window.location = '/index.html';
+      window.location = './index.html';
     }
   });
 }
