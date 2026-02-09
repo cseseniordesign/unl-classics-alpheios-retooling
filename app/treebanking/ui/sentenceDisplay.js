@@ -24,6 +24,13 @@ if (!window.treebankModeHTML) {
 }
 
 export function updateTreebankSelectionBanner() {
+  const morphBtn = document.getElementById("morph").classList.contains("active");
+  const selectBtn = document.getElementById("selector").classList.contains("active");
+  const relationBtn = document.getElementById("relation").classList.contains("active");
+  if (morphBtn || selectBtn || relationBtn) {
+    return
+  }
+  //if none of the toolbar options are selected update the banner
   clearTreebankSelectionBanner();
   const sentences = Array.isArray(window.treebankData) ? window.treebankData : [];
   const currentSentence = sentences.find(s => s.id === String(window.currentIndex));
@@ -65,9 +72,9 @@ export function updateTreebankSelectionBanner() {
 
 function clearTreebankSelectionBanner() {
   const label = document.querySelector(".label");
-  label.style.display = ("none");
+  if (label) label.style.display = ("none");
   const value = document.querySelector(".value");
-  value.replaceChildren();
+  if (value) value.replaceChildren();
 }
 
 
@@ -196,9 +203,11 @@ export async function displaySentence(index) {
  */
 export function handleWordClick(event,wordId, word) {
   const value = document.querySelector(".value");
-  if (!window.inSelection) {
-    updateTreebankSelectionBanner();
-  }
+  const morphBtn = document.getElementById("morph").classList.contains("active");
+  const selectBtn = document.getElementById("selector").classList.contains("active");
+  const relationBtn = document.getElementById("relation").classList.contains("active");
+  //if none of the toolbar options are selected update the banner
+  updateTreebankSelectionBanner();
   const lang = getLanguage();
   if (isMorpheusSupported(lang)) {
     fetchMorphology(word, lang);
@@ -338,8 +347,8 @@ export function handleWordClick(event,wordId, word) {
   }
   const dependent = currentSentence.words.find(word => word.id === selectedWordId);
   //gets indepenent node (second selected node)
-  const independent = currentSentence.words.find(word => word.id === newHeadId);
-
+  const isRoot = newHeadId === "root";
+  const independent = isRoot ? { id: "root" } : currentSentence.words.find(word => word.id === newHeadId);
   //remove highlight when second word is selected
   const btnNewHead = document.querySelector(`button[data-word-id="${newHeadId}"]`);
   if (btnNewHead) btnNewHead.classList.remove("highlight");
