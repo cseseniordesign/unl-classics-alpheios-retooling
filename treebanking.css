@@ -1101,7 +1101,7 @@ td{
 .relation-tool .rel-item,
 .relation-tool .rel-subitem {
   padding: 4px 10px;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   line-height: 1.4;
   cursor: pointer;
   white-space: nowrap;
@@ -1128,9 +1128,10 @@ td{
 
 .relation-tool .rel-submenu {
   position: absolute;
-  top: 0;
-  left: 100%;
-  margin-left: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  left: calc(100% - 1px);
+  margin-left: 0;
   min-width: 120px;
   padding: 2px 0;
   list-style: none;
@@ -1140,6 +1141,15 @@ td{
   box-shadow: 0 2px 6px rgba(0,0,0,0.15);
   z-index: 999;
   display: none;   
+}
+
+.relation-tool .rel-has-submenu::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  right: -12px;
+  width: 14px;          
 }
 
 .relation-tool .rel-has-submenu:hover .rel-submenu {
@@ -1421,4 +1431,48 @@ body.mode-relation #tool-body {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+.rel-apply-all{
+  appearance: none;
+  border: none;
+  outline: none;
+
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 1px 0 rgba(0,0,0,0.08);
+  background-color: #4e6476;
+  color: #fff;
+}
+
+.rel-apply-all:hover{
+  background-color: #6c8294;
+}
+
+.rel-apply-all:active{
+  transform: translateY(1px);
+}
+
+.rel-apply-all:focus{
+  outline: none;
+  box-shadow: none;
+}
+
+.rel-apply-all:focus-visible{
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(108,130,148,0.35);
+}
+
+.relation-change-all-title{
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  text-transform: uppercase;
+  margin: 0 0 8px 0;
 }

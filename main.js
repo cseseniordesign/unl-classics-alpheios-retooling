@@ -76,7 +76,7 @@ function setupHistoryButton() {
     const button = document.getElementById("history");
     if (button) {
         button.addEventListener("click", function() {
-            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+            alert("Sorry, this feature is not yet implemented. Please look forward to using it in future updates!");
         });
     }
 }
@@ -85,7 +85,7 @@ function setupCommentButton() {
     const button = document.getElementById("comment");
     if (button) {
         button.addEventListener("click", function() {
-            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+            alert("Sorry, this feature is not yet implemented. Please look forward to using it in future updates!");
         });
     }
 }
@@ -94,7 +94,7 @@ function setupSettingsButton() {
     const button = document.getElementById("settings");
     if (button) {
         button.addEventListener("click", function() {
-            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+            alert("Sorry, this feature is not yet implemented. Please look forward to using it in future updates!");
         });
     }
 }
@@ -103,7 +103,7 @@ function setupLanguageButton() {
     const button = document.getElementById("language");
     if (button) {
         button.addEventListener("click", function() {
-            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+            alert("Sorry, this feature is not yet implemented. Please look forward to using it in future updates!");
         });
     }
 }
@@ -112,7 +112,7 @@ function setupaTButton() {
     const button = document.getElementById("aT");
     if (button) {
         button.addEventListener("click", function() {
-            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+            alert("Sorry, this feature is not yet implemented. Please look forward to using it in future updates!");
         });
     }
 }
