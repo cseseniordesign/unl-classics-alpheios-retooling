@@ -61,7 +61,7 @@ function handleExit() {
     if(confirm("Are you sure you want to exit?") == true){
       localStorage.removeItem("xmlContent");
       localStorage.removeItem("treebankData");
-      sessionStorage.removeItem("userInput");  // ← ADD THIS LINE
+      sessionStorage.removeItem("userInput");
       window.uploadedFileHandle = null;
       window.treebankData = null;
       window.location = '/index.html';
