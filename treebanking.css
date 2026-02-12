@@ -1360,7 +1360,14 @@ body.mode-relation #tool-body {
   padding: 0 15px;
   height: 40px;
 }
-
+.batch-token-btn {
+  background: none;
+  border: none;
+  margin-bottom: 2px;
+}
+.batch-token-btn:hover {
+  background-color: lightblue;
+}
 .morph-gear-btn{
   position: absolute;
   top: 6px;          

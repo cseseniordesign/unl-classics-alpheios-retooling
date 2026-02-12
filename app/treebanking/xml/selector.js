@@ -13,7 +13,6 @@ export function setupSelector() {
   const selectBtn = document.getElementById("selector");
   if (!selectBtn) return;
   selectBtn.onmouseover = null;
-
   // Open/toggle ONLY on click
   selectBtn.addEventListener("click", handleSelectClick);
 }
@@ -31,7 +30,6 @@ function handleSelectClick() {
   const selectBtn = document.getElementById("selector");
   const wasActive = selectBtn.classList.contains("active");
   const toolBody = document.getElementById("tool-body");
-
   // public closer 
   window.closeSelector = function () {
     selectBtn.classList.remove("active");
@@ -67,7 +65,7 @@ function handleSelectClick() {
   toolBody.innerHTML = `
    <label for="token">by token</label>
                 <div class="input-container">
-                    <input id="token-input" class = "token-input" type="text">
+                    <input class = "token-input" type="text">
                     <div class="checkbox-wrapper">
                         <input type="checkbox">
                     </div>
@@ -79,7 +77,7 @@ function handleSelectClick() {
 
                 <label for="form">by Form</label>
                 <div class="input-container">
-                    <input type="text">
+                    <input class = "form-input" type="text">
                     <div class="checkbox-wrapper">
                         <input type="checkbox">
                     </div>
@@ -93,11 +91,12 @@ function handleSelectClick() {
                     <select name="" id=""></select>
                 </div>
                 <p>Found Tokens</p>
-                <ul className = "found-tokens">
+                <ul class = "found-tokens">
                 </ul>
   `;
+  updateFoundTokens();
   handleTokens();
-  
+  handleForm();
   // Wait for DOM to be ready, then check if element exists before initializing
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -401,10 +400,10 @@ function handleTokens() {
       const text = token.textContent.trim().toLowerCase();
 
       if (tokensArr.includes(text)) {
-        const foundTokenList = document.querySelector(".found-tokens");
         window.batchSelection.add(id); // Store the ID for the movement logic
         token.classList.add("selected");
         const node = document.querySelector(`.node[id="${id}"]`);
+        updateFoundTokens();
         if (node) d3.select(node).classed("selected", true);
       } else {
         token.classList.remove("selected");
@@ -414,3 +413,164 @@ function handleTokens() {
     });
   }
 }
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: handleForm
+ * --------------------------------------------------------------------------
+ * Handles the selection by form and highlights corresponding tokens/nodes
+ * --------------------------------------------------------------------------
+ */
+
+function handleForm() {
+  const formInput = document.querySelector(".form-input");
+  const tokens = document.querySelectorAll(".token");
+  if (window.formInputValue) {
+    formInput.value += window.formInputValue;
+    updateSelection(formInput.value.toLowerCase());
+  }
+  formInput.addEventListener("input", () => {
+    // Save the raw string to persistence
+    window.formInputValue = formInput.value;
+    updateSelection(formInput.value.toLowerCase());
+  });
+
+  function updateSelection(currentValue) {
+    const formsArr = currentValue.split(" ").filter(t => t !== "");
+    window.batchSelection.clear();
+    tokens.forEach(token => {
+      const id = token.dataset.wordId;
+      const sentences = Array.isArray(window.treebankData) ? window.treebankData : [];
+      const currentSentence = sentences.find(s => s.id === String(window.currentIndex));
+      const word = currentSentence?.words?.find(w => String(w.id) === String(id));
+      const form = formParser(word.postag[0]);
+      if (formsArr.includes(form)) {
+        updateFoundTokens()
+        window.batchSelection.add(id); // Store the ID for the movement logic
+        token.classList.add("selected");
+        const node = document.querySelector(`.node[id="${id}"]`);
+        if (node) d3.select(node).classed("selected", true);
+      } else {
+        token.classList.remove("selected");
+        const node = document.querySelector(`.node[id="${id}"]`);
+        if (node) d3.select(node).classed("selected", false);
+        updateFoundTokens()
+      }
+    });
+  }
+} 
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: formParser
+ * --------------------------------------------------------------------------
+ * converts the postag to corresponding part of speach
+ * --------------------------------------------------------------------------
+ */
+function formParser(posChar) {
+  switch (posChar) {
+    case 'v':
+      return 'verb';
+    case 'p':
+      return 'pron';
+    case 'n':
+      return 'noun';
+    case 'l':
+      return 'art';
+
+    // ========================
+    //     ADJECTIVE  (a)
+    // ========================
+    case 'a':
+      return 'adj';
+
+    // ========================
+    //      NUMERAL (m)
+    // ========================
+    case 'm':
+      return 'num';
+
+    // ========================
+    //      ADVERB  (d)
+    // ========================
+    case 'd':
+      return 'adv';
+
+    // ========================
+    //  Conjunction (c),
+    //  Adposition (r),
+    //  Interjection (i),
+    //  Punctuation/Unknown (u)
+    // ========================
+    case 'c':
+      return 'conj';
+    case 'r':
+      return 'adp';
+    case 'i':
+      return 'int';
+    case 'u':
+      return 'pun'
+
+    // ========================
+    //     DEFAULT / UNKNOWN
+    // ========================
+    default:
+      return 'unknown'
+}
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: updateFoundTokens
+ * --------------------------------------------------------------------------
+ * Updates list of found tokens
+ * --------------------------------------------------------------------------
+ */
+export function updateFoundTokens() {
+  let wordsArr = [];
+  // if in the selection tab
+  if (inSelection) {
+    const foundTokenList = document.querySelector(".found-tokens");
+    //reset the found tokens
+    foundTokenList.replaceChildren();
+    const sentences = Array.isArray(window.treebankData) ? window.treebankData : [];
+    const currentSentence = sentences.find(s => s.id === String(window.currentIndex));
+    window.batchSelection.forEach((id) => {
+      const word = currentSentence?.words?.find(w => String(w.id) === String(id));
+      if (!word || wordsArr.includes(word.form)) return; 
+      wordsArr.push(word.form);
+      const tokenButton = document.createElement('button');
+      tokenButton.textContent = word.form;
+      tokenButton.className = "batch-token-btn"; 
+      const listItem = document.createElement('li');
+      listItem.append(tokenButton);
+      foundTokenList.append(listItem);
+      tokenButton.addEventListener("click", () => (removeTokenButton(word.form)));
+  });
+    }
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: removeTokenButton
+ * --------------------------------------------------------------------------
+ * Removes selection of the tokens/nodes 
+ * associated with the clicked token button
+ * --------------------------------------------------------------------------
+ */
+function removeTokenButton(targetForm) {
+  const sentences = Array.isArray(window.treebankData) ? window.treebankData : [];
+  const currentSentence = sentences.find(s => s.id === String(window.currentIndex));
+  const currentBatchIds = [...window.batchSelection];
+  currentBatchIds.forEach((batchId) => {  
+  const batchWord = currentSentence?.words?.find(w => String(w.id) === String(batchId));
+  if (batchWord.form == targetForm) {
+    window.batchSelection.delete(batchId)
+    const token = document.querySelector(`.token[data-word-id="${batchId}"]`)
+    if (token) token.classList.remove("selected");
+    const node = document.querySelector(`.node[id="${batchId}"]`);
+    if (node) d3.select(node).classed("selected", false);} 
+  })  
+  updateFoundTokens();
+}
+    
