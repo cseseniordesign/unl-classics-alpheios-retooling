@@ -16,6 +16,8 @@ import { setupRelationTool } from './app/treebanking/relation/relationTool.js';
 import { tokenizer } from './app/treebanking/xml/tokenizer.js';
 import { setLanguage } from "./app/treebanking/input/language.js"; 
 import {setupSelector} from "./app/treebanking/xml/selector.js";
+import { updateTreebankSelectionBanner } from "./app/treebanking/ui/sentenceDisplay.js";
+
 window.handleFileUpload = handleFileUpload;
 window.batchSelection = new Set();
 window.selectorInputValue = "";
@@ -61,7 +63,7 @@ function handleExit() {
     if(confirm("Are you sure you want to exit?") == true){
       localStorage.removeItem("xmlContent");
       localStorage.removeItem("treebankData");
-      sessionStorage.removeItem("userInput");  // ← ADD THIS LINE
+      sessionStorage.removeItem("userInput");
       window.uploadedFileHandle = null;
       window.treebankData = null;
       window.location = '/index.html';
@@ -74,7 +76,7 @@ function setupHistoryButton() {
     const button = document.getElementById("history");
     if (button) {
         button.addEventListener("click", function() {
-            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+            alert("Sorry, this feature is not yet implemented. Please look forward to using it in future updates!");
         });
     }
 }
@@ -83,7 +85,7 @@ function setupCommentButton() {
     const button = document.getElementById("comment");
     if (button) {
         button.addEventListener("click", function() {
-            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+            alert("Sorry, this feature is not yet implemented. Please look forward to using it in future updates!");
         });
     }
 }
@@ -92,7 +94,7 @@ function setupSettingsButton() {
     const button = document.getElementById("settings");
     if (button) {
         button.addEventListener("click", function() {
-            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+            alert("Sorry, this feature is not yet implemented. Please look forward to using it in future updates!");
         });
     }
 }
@@ -101,7 +103,7 @@ function setupLanguageButton() {
     const button = document.getElementById("language");
     if (button) {
         button.addEventListener("click", function() {
-            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+            alert("Sorry, this feature is not yet implemented. Please look forward to using it in future updates!");
         });
     }
 }
@@ -110,9 +112,141 @@ function setupaTButton() {
     const button = document.getElementById("aT");
     if (button) {
         button.addEventListener("click", function() {
-            alert("Sorry, this feature is not yet implemented. PLease look forward to using it in future updates!");
+            alert("Sorry, this feature is not yet implemented. Please look forward to using it in future updates!");
         });
     }
+}
+
+function setupNoneButton() {
+  const button = document.getElementById("none");
+  if (button) {
+    button.addEventListener("click", function() {
+      console.log('Button clicked!');
+      
+      // Check the batch selection
+      console.log('batchSelection exists?', window.batchSelection);
+      console.log('batchSelection size:', window.batchSelection?.size);
+      console.log('batchSelection contents:', Array.from(window.batchSelection || []));
+        
+      // Check what selected elements exist
+      const selectedElements = document.querySelectorAll('.selected');
+      console.log('Found selected elements:', selectedElements.length);
+      console.log('Selected elements:', selectedElements);
+        
+      // Check D3 nodes
+      const selectedNodes = d3.selectAll('.node.selected');
+      console.log('Found selected nodes:', selectedNodes.size());
+        
+      // Now try to clear
+      window.batchSelection?.clear();
+        
+      selectedElements.forEach(element => {
+        console.log('Removing selected from:', element);
+        element.classList.remove('selected');
+      });
+        
+      d3.selectAll('.node.selected').classed('selected', false);
+        
+      console.log('After clear - batchSelection size:', window.batchSelection?.size);
+    });
+  }
+}
+
+function setupUnusedButton() {
+  const button = document.getElementById("unused");
+  if (!button) return;
+  
+  let isHighlighted = false;
+  
+  button.addEventListener("click", function() {
+    isHighlighted = !isHighlighted;
+    
+    if (isHighlighted) {
+    
+      // Highlight and select all unhung words
+      const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+      if (!currentSentence || !currentSentence.words) return;
+      
+      currentSentence.words.forEach(word => {
+        // Check if word has no head (unhung)
+        if (!word.head || word.head === "" || word.head === null) {
+          const wordId = String(word.id);
+          
+          // Add to batch selection
+          window.batchSelection.add(wordId);
+          
+          // Highlight the token
+          const token = document.querySelector(`.token[data-word-id="${wordId}"]`);
+          if (token) token.classList.add("selected");
+          
+          // Highlight the node
+          const node = d3.select(`.node[id="${wordId}"]`);
+          if (node) node.classed("selected", true);
+        }
+      });
+      
+      button.classList.add("active"); // Make button darker
+      updateTreebankSelectionBanner(); // Update the banner to show selections
+      
+    } else {
+      // Clear batch selection
+      window.batchSelection.clear();
+      
+      // Remove all highlights
+      document.querySelectorAll('.token.selected').forEach(el => {
+        el.classList.remove('selected');
+      });
+      
+      d3.selectAll('.node.selected').classed('selected', false);
+      
+      button.classList.remove("active"); // Remove dark state
+      updateTreebankSelectionBanner(); // Update the banner
+    }
+  });
+}
+
+function setupHighlightButton() {
+  const button = document.getElementById("highlight");
+  if (!button) return;
+  
+  let isHighlighted = false; // Track state
+  
+  button.addEventListener("click", function() {
+    isHighlighted = !isHighlighted; // Toggle
+    
+    if (isHighlighted) {
+      // Highlight all unhung words
+      const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+      if (!currentSentence || !currentSentence.words) return;
+      
+      currentSentence.words.forEach(word => {
+        // Check if word has no head (unhung)
+        if (!word.head || word.head === "" || word.head === null) {
+          const wordId = String(word.id);
+          
+          // Highlight the token
+          const token = document.querySelector(`.token[data-word-id="${wordId}"]`);
+          if (token) token.classList.add("selected");
+          
+          // Highlight the node
+          const node = d3.select(`.node[id="${wordId}"]`);
+          if (node) node.classed("selected", true);
+        }
+      });
+      
+      button.classList.add("active"); // Make button darker
+      
+    } else {
+      // Remove all highlights
+      document.querySelectorAll('.token.selected').forEach(el => {
+        el.classList.remove('selected');
+      });
+      
+      d3.selectAll('.node.selected').classed('selected', false);
+      
+      button.classList.remove("active"); // Remove dark state
+    }
+  });
 }
 
 /**  
@@ -258,4 +392,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupSettingsButton();
   setupLanguageButton();
   setupaTButton();
+  setupNoneButton();
+  setupUnusedButton();
+  setupHighlightButton();
 });

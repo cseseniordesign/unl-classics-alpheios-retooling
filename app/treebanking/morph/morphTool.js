@@ -120,7 +120,8 @@ export function setupMorphTool() {
             border-radius:10px;
             padding:10px;
             box-shadow:0 4px 14px rgba(0,0,0,0.15);
-            min-width:200px;
+            min-width:0;
+            width:max-content;
           ">
           <label style="display:flex; gap:10px; align-items:center; margin:0;">
             <input type="checkbox" id="morph-preselect-checkbox" />
@@ -131,23 +132,32 @@ export function setupMorphTool() {
 
       wireMorphSettingsUI(toolBody);
 
+      // If there are already selected nodes BEFORE opening Morph,
+      // show ALL of them. Otherwise fall back to the single selected token.
+      if (Array.isArray(window.treebankData) && typeof window.renderMorphInfo === 'function') {
+        const currentSentence = window.treebankData.find(s => String(s.id) === String(window.currentIndex));
 
-      // If a word is already selected, render it into the PINNED slot
-      const selectedToken = document.querySelector('.token.selected');
-      if (
-        selectedToken &&
-        Array.isArray(window.treebankData) &&
-        typeof window.renderMorphInfo === 'function'
-      ) {
-        const wordId = selectedToken.dataset.wordId;
-        const currentSentence = window.treebankData.find(
-          s => s.id === `${window.currentIndex}`
-        );
-        const word = currentSentence?.words?.find(w => w.id === wordId);
+        // Prefer multi-select set (ctrl/cmd selection)
+        const hasBatch = window.batchSelection && window.batchSelection.size > 0;
 
-        if (word) {
-          // renderMorphInfo must support { slot: "pinned" }
-          window.renderMorphInfo(word, { slot: 'pinned' });
+        if (hasBatch && currentSentence?.words) {
+          const ids = Array.from(window.batchSelection).map(String).sort((a,b) => Number(a) - Number(b));
+          const words = ids
+            .map(id => currentSentence.words.find(w => String(w.id) === id))
+            .filter(Boolean);
+
+          if (words.length > 0) {
+            window.renderMorphInfo(words, { slot: 'pinned' });
+          }
+        } else {
+          // Fallback: single selection
+          const selectedToken = document.querySelector('.token.selected');
+          const wordId = selectedToken?.dataset?.wordId;
+
+          if (wordId && currentSentence?.words) {
+            const word = currentSentence.words.find(w => String(w.id) === String(wordId));
+            if (word) window.renderMorphInfo(word, { slot: 'pinned' });
+          }
         }
       }
     } else {
@@ -744,65 +754,88 @@ function removeForm(word, index) {
 // PUBLIC: renderMorphInfo(word) — keep your top card intact,
 // then append "Create new form" + user-forms list underneath
 // ---------------------------------------------------------
-function renderMorphInfo(word, opts = {}) {
+function renderMorphInfo(wordOrWords, opts = {}) {
   if (!window.isMorphActive) return;
 
   const slot = (opts && opts.slot === "hover") ? "hover" : "pinned";
-
   const pinnedEl = document.getElementById("morph-pinned");
   const hoverEl  = document.getElementById("morph-hover");
   const promptEl = document.getElementById("morph-prompt");
 
-  // Fall back safely (but prefer slots)
   const root = (slot === "hover") ? hoverEl : pinnedEl;
-  if (!root || !word) return;
+  if (!root) return;
 
-  // Hide prompt as soon as we have *any* content to show (hover OR pinned)
   if (promptEl) promptEl.style.display = "none";
 
-  ensureDocumentSnapshot(word);
+  const words = Array.isArray(wordOrWords) ? wordOrWords.filter(Boolean) : [wordOrWords].filter(Boolean);
+  if (words.length === 0) return;
 
-  // Normalize activeForm to a real number (handles "0" coming from XML/storage)
-  const af = Number(word.activeForm);
-  word.activeForm = Number.isFinite(af) ? af : -1;
+  // Keep stable order
+  words.sort((a,b) => Number(a.id) - Number(b.id));
 
-  const lemma  = (word._doc?.lemma  ?? '').trim();
-  const postag = (word._doc?.postag ?? '').trim();
-  const posColor = colorForTag(postag);
+  const renderOne = (word, mountEl) => {
+    ensureDocumentSnapshot(word);
 
-  const documentForm = { lemma, postag, source: "document" };
+    const af = Number(word.activeForm);
+    word.activeForm = Number.isFinite(af) ? af : -1;
 
-  const hasDocMorph = (lemma !== '' || postag !== '') && postag !== '---------' && lemma !== 'null' && postag !== 'null';
+    const lemma  = word._doc?.lemma ?? '';
+    const postag = word._doc?.postag ?? '';
 
-  // Base card
-  root.innerHTML = `
-    <div class="morph-container">
-      <p class="morph-form">
-        ${word.form}
-        <span class="morph-id" style="color:#9aa3ad">${window.currentIndex}-${word.id}</span>
-      </p>
-      ${hasDocMorph ? userFormCardHTML(documentForm, -1, word.activeForm === -1) : ''}
-    </div>
-  `;
+    const docLemma  = String(lemma).trim();
+    const docPostag = String(postag).trim();
+    const hasDocMorph = (docLemma !== '' || docPostag !== '');
 
-  const lemmaEl = root.querySelector(".morph-lemma");
-  if (lemmaEl) lemmaEl.style.color = posColor;
+    const posColor = colorForTag(postag);
+    const documentForm = { lemma, postag, source: "document" };
 
-  const mc = root.querySelector(".morph-container");
-  if (mc) enableMorphEntryExpansion(mc);
+    mountEl.innerHTML = `
+      <div class="morph-container">
+        <p class="morph-form">
+          ${word.form}
+          <span class="morph-id" style="color:#9aa3ad">${window.currentIndex}-${word.id}</span>
+        </p>
+        ${hasDocMorph ? userFormCardHTML(documentForm, -1, word.activeForm === -1) : ''}
+      </div>
+    `;
 
-  appendCreateAndUserForms(word, root);
-  attachMorpheusSuggestions(word, root);
+    const lemmaEl = mountEl.querySelector(".morph-lemma");
+    if (lemmaEl) lemmaEl.style.color = posColor;
 
-  // Collapse entries (scoped)
-  root.querySelectorAll(".morph-entry").forEach(entry => {
-    entry.classList.remove("expanded");
-    entry.dataset.expanded = "false";
-    const details = entry.querySelector(".morph-details");
-    if (details) details.remove();
-    const divider = entry.querySelector(".morph-divider");
-    if (divider) divider.remove();
-  });
+    const mc = mountEl.querySelector(".morph-container");
+    if (mc) enableMorphEntryExpansion(mc);
+
+    appendCreateAndUserForms(word, mountEl);
+    attachMorpheusSuggestions(word, mountEl);
+
+    // Collapse entries scoped to this mount only
+    mountEl.querySelectorAll(".morph-entry").forEach(entry => {
+      entry.classList.remove("expanded");
+      entry.dataset.expanded = "false";
+      entry.querySelector(".morph-details")?.remove();
+      entry.querySelector(".morph-divider")?.remove();
+    });
+  };
+
+  // ---- MULTI ----
+  if (words.length > 1) {
+    root.innerHTML = `<div class="morph-multi"></div>`;
+    const wrap = root.querySelector(".morph-multi");
+
+    words.forEach(w => {
+      const block = document.createElement("div");
+      block.className = "morph-word-block";
+      block.dataset.wordId = String(w.id);
+      wrap.appendChild(block);
+      renderOne(w, block);
+    });
+
+    return;
+  }
+
+  // ---- SINGLE ----
+  root.innerHTML = ""; // or keep your old structure if you want
+  renderOne(words[0], root);
 }
 
 // ============================================================================
