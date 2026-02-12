@@ -246,7 +246,7 @@ function chooseKeyboard() {
           "ῖ ῗ ῠ ῡ ῢ ΰ ῤ ῥ ῦ ῧ",
           "ῲ ῳ ῴ ῶ ῷ ὸ ὐ ὑ ὒ ὓ",
           "ὔ ὕ ὖ ὗ",
-          "{shift} {space} {default}"
+          "{default} {space} {shift}"
         ],
         "diacritics-shift": [
           "Ά Έ Ή Ί Ό Ύ Ώ Ϊ Ϋ {bksp}",
@@ -256,7 +256,7 @@ function chooseKeyboard() {
           "ᾮ ᾯ Ᾰ Ᾱ Ὰ Ά ᾼ Ὲ Έ Ὴ",
           "Ή ῌ Ῐ Ῑ Ὶ Ί Ῠ Ῡ Ὺ Ύ",
           "Ῥ ῼ Ὸ Ό Ὑ Ὓ Ὕ Ὗ",
-          "{shift} {space} {default}"
+          "{default} {space} {shift}"
         ]
       },
       display: {
