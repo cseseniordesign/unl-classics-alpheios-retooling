@@ -10,6 +10,7 @@ import { createTable } from '../table/tableRender.js';
 import { recomputeDirty, discardXmlEdits } from '../xml/xmlTool.js';
 import { showConfirmDialog } from './modal.js';
 import { getLanguage, isMorpheusSupported } from '../input/language.js';
+import { updateFoundTokens } from '../xml/selector.js';
 
 // ---------------------------------------------------------------------------
 // Treebank mode banner helpers
@@ -35,8 +36,6 @@ export function updateTreebankSelectionBanner() {
   const sentences = Array.isArray(window.treebankData) ? window.treebankData : [];
   const currentSentence = sentences.find(s => s.id === String(window.currentIndex));
   const rowEl    = document.getElementById("treebank-selected-node");
-  //const tokenEl  = document.getElementById("tb-node-token");
-  //const metaEl   = document.getElementById("tb-node-meta");
 
   const tokens = document.querySelectorAll(".token");
   tokens.forEach((token)=> {
@@ -242,6 +241,11 @@ export function handleWordClick(event,wordId, word) {
       window.batchSelection.add(String(wordId));
       document.querySelector(`.token[data-word-id="${wordId}"]`)?.classList.add("selected");
       d3.select(`.node[id="${wordId}"]`).classed("selected", true);
+    }
+
+
+    if (window.inSelection){
+      updateFoundTokens();
     }
 
     updateTreebankSelectionBanner();

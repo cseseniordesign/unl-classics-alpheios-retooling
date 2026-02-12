@@ -21,6 +21,7 @@ import { updateTreebankSelectionBanner } from "./app/treebanking/ui/sentenceDisp
 window.handleFileUpload = handleFileUpload;
 window.batchSelection = new Set();
 window.selectorInputValue = "";
+window.formInputValue = "";
 
 window.root = null;
 window.svg = null;
