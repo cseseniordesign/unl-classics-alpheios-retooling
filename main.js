@@ -148,6 +148,7 @@ function setupNoneButton() {
       d3.selectAll('.node.selected').classed('selected', false);
         
       console.log('After clear - batchSelection size:', window.batchSelection?.size);
+      updateTreebankSelectionBanner();
     });
   }
 }
