@@ -42,7 +42,12 @@ export function setupSentenceSelector() {
   data.forEach(sentence => {
     const opt = document.createElement('option');
     opt.value = sentence.id;
-    opt.textContent = `${sentence.id}`;
+
+    const sentenceText = Array.isArray(sentence.words) ? 
+    sentence.words.map(w => w.form).join(' ') : ' ';
+    const preview = sentenceText.length <= 20 ? sentenceText : sentenceText.slice(0, 20) + '...';
+
+    opt.textContent = `${sentence.id}: ${preview}`;
     select.appendChild(opt);
   });
 

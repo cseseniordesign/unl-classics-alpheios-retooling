@@ -10,6 +10,7 @@ import { createTable } from '../table/tableRender.js';
 import { recomputeDirty, discardXmlEdits } from '../xml/xmlTool.js';
 import { showConfirmDialog } from './modal.js';
 import { getLanguage, isMorpheusSupported } from '../input/language.js';
+import { updateFoundTokens } from '../xml/selector.js';
 
 // ---------------------------------------------------------------------------
 // Treebank mode banner helpers
@@ -35,8 +36,6 @@ export function updateTreebankSelectionBanner() {
   const sentences = Array.isArray(window.treebankData) ? window.treebankData : [];
   const currentSentence = sentences.find(s => s.id === String(window.currentIndex));
   const rowEl    = document.getElementById("treebank-selected-node");
-  //const tokenEl  = document.getElementById("tb-node-token");
-  //const metaEl   = document.getElementById("tb-node-meta");
 
   const tokens = document.querySelectorAll(".token");
   tokens.forEach((token)=> {
@@ -220,36 +219,37 @@ export function handleWordClick(event,wordId, word) {
     : null;
 
   const toolBody = document.getElementById('tool-body');
-  // If Morph/Relation is open, update the side panel,
-  // but DO NOT interrupt the normal head-change click flow.
-  if ((window.isMorphActive || window.isRelationActive) && Array.isArray(window.treebankData)) {
-    const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
-    const w = currentSentence && currentSentence.words
-      ? currentSentence.words.find(x => String(x.id) === String(wordId))
-      : null;
-
-    if (w) {
-      if (window.isMorphActive) window.renderMorphInfo(w);
-      if (window.isRelationActive) window.renderRelationInfo(w);
-    }
-  }
  
   const isMultiSelect = event.ctrlKey || event.metaKey;
   const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
   const newHeadId = String(wordId);
+  updateSidePanelsForSelection(currentSentence, wordId);
   //check if ctrl is down 
   if (isMultiSelect) {
+    // If the user already picked a "first word" via normal click,
+    // and now they ctrl+click to add more, seed the batch with that first word.
+    if (window.batchSelection.size === 0 && selectedWordId) {
+      window.batchSelection.add(String(selectedWordId));
+    }
+
     // Toggle logic: just highlight/unhighlight, don't move anything yet
-    if (window.batchSelection.has(wordId)) {
-      window.batchSelection.delete(wordId);
+    if (window.batchSelection.has(String(wordId))) {
+      window.batchSelection.delete(String(wordId));
       document.querySelector(`.token[data-word-id="${wordId}"]`)?.classList.remove("selected");
       d3.select(`.node[id="${wordId}"]`).classed("selected", false);
     } else {
-      window.batchSelection.add(wordId);
+      window.batchSelection.add(String(wordId));
       document.querySelector(`.token[data-word-id="${wordId}"]`)?.classList.add("selected");
       d3.select(`.node[id="${wordId}"]`).classed("selected", true);
     }
+
+
+    if (window.inSelection){
+      updateFoundTokens();
+    }
+
     updateTreebankSelectionBanner();
+    updateSidePanelsForSelection(currentSentence, wordId);
     return; // Exit!
   }
 
@@ -373,6 +373,27 @@ export function handleWordClick(event,wordId, word) {
 
   resetSelection();
   }
+
+// Helper Function for Batch Selection to help display all information
+function updateSidePanelsForSelection(currentSentence, fallbackWordId) {
+  if (!(window.isMorphActive || window.isRelationActive)) return;
+  if (!currentSentence?.words) return;
+
+  // If batch selection exists, use that; else use the clicked word
+  const ids = (window.batchSelection && window.batchSelection.size > 0)
+    ? Array.from(window.batchSelection).map(String)
+    : [String(fallbackWordId)];
+
+  // stable order (optional, but nice)
+  ids.sort((a,b) => Number(a) - Number(b));
+
+  const selectedWords = ids
+    .map(id => currentSentence.words.find(w => String(w.id) === String(id)))
+    .filter(Boolean);
+
+  if (window.isMorphActive) window.renderMorphInfo(selectedWords);
+  if (window.isRelationActive) window.renderRelationInfo(selectedWords);
+}
 
 /**
  * --------------------------------------------------------------------------
