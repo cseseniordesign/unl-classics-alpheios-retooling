@@ -1260,6 +1260,7 @@ body.mode-relation #tool-body {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+  padding-top: 14px;
 }
 
 .app-modal-buttons .btn-primary,

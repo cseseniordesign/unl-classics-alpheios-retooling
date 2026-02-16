@@ -84,3 +84,93 @@ export function showConfirmDialog(message, options = {}) {
     ok.focus();
   });
 }
+
+export function showPromptDialog(message, options = {}) {
+  const els = getModalElements();
+
+  // Fallback: native prompt
+  if (!els) {
+    const def = options.defaultValue ?? "";
+    const result = window.prompt(message, def);
+    return Promise.resolve(result); // string | null
+  }
+
+  const { overlay, msg, ok, cancel, title } = els;
+  const {
+    titleText     = "Save as",
+    okText        = "Save",
+    cancelText    = "Cancel",
+    defaultValue  = "",
+    placeholder   = "treebank.xml"
+  } = options;
+
+  return new Promise((resolve) => {
+    // Build an input 
+    let input = overlay.querySelector("#app-modal-input");
+    if (!input) {
+      input = document.createElement("input");
+      input.id = "app-modal-input";
+      input.type = "text";
+      input.autocomplete = "off";
+      input.spellcheck = false;
+
+      // simple inline styling 
+      input.style.width = "100%";
+      input.style.boxSizing = "border-box";
+      input.style.marginTop = "10px";
+      input.style.padding = "10px";
+      input.style.border = "1px solid #ccc";
+      input.style.borderRadius = "8px";
+      input.style.fontSize = "14px";
+
+      msg.insertAdjacentElement("afterend", input);
+    }
+
+    msg.textContent    = message;
+    title.textContent  = titleText;
+    ok.textContent     = okText;
+    cancel.textContent = cancelText;
+
+    input.value = defaultValue;
+    input.placeholder = placeholder;
+
+    overlay.hidden = false;
+
+    const cleanup = (result) => {
+      overlay.hidden = true;
+      ok.removeEventListener("click", onOk);
+      cancel.removeEventListener("click", onCancel);
+      overlay.removeEventListener("click", onBackdrop);
+      document.removeEventListener("keydown", onKey);
+      resolve(result);
+    };
+
+    const onOk = (e) => {
+      e.stopPropagation();
+      cleanup(input.value);
+    };
+
+    const onCancel = (e) => {
+      e.stopPropagation();
+      cleanup(null);
+    };
+
+    const onBackdrop = (e) => {
+      if (e.target === overlay) cleanup(null);
+    };
+
+    const onKey = (e) => {
+      if (e.key === "Enter") cleanup(input.value);
+      if (e.key === "Escape") cleanup(null);
+    };
+
+    ok.addEventListener("click", onOk);
+    cancel.addEventListener("click", onCancel);
+    overlay.addEventListener("click", onBackdrop);
+    document.addEventListener("keydown", onKey, { capture: true });
+
+    // Focus + select for quick rename
+    input.focus();
+    input.select();
+  });
+}

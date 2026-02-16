@@ -1,6 +1,7 @@
 import { ensureFormsArray, composeUserPostag, parseMorphTag } from './morphHelpers.js';
 import { applyActiveSelectionToWord, renderUserFormsList } from './morphTool.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
+import { showConfirmDialog } from '../ui/modal.js';
 
 // Inline editor that appears under the button and closes on save
 export function renderCreateEditorBelow(word, toolBody, opts = {}) {
@@ -56,6 +57,12 @@ export function renderCreateEditorBelow(word, toolBody, opts = {}) {
     const nfLemma = host.querySelector('#nf-lemma');
     const nfPos   = host.querySelector('#nf-pos');
     const nfDyn   = host.querySelector('#nf-dynamic');
+
+    // Remove red outline when user fixes a field 
+    host.querySelectorAll('select, input').forEach(el => {
+    el.addEventListener('input', () => el.closest('.field')?.classList.remove('invalid'));
+    el.addEventListener('change', () => el.closest('.field')?.classList.remove('invalid'));
+    });
 
     const initialLemma = (seedForm?.lemma || word._displayLemma || word._doc?.lemma || word.lemma || word.form || '').trim();
 
@@ -135,7 +142,7 @@ function renderDynamicForPOS(pos) {
         const caseSel   = buildSelect('nf-case', CASES);
         const degSel    = buildSelect('nf-deg', DEGREE);
 
-        // --- Create all wrappers ONCE (order here doesn't matter, we’ll reorder later)
+        // --- Create all wrappers ONCE
         const pWrap = add('Person', personSel);
         const nWrap = add('Number', numSel);
         const tWrap = add('Tense',  tenseSel);
@@ -162,7 +169,7 @@ function renderDynamicForPOS(pos) {
             "o": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],    // optative
             "m": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],    // imperative
             "n": ["tWrap", "mWrap", "vWrap"],                      // infinitive
-            "p": ["nWrap", "tWrap", "mWrap", "vWrap",                       // participle
+            "p": ["nWrap", "tWrap", "mWrap", "vWrap",              // participle
                  "gWrap", "cWrap", "dWrap"]
         };
 
@@ -299,163 +306,142 @@ host.querySelector('#nf-cancel').addEventListener('click', () => {
     host.remove();
 });
 
-host.querySelector('#nf-save').addEventListener('click', () => {
-    // Guardrail: POS is required
-    if (!nfPos.value) {
-    alert('Please choose a Part of Speech.');
+host.querySelector('#nf-save').addEventListener('click', async () => {
+  const lemmaVal = (nfLemma.value || '').trim();
+  const posChar  = (nfPos.value || '').trim();
+
+  // Clear old highlights
+  nfDyn.querySelectorAll('.field').forEach(f => f.classList.remove('invalid'));
+  nfLemma.closest('.field')?.classList.remove('invalid');
+  nfPos.closest('.field')?.classList.remove('invalid');
+
+  const markInvalid = (el) => el?.closest('.field')?.classList.add('invalid');
+
+  // -------------------------
+  // HARD REQUIRED: Lemma + POS
+  // -------------------------
+  if (!lemmaVal) {
+    markInvalid(nfLemma);
+    await showConfirmDialog(
+      'Lemma cannot be blank.',
+      { titleText: 'Missing required field', okText: 'OK', cancelText: 'OK' }
+    );
+    nfLemma.focus();
     return;
-    }
+  }
 
-    const posChar = nfPos.value;
+  if (!posChar) {
+    markInvalid(nfPos);
+    await showConfirmDialog(
+      'Part of Speech cannot be blank.',
+      { titleText: 'Missing required field', okText: 'OK', cancelText: 'OK' }
+    );
+    nfPos.focus();
+    return;
+  }
 
-    // Collect dynamic fields if present
-    const fields = {
-        person: nfDyn.querySelector('#nf-person')?.value || '',
-        tense:  nfDyn.querySelector('#nf-tense')?.value || '',
-        mood:   nfDyn.querySelector('#nf-mood')?.value  || '',
-        voice:  nfDyn.querySelector('#nf-voice')?.value || '',
-        number: nfDyn.querySelector('#nf-num')?.value   || '',
-        gender: nfDyn.querySelector('#nf-g')?.value     || '',
-        case:   nfDyn.querySelector('#nf-case')?.value  || '',
-        degree: nfDyn.querySelector('#nf-deg')?.value   || ''
+    // -------------------------
+    // OPTIONAL FIELDS (prompt-only)
+    // Only warn about fields that are currently rendered for this POS/layout
+    // -------------------------
+    const isBlank = (v) => !v || String(v).trim() === '' || String(v).trim() === '---';
+
+    const labelMap = {
+    'nf-person': 'Person',
+    'nf-tense':  'Tense',
+    'nf-mood':   'Mood',
+    'nf-voice':  'Voice',
+    'nf-num':    'Number',
+    'nf-g':      'Gender',
+    'nf-case':   'Casus',
+    'nf-deg':    'Degree'
     };
 
-    // --- Require all visible fields to be filled in ---
-    const missingFields = [];
+    // Start with empty defaults
+    const fields = {
+    person: '',
+    tense: '',
+    mood: '',
+    voice: '',
+    number: '',
+    gender: '',
+    case: '',
+    degree: ''
+    };
 
-    // Clear old highlights first
-    nfDyn.querySelectorAll('.field').forEach(f => f.classList.remove('invalid'));
-    nfLemma.closest('.field')?.classList.remove('invalid');
+    const missing = [];
+    const addMissing = (name, el) => {
+    missing.push({ name, el });
+    markInvalid(el);
+    };
 
-    const markInvalid = (el) => el?.closest('.field')?.classList.add('invalid');
+    // Look ONLY at inputs/selects currently inside nfDyn
+    nfDyn.querySelectorAll('select, input').forEach(el => {
+        const label = labelMap[el.id];
+        if (!label) return;
 
-    // Lemma required
-    if (!nfLemma.value.trim()) {
-    missingFields.push('Lemma');
-    markInvalid(nfLemma);
-    }
+        // only count fields that are currently visible
+        const fieldWrap = el.closest('.field');
+        if (!fieldWrap) return;
 
-    if (posChar === 'v') {
-        const mood = fields.mood;
+        // If wrapper is display:none (verb layout), skip it
+        if (fieldWrap.style.display === 'none') return;
 
-        const personEl = nfDyn.querySelector('#nf-person');
-        const numEl    = nfDyn.querySelector('#nf-num');
-        const tenseEl  = nfDyn.querySelector('#nf-tense');
-        const genderEl = nfDyn.querySelector('#nf-g');
-        const caseEl   = nfDyn.querySelector('#nf-case');
+        // More robust: skip if hidden due to CSS/ancestor hiding
+        if (fieldWrap.offsetParent === null) return;
 
-        const finite = ['i','s','o','m'];   // indicative, subjunctive, optative, imperative
-        const isInf  = (mood === 'n');      // infinitive
-        const isPart = (mood === 'p');      // participle
+        const val = el.value ?? '';
 
-        // ------------------------
-        // FINITE VERBS (normal)
-        // ------------------------
-        if (finite.includes(mood)) {
-            if (!fields.person) { missingFields.push('Person'); markInvalid(personEl); }
-            if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
-            if (!fields.tense)  { missingFields.push('Tense');  markInvalid(tenseEl); }
-        }
+        if (el.id === 'nf-person') fields.person = val;
+        if (el.id === 'nf-tense')  fields.tense  = val;
+        if (el.id === 'nf-mood')   fields.mood   = val;
+        if (el.id === 'nf-voice')  fields.voice  = val;
+        if (el.id === 'nf-num')    fields.number = val;
+        if (el.id === 'nf-g')      fields.gender = val;
+        if (el.id === 'nf-case')   fields.case   = val;
+        if (el.id === 'nf-deg')    fields.degree = val;
 
-        // ------------------------
-        // INFINITIVE
-        // ------------------------
-        if (isInf) {
-            if (!fields.tense) { missingFields.push('Tense'); markInvalid(tenseEl); }
-
-        }
-
-        // ------------------------
-        // PARTICIPLE
-        // ------------------------
-        if (isPart) {
-            if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
-            if (!fields.gender) { missingFields.push('Gender'); markInvalid(genderEl); }
-            if (!fields.case)   { missingFields.push('Case');   markInvalid(caseEl); }
-            if (!fields.tense)  { missingFields.push('Tense');  markInvalid(tenseEl); }
-        }
-    }
-
-
-    // For nouns, articles
-    if (['n', 'm', 'l'].includes(posChar)) {
-        const numEl = nfDyn.querySelector('#nf-num');
-        const gEl   = nfDyn.querySelector('#nf-g');
-        const cEl   = nfDyn.querySelector('#nf-case');
-
-        if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
-        if (!fields.gender) { missingFields.push('Gender'); markInvalid(gEl); }
-        if (!fields.case)   { missingFields.push('Case');   markInvalid(cEl); }
-    }
-
-    // For pronouns: person, number, gender, case required
-    if (posChar === 'p') {
-        const numEl    = nfDyn.querySelector('#nf-num');
-        const gEl      = nfDyn.querySelector('#nf-g');
-        const cEl      = nfDyn.querySelector('#nf-case');
-
-        if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
-        if (!fields.gender) { missingFields.push('Gender'); markInvalid(gEl); }
-        if (!fields.case)   { missingFields.push('Case');   markInvalid(cEl); }
-    }
-
-    // For adjectives
-    if (posChar === 'a') {
-        const numEl = nfDyn.querySelector('#nf-num');
-        const gEl   = nfDyn.querySelector('#nf-g');
-        const cEl   = nfDyn.querySelector('#nf-case');
-
-        if (!fields.number) { missingFields.push('Number'); markInvalid(numEl); }
-        if (!fields.gender) { missingFields.push('Gender'); markInvalid(gEl); }
-        if (!fields.case)   { missingFields.push('Case');   markInvalid(cEl); }
-    }
-
-    if (missingFields.length > 0) {
-    alert(`Please fill in all required fields:\n${missingFields.join(', ')}`);
-    return;
-    }
-
-    // Remove red outline when user fixes a field
-    host.querySelectorAll('select, input').forEach(el => {
-    el.addEventListener('input', () => el.closest('.field')?.classList.remove('invalid'));
-    el.addEventListener('change', () => el.closest('.field')?.classList.remove('invalid'));
+        if (isBlank(val)) addMissing(label, el);
     });
 
-    // Compose a compact tag using your helper already in this file
-    const postag = composeUserPostag(posChar, fields);
-    const normalizedLemma = (nfLemma.value || '').trim() || word.form;
+    // Prompt once if any optional fields are blank
+    if (missing.length > 0) {
+    const names = [...new Set(missing.map(m => m.name))];
 
-    // Save the new form and activate it
-    word.forms.push({ lemma: normalizedLemma, postag, source: 'you' });
-    word.activeForm = word.forms.length - 1;
-    triggerAutoSave(); // autosave after creating new form
+    const ok = await showConfirmDialog(
+        `You left these morph fields blank:\n\n${names.join(', ')}\n\nSave anyway?`,
+        { titleText: 'Missing morph fields', okText: 'Save anyway', cancelText: 'Go back' }
+    );
 
-
-    // Apply to the token/tree and refresh list, then close editor
-    applyActiveSelectionToWord(word);
-    renderUserFormsList(word, toolBody);
-    host.remove();
-
-    // Redraw (update colors + labels instantly)
-    if (typeof window.fastRefreshTree === 'function') {
-        window.fastRefreshTree();
+    if (!ok) {
+        missing[0]?.el?.focus?.();
+        return;
     }
+}
 
-    triggerAutoSave(); // autosave after creating new form
+  // -------------------------
+  // SAVE (compose supports blanks using '-' slots)
+  // -------------------------
+  const postag = composeUserPostag(posChar, fields);
 
-    // Ensure the top (document) checkbox is unticked when user form is active
-    const docEntry = toolBody.querySelector('.morph-entry[data-index="-1"]');
-    const topCheckbox = docEntry?.querySelector('input[type="checkbox"]');
-    if (topCheckbox) topCheckbox.checked = false;
+  word.forms.push({ lemma: lemmaVal, postag, source: 'you' });
+  word.activeForm = word.forms.length - 1;
 
-    // Re-render header card so colors/tags mirror the active form
-    if (typeof window.renderMorphInfo === 'function') {
-        window.renderMorphInfo(word);
-    }
+  triggerAutoSave();
 
-    // Refresh XML tab if open
-    if (typeof window.updateXMLIfActive === 'function') {
-        window.updateXMLIfActive();
-    }
+  applyActiveSelectionToWord(word);
+  renderUserFormsList(word, toolBody);
+  host.remove();
+
+  if (typeof window.fastRefreshTree === 'function') window.fastRefreshTree();
+
+  triggerAutoSave();
+
+  const docEntry = toolBody.querySelector('.morph-entry[data-index="-1"]');
+  const topCheckbox = docEntry?.querySelector('input[type="checkbox"]');
+  if (topCheckbox) topCheckbox.checked = false;
+
+  if (typeof window.renderMorphInfo === 'function') window.renderMorphInfo(word);
+  if (typeof window.updateXMLIfActive === 'function') window.updateXMLIfActive();
 });
 }

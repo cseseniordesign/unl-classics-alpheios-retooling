@@ -1,3 +1,6 @@
+import { getLanguage } from "../input/language.js";
+import { showPromptDialog } from "../ui/modal.js";
+
 /**
  * =============================================================================
  * AUTOSAVE SYSTEM — How Arethusa Lite Keeps the XML in Sync
@@ -160,8 +163,7 @@ function getTreebankMetaForSave() {
   }
 
   const direction = meta.direction || localStorage.getItem("textDirection") || "ltr";
-  const xmlLang = (localStorage.getItem("textLanguage") || "grc").toLowerCase();
-
+  const xmlLang = getLanguage();
   const version = meta.version || "1.5";
 
   // required, unknown languages get a predictable placeholder:
@@ -238,22 +240,43 @@ export async function saveCurrentTreebank() {
       await writable.write(xmlOut);
       await writable.close();
       console.log("Saved to existing file handle.");
-} else {
-  // Safari/Firefox don't support showSaveFilePicker — fall back to download
-  if (typeof window.showSaveFilePicker !== "function") {
-    const blob = new Blob([xmlOut], { type: "application/xml;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
+    } else {
+    // Safari/Firefox don't support showSaveFilePicker — fall back to download
+    if (typeof window.showSaveFilePicker !== "function") {
+      const defaultName = getSuggestedXmlName();
 
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "treebank.xml";
-    document.body.appendChild(a); // Safari likes it attached
-    a.click();
-    a.remove();
+      const userName = await showPromptDialog("Choose a file name:", {
+        titleText: "Save XML",
+        okText: "Save",
+        cancelText: "Cancel",
+        defaultValue: defaultName,
+        placeholder: "treebank.xml"
+      });
 
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
+      if (!userName) {
+        // user cancelled
+        return;
+      }
 
-    console.log("Saved via download fallback (no file handle available).");
+      let finalName = sanitizeFileName(userName);
+      if (!finalName.toLowerCase().endsWith(".xml")) finalName += ".xml";
+
+      // remember for next time
+      localStorage.setItem("treebankFileName", finalName);
+
+      const blob = new Blob([xmlOut], { type: "application/xml;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = finalName;
+      document.body.appendChild(a); // Safari likes it attached
+      a.click();
+      a.remove();
+
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+      console.log("Saved via download fallback with filename:", finalName);
     } else {
       // Chrome/Edge path
       const handle = await window.showSaveFilePicker({
@@ -357,6 +380,22 @@ export function triggerAutoSave() {
       }, 4000);
     }
   }
+}
+
+function sanitizeFileName(name) {
+  // remove characters that cause issues across OS/filesystems
+  return name.replace(/[\/\\?%*:|"<>]/g, "-").trim();
+}
+
+function getSuggestedXmlName() {
+  // best effort defaults
+  const fromStorage = localStorage.getItem("treebankFileName");
+  if (fromStorage) return fromStorage;
+
+  const handleName = window.uploadedFileHandle?.name;
+  if (handleName) return handleName;
+
+  return "treebank.xml";
 }
 
 // Expose for manual testing in browser console
