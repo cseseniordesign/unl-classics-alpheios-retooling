@@ -2,7 +2,7 @@ import { setupWordHoverSync } from './hoverSync.js';
 import { buildHierarchy, drawLinks, drawNodes, createNodeHierarchy } from './treeRender.js';
 
 export const POS_COLORS = {
-  v:'#c65a5a', c:'#c77d9b', d:'#e69109', i:'#b29100',
+  v:'#c65a5a', c:'#c77d9b', d:'#e69109', i:'#b29100', e:'#b29100',
   n:'#487a6f', a:'#5a78c6', r:'#5a9b6b', l:'#a6784d',
   p:'#7a5aa9', u:'#444', m:'#888', '':'#444'
 };

@@ -4,6 +4,7 @@ const POS_COLORS = {
   c: '#c77d9b', // conjunction
   d: '#e69109', // adverb
   i: '#b29100', // interjection
+  e: '#b29100', // exclamation
   n: '#487a6f', // noun
   a: '#5a78c6', // adjective
   r: '#5a9b6b', // adposition
@@ -72,9 +73,21 @@ export function composeUserPostag(posChar, fields) {
     case 'n':
     case 'l':
       // 2 = number
+      // 4 = mood (latin verbal noun types like supine)
       // 6 = gender
       // 7 = case
       if (fields.number) tag[2] = fields.number;
+      if (fields.mood)   tag[4] = fields.mood; 
+      if (fields.gender) tag[6] = fields.gender;
+      if (fields.case)   tag[7] = fields.case;
+      return tag.join('');
+
+    // ========================
+    //      NUMERAL (m)
+    // ========================
+    case 'm':
+      if (fields.number) tag[2] = fields.number;
+      if (fields.mood)   tag[4] = fields.mood;   
       if (fields.gender) tag[6] = fields.gender;
       if (fields.case)   tag[7] = fields.case;
       return tag.join('');
@@ -85,24 +98,15 @@ export function composeUserPostag(posChar, fields) {
     // ========================
     case 'a':
       // 2 = number
+      // 4 = mood
       // 6 = gender
       // 7 = case
       // 8 = degree
       if (fields.number) tag[2] = fields.number;
+      if (fields.mood)   tag[4] = fields.mood;   // optional
       if (fields.gender) tag[6] = fields.gender;
       if (fields.case)   tag[7] = fields.case;
       if (fields.degree) tag[8] = fields.degree;
-      return tag.join('');
-
-
-    // ========================
-    //      NUMERAL (m)
-    // ========================
-    case 'm':
-      // Same structure as nouns:
-      if (fields.number) tag[2] = fields.number;
-      if (fields.gender) tag[6] = fields.gender;
-      if (fields.case)   tag[7] = fields.case;
       return tag.join('');
 
 
@@ -120,11 +124,13 @@ export function composeUserPostag(posChar, fields) {
     //  Adposition (r),
     //  Interjection (i),
     //  Punctuation/Unknown (u)
+    //  Exclamation (Latin)
     // ========================
     case 'c':
     case 'r':
     case 'i':
     case 'u':
+    case 'e':
       // Nothing except POS
       return tag.join('');
 

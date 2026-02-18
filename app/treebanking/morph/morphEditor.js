@@ -2,11 +2,14 @@ import { ensureFormsArray, composeUserPostag, parseMorphTag } from './morphHelpe
 import { applyActiveSelectionToWord, renderUserFormsList } from './morphTool.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
 import { showConfirmDialog } from '../ui/modal.js';
+import { getLanguage } from '../input/language.js';
 
 // Inline editor that appears under the button and closes on save
 export function renderCreateEditorBelow(word, toolBody, opts = {}) {
     const seedForm = opts.seedForm || null;
     ensureFormsArray(word);
+    const lang = getLanguage();
+    const isLatin = String(lang).toLowerCase().startsWith('lat');
 
     // Only one editor at a time
     toolBody.querySelector('.morph-editor-inline')?.remove();
@@ -56,6 +59,20 @@ export function renderCreateEditorBelow(word, toolBody, opts = {}) {
 
     const nfLemma = host.querySelector('#nf-lemma');
     const nfPos   = host.querySelector('#nf-pos');
+
+    // POS adjustments for Latin
+    if (isLatin) {
+    // Remove Article (l)
+    nfPos.querySelector('option[value="l"]')?.remove();
+
+    // Replace interjection (i) with exclamation (e)
+    const intOpt = nfPos.querySelector('option[value="i"]');
+    if (intOpt) {
+        intOpt.textContent = 'exclamation';
+        intOpt.value = 'e';            
+    }
+    }
+
     const nfDyn   = host.querySelector('#nf-dynamic');
 
     // Remove red outline when user fixes a field 
@@ -82,13 +99,50 @@ export function renderCreateEditorBelow(word, toolBody, opts = {}) {
 
     // Option maps
     const PERSON = [["",  "---"], ["1", "1st"], ["2", "2nd"], ["3", "3rd"]];
-    const TENSE  = { "": "---", p:"present", i:"imperfect", r:"perfect", l:"plusquamperfect", f:"future", a:"aorist" };
-    const MOOD   = { "": "---", i:"indicative", s:"subjunctive", o:"optative", n:"infinitive", m:"imperative", p:"participle" };
-    const VOICE  = { "": "---", a:"active", e:"medio-passive", p:"passive" };
-    const NUMBER = { "": "---", s:"singular", p:"plural", d:"dual" };
-    const GENDER = { "": "---", m:"masculine", f:"feminine", n:"neuter", c:"common" };
-    const CASES  = { "": "---", n:"nominative", g:"genitive", d:"dative", a:"accusative", v:"vocative" };
+    const TENSE = isLatin
+    ? { "": "---", p:"present", i:"imperfect", r:"perfect", l:"plusquamperfect", f:"future", t:"future perfect" }
+    : { "": "---", p:"present", i:"imperfect", r:"perfect", l:"plusquamperfect", f:"future", t:"future perfect", a:"aorist" };
+    // Greek: optative exists; Latin: no optative, add gerund/gerundive/supine
+    const MOOD = isLatin
+    ? { "": "---", i:"indicative", s:"subjunctive", n:"infinitive", m:"imperative", p:"participle", d:"gerund", g:"gerundive", u:"supine" }
+    : { "": "---", i:"indicative", s:"subjunctive", o:"optative", n:"infinitive", m:"imperative", p:"participle" };
+
+    // Greek: medio-passive (e); Latin: no medio-passive, add deponens (d)
+    const VOICE = isLatin
+    ? { "": "---", a:"active", p:"passive", d:"deponens" }
+    : { "": "---", a:"active", e:"medio-passive", p:"passive" };
+
+    // Latin: singular/plural only
+    const NUMBER = isLatin
+    ? { "": "---", s:"singular", p:"plural" }
+    : { "": "---", s:"singular", p:"plural", d:"dual" };
+
+    // Latin: no common gender
+    const GENDER = isLatin
+    ? { "": "---", m:"masculine", f:"feminine", n:"neuter" }
+    : { "": "---", m:"masculine", f:"feminine", n:"neuter", c:"common" };
+
+    // Latin: add ablative (b) + locative (l)
+    const CASES = isLatin
+    ? { "": "---", n:"nominative", g:"genitive", d:"dative", a:"accusative", b:"ablative", l:"locative", v:"vocative" }
+    : { "": "---", n:"nominative", g:"genitive", d:"dative", a:"accusative", v:"vocative" };
+
     const DEGREE = { "": "---", p:"positive", c:"comparative", s:"superlative" };
+
+    /**
+     * Need to replace interjection with exclamtion while in latin (has no other fields)
+     * No article pos in latin
+     * Pronoun has no "Person" field
+     * Verb defaults to Tense, Mood, and Voice
+     * - If mood is indicative, fields are: Person, Number, Tense, Mood, and Voice
+     * - If mood is subjunctive, fields are: Person, Number, Tense, Mood, and Voice
+     * - If mood is infinitive, fields are: Tense Mood, and Voice
+     * - If mood is imperative, fields are: Person, Number, Tense, Mood, and Voice
+     * - If mood is gerund, fields are: Person, Number, Tense, Mood, Voice, and Casus
+     * - If mood is gerundive, fields are Person, Number, Tense, Mood, Voice, Gender, and Casus
+     * - If mood is participle, fields are: Number, Tense, Mood, Voice, Gender, Casus, and Degree
+     * - If mood is supine, fields are: Person, Number, Tense, Mood, and Voice
+     */
 
     const buildSelect = (id, map) => {
         const sel = document.createElement('select');
@@ -117,6 +171,10 @@ function createLabel(text){
 
 function renderDynamicForPOS(pos) {
     nfDyn.innerHTML = '';
+    if (pos === 'i' || pos === 'e' || pos === 'c' || pos === 'r' || pos === 'u') {
+        nfDyn.innerHTML = '';
+        return;
+    }
 
     const add = (label, el) => {
         const wrap = document.createElement('div');
@@ -162,16 +220,39 @@ function renderDynamicForPOS(pos) {
 
         // Layout for each mood, in **postag order**
         // "" = '---' initial; treat like infinitive (no person/number)
-        const VERB_LAYOUT = {
-            "":  ["tWrap", "mWrap", "vWrap"],                      // default (---)
-            "i": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],    // indicative
-            "s": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],    // subjunctive
-            "o": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],    // optative
-            "m": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],    // imperative
-            "n": ["tWrap", "mWrap", "vWrap"],                      // infinitive
-            "p": ["nWrap", "tWrap", "mWrap", "vWrap",              // participle
-                 "gWrap", "cWrap", "dWrap"]
-        };
+        const VERB_LAYOUT = isLatin
+        ? {
+            "":  ["tWrap", "mWrap", "vWrap"],
+
+            // indicative/subjunctive/imperative: Person, Number, Tense, Mood, Voice
+            "i": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
+            "s": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
+            "m": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
+
+            // infinitive: Tense, Mood, Voice
+            "n": ["tWrap", "mWrap", "vWrap"],
+
+            // gerund: Person, Number, Tense, Mood, Voice, Casus
+            "d": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap", "div", "cWrap"],
+
+            // gerundive: Person, Number, Tense, Mood, Voice, Gender, Casus
+            "g": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap", "div", "gWrap", "cWrap"],
+
+            // participle: Number, Tense, Mood, Voice, Gender, Casus, Degree
+            "p": ["nWrap", "tWrap", "mWrap", "vWrap", "div", "gWrap", "cWrap", "dWrap"],
+
+            // supine: Person, Number, Tense, Mood, Voice
+            "u": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"]
+            }
+        : {
+            "":  ["tWrap", "mWrap", "vWrap"],
+            "i": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
+            "s": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
+            "o": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
+            "m": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
+            "n": ["tWrap", "mWrap", "vWrap"],
+            "p": ["nWrap", "tWrap", "mWrap", "vWrap", "div", "gWrap", "cWrap", "dWrap"]
+            };
 
         function applyVerbLayout() {
             const mood = moodSel.value || "";
@@ -212,11 +293,11 @@ function renderDynamicForPOS(pos) {
     //                       PRONOUN (p)
     // ===================================================================
     if (pos === 'p') {
-        add('Person', buildSelect('nf-person', PERSON));
-        add('Number', buildSelect('nf-num', NUMBER));
-        add('Gender', buildSelect('nf-g',    GENDER));
-        add('Casus',  buildSelect('nf-case', CASES));
-        return;
+    if (!isLatin) add('Person', buildSelect('nf-person', PERSON));
+    add('Number', buildSelect('nf-num', NUMBER));
+    add('Gender', buildSelect('nf-g',    GENDER));
+    add('Casus',  buildSelect('nf-case', CASES));
+    return;
     }
 
     // ===================================================================
@@ -250,7 +331,7 @@ function renderDynamicForPOS(pos) {
 
     // Other POS have no dynamic fields
     nfDyn.innerHTML = '';
-    }
+}
 
 
 nfPos.addEventListener('change', e => renderDynamicForPOS(e.target.value));
@@ -264,7 +345,10 @@ nfPos.addEventListener('change', e => renderDynamicForPOS(e.target.value));
 
     if (seedForm?.postag) {
         const parsed = parseMorphTag(seedForm.postag) || {};
-        const posChar = seedForm.postag[0]?.toLowerCase() || '';
+        let posChar = seedForm.postag[0]?.toLowerCase() || '';
+
+        if (isLatin && posChar === 'i') posChar = 'e';  
+        if (!isLatin && posChar === 'e') posChar = 'i'; 
 
         if (posChar) {
             // 1) set POS

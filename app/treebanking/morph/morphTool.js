@@ -458,7 +458,7 @@ function enableMorphEntryExpansion(scopeEl) {
   // Pretty labels and ordering
   const POS_LABELS = { v:'verb', n:'noun', a:'adjective', d:'adverb', p:'pronoun',
                       c:'conjunction', r:'adposition', l:'article', m:'numeral',
-                      i:'interjection', u:'punctuation' };
+                      i:'interjection', u:'punctuation', e:'exclamation' };
 
   const LABELS = {
     pos:    'Part of Speech',
@@ -476,7 +476,7 @@ function enableMorphEntryExpansion(scopeEl) {
   const DEFAULT_ORDER = ['pos','number','gender','case','person','tense','mood','voice','degree'];
   const ORDER_BY_POS = {
     v: ['pos','person','number','gender','tense','mood','voice', 'case', 'degree'],
-    n: ['pos','number','gender','case'],
+    n: ['pos','number','mood','gender','case'],
     p: ['pos','person','number','gender','case'],
     l: ['pos','number','gender','case'],
     a: ['pos','number','gender','case','degree'],
@@ -503,10 +503,10 @@ function enableMorphEntryExpansion(scopeEl) {
   const VALUE_MAPS = {
     number: { s:'singular', p:'plural', d:'dual' },
     gender: { m:'masculine', f:'feminine', n:'neuter', c:'common' },
-    case:   { n:'nominative', g:'genitive', d:'dative', a:'accusative', v:'vocative' },
-    tense:  { p:'present', i:'imperfect', r:'perfect', l:'pluperfect', f:'future', a:'aorist' },
-    mood:   { i:'indicative', s:'subjunctive', o:'optative', n:'infinitive', m:'imperative', p:'participle' },
-    voice:  { a:'active', e:'medio-passive', p:'passive' },
+    case:   { n:'nominative', g:'genitive', d:'dative', a:'accusative', v:'vocative', b:'ablative', l:'locative' },
+    tense:  { p:'present', i:'imperfect', r:'perfect', l:'pluperfect', f:'future', a:'aorist', t: 'future perfect' },
+    mood:   { i:'indicative', s:'subjunctive', o:'optative', n:'infinitive', m:'imperative', p:'participle', d: 'gerund', g:'gerundive', u:'supine' },
+    voice:  { a:'active', e:'medio-passive', p:'passive', d:'deponens' },
     degree: { p:'positive', c:'comparative', s:'superlative' },
     person: { '1':'first', '2':'second', '3':'third' }
   };
@@ -635,10 +635,10 @@ function userFormCardHTML(form, index, isActive) {
   const VALUE_MAPS = {
     number: { s:'singular', p:'plural', d:'dual' },
     gender: { m:'masculine', f:'feminine', n:'neuter', c:'common' },
-    case:   { n:'nominative', g:'genitive', d:'dative', a:'accusative', v:'vocative' },
-    tense:  { p:'present', i:'imperfect', r:'perfect', l:'pluperfect', f:'future', a:'aorist' },
-    mood:   { i:'indicative', s:'subjunctive', o:'optative', n:'infinitive', m:'imperative', p:'participle' },
-    voice:  { a:'active', e:'medio-passive', p:'passive' },
+    case:   { n:'nominative', g:'genitive', d:'dative', a:'accusative', v:'vocative', b:'ablative', l:'locative' },
+    tense:  { p:'present', i:'imperfect', r:'perfect', l:'pluperfect', f:'future', a:'aorist', t:'futperfect' },
+    mood:   { i:'indicative', s:'subjunctive', o:'optative', n:'infinitive', m:'imperative', p:'participle', d: 'gerund', g:'gerundive', u:'supine' },
+    voice:  { a:'active', e:'medio-passive', p:'passive', d:'deponens' },
     degree: { p:'positive', c:'comparative', s:'superlative' },
     person: { '1':'first', '2':'second', '3':'third' }
   };
@@ -652,7 +652,7 @@ function userFormCardHTML(form, index, isActive) {
   const posLabels = {
     v:'verb', n:'noun', a:'adjective', d:'adverb', p:'pronoun',
     c:'conjunction', r:'adposition', l:'article', m:'numeral',
-    i:'interjection', u:'punctuation'
+    i:'interjection', u:'punctuation', e: 'exclamation'
   };
 
   const posChar = (form.postag || '')[0]?.toLowerCase() || '';
@@ -847,6 +847,9 @@ function posCharFromMorpheusPOS(posRaw) {
   const s = (posRaw || '').toString().trim().toLowerCase();
   if (!s) return '';
 
+  const lang = getLanguage();
+  const isLatin = lang === 'lat';
+
   // Typical Morpheus POS strings:
   // "verb", "noun", "adjective", "pronoun", "article",
   // "adverb", "conjunction", "preposition", "interjection", etc.
@@ -864,6 +867,7 @@ function posCharFromMorpheusPOS(posRaw) {
       s.includes('preposition'))    return 'r'; // adposition
   if (s.startsWith('num') ||
       s.startsWith('card'))         return 'm'; // numeral
+  if (s.startsWith('excl') || s.startsWith('exclam')) return isLatin ? 'e' : 'i';
   if (s.startsWith('interj'))       return 'i';
   if (s.startsWith('punct'))        return 'u';
 
@@ -928,6 +932,12 @@ function codeFromCase(c) {
     case 'voc':
     case 'vocative':
       return 'v';
+    case 'abl':
+    case 'ablative':
+      return 'b';
+    case 'loc':
+    case 'locative':
+      return 'l';
     default:
       return '';
   }
@@ -975,6 +985,10 @@ function codeFromTense(t) {
     case 'aor':
     case 'aorist':
       return 'a';
+    case 'futperf':
+    case 'future perfect':
+    case 'fut perfect':
+      return 't';
     default:
       return '';
   }
@@ -1000,6 +1014,12 @@ function codeFromMood(m) {
     case 'part':
     case 'participle':
       return 'p';
+    case 'gerund':
+      return 'd';
+    case 'gerundive':
+      return 'g';
+    case 'supine':
+      return 'u';
     default:
       return '';
   }
@@ -1018,6 +1038,10 @@ function codeFromVoice(v) {
     case 'pass':
     case 'passive':
       return 'p';
+    case 'dep':
+    case 'deponent':
+    case 'deponens':
+      return 'd';
     default:
       return '';
   }
@@ -1026,6 +1050,7 @@ function codeFromVoice(v) {
 // Turn one Morpheus result into a { lemma, postag, source } form
 function formFromMorphResult(result, word) {
   const posChar = guessPosCharFromMorph(result);
+  const isLatin = String(getLanguage()).toLowerCase().startsWith('lat');
 
   const fields = {
     person: codeFromPerson(result.person),
@@ -1037,6 +1062,19 @@ function formFromMorphResult(result, word) {
     case:   codeFromCase(result.case),
     degree: ''
   };
+
+  if (isLatin && posChar === 'p') {
+    fields.person = '';
+  }
+
+  if (isLatin) {
+    // Latin: no dual, no common gender, no optative, no medio-passive
+    if (fields.number === 'd') fields.number = '';
+    if (fields.gender === 'c') fields.gender = '';
+    if (fields.mood === 'o') fields.mood = '';
+    if (fields.voice === 'e') fields.voice = '';
+    if (fields.tense === 'a') fields.tense = '';
+  }
 
   const postag = composeUserPostag(posChar, fields);
 
@@ -1232,7 +1270,8 @@ function shortPOS(postag = '') {
     l: 'article',
     m: 'numeral',
     i: 'interjection',
-    u: 'punctuation'
+    u: 'punctuation',
+    e: 'exclamation'
   };
   return map[c] || t || '';
 }
