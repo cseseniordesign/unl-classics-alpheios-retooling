@@ -38,7 +38,35 @@ export function createNodeHierarchy(sentenceId) {
 
   // Generate a hierarchical layout from the flat data
   const rootHierarchy = buildHierarchy(idParentPairs);
+  let maxMainX = 0;
+  rootHierarchy.children?.forEach(child => {
+    if (!child.data.isForestRoot) {
+      // Find the furthest right point of the main tree
+      child.each(node => {
+        if (node.x > maxMainX) maxMainX = node.x;
+      });
+    }
+  });
 
+// Shift the forest roots to the right
+const horizontalGap = 90; // Distance between main tree and forest
+let currentForestX = maxMainX + horizontalGap;
+
+rootHierarchy.children?.forEach(child => {
+  if (child.data.isForestRoot) {
+    // Calculate how much we need to shift this specific sub-tree
+    const shiftAmount = currentForestX - child.x;
+
+    // Move the entire sub-tree (parent and all its descendants)
+    child.each(node => {
+      node.x += shiftAmount;
+      node.y -= 10;
+    });
+    
+    // Increment for the next floating tree so they don't overlap each other
+    currentForestX += 120; 
+  }
+});
   // Make the current D3 root hierarchy globally accessible
   window.root = rootHierarchy;
 
@@ -146,20 +174,40 @@ window.fastRefreshTree = fastRefreshTree;
  * @returns {Array<Object>} Returns a flat list of parsed word entries with ID, parent, form, and relation.
  */
 export function prepareSentenceData(sentence) {
-  const annotatedWords = sentence.words.filter(w => w.head !== "");
+  const words = sentence.words;
 
-  // Convert <word> nodes into simple JS objects
-  const idParentPairs = annotatedWords.map(w => ({
-    id: String(w.id),
-    parentId: (w.head === 0 || w.head === '0') ? 'root' : String(w.head),
-    form: w.form || w.word || '(blank)',
-    relation: w.relation || '',
-    postag: w._displayPostag || w.postag || ''  
-  }));
+  const idParentPairs = words.map(w => {
+    const wordId = String(w.id);
+    const isParent = words.some(other => String(other.head) === wordId);
+    const hasHead = w.head !== "" && w.head !== null;
+    const isComma = w.form === ",";
 
-  // Add a synthetic root node that acts as a parent for headless nodes
-  idParentPairs.push({ id: 'root', parentId: null, form: 'ROOT', relation: '' });
-  return idParentPairs;
+    let pId = null;
+
+    if (w.head === 0 || w.head === '0') {
+      pId = 'root';
+    } else if (hasHead) {
+      pId = String(w.head);
+    } else if (isParent || isComma) {
+      // These are the "roots" of the forest trees
+      pId = 'root';
+    }
+
+    return {
+      id: wordId,
+      parentId: pId,
+      form: w.form || '',
+      relation: w.relation || '',
+      postag: w.postag || w._displayPostag || '',
+      //flag to identify forest-roots for visual styling
+      isForestRoot: !hasHead && pId === 'root' && !isComma && w.head !== 0
+    };
+  });
+
+  idParentPairs.push({ id: 'root', parentId: null, form: '[ROOT]' });
+
+  // Only keep nodes that belong to a tree
+  return idParentPairs.filter(d => d.id === 'root' || d.parentId !== null);
 }
 
 /**
@@ -272,12 +320,19 @@ export function drawNodes(gx, rootHierarchy) {
 export function drawLinks(gx, rootHierarchy, idParentPairs) {
   const tLabel = 0.75;  // Where label sits along the curve
   const gapT = 0.15;   // Fraction of curve length to remove around label (≈ small gap)
-
   gx.selectAll(".link")
     .data(rootHierarchy.links())
     .join("g")
     .attr("class", "link-group")
     .each(function (d) {
+      // ---FOREST CHECK ---
+      // If the parent is root, and the child is a floating word (isForestRoot), 
+      // do not draw the line or the label.
+      if (d.source.data.id === 'root' && d.target.data.isForestRoot) {
+        const toolBody = document.getElementById("tool-body") || null;
+        
+        return; 
+      }
       const group = d3.select(this);
 
       // --- Spread siblings slightly to prevent overlap ---

@@ -11,8 +11,7 @@ import { recomputeDirty, discardXmlEdits } from '../xml/xmlTool.js';
 import { showConfirmDialog } from './modal.js';
 import { getLanguage, isMorpheusSupported } from '../input/language.js';
 import { updateFoundTokens } from '../xml/selector.js';
-
-// ---------------------------------------------------------------------------
+// ----------------------------------------------- ----------------------------
 // Treebank mode banner helpers
 // ---------------------------------------------------------------------------
 window.selectedWordId = window.selectedWordId ?? null;
@@ -359,6 +358,7 @@ export function handleWordClick(event,wordId, word) {
   }
 
   saveState();
+
   if (createsCycle(currentSentence.words, selectedWordId, newHeadId)) {
     // Flip logic — make the old head now depend on the selected word
     independent.head = dependent.head;
@@ -368,7 +368,7 @@ export function handleWordClick(event,wordId, word) {
     dependent.head = newHeadId;
     triggerAutoSave();
   }
-  
+
   createNodeHierarchy(window.currentIndex);
 
   resetSelection();
