@@ -458,7 +458,7 @@ function enableMorphEntryExpansion(scopeEl) {
   // Pretty labels and ordering
   const POS_LABELS = { v:'verb', n:'noun', a:'adjective', d:'adverb', p:'pronoun',
                       c:'conjunction', r:'adposition', l:'article', m:'numeral',
-                      i:'interjection', u:'punctuation', e:'exclamation' };
+                      i:'interjection', u:'punctuation', e:'exclamation', x:'irregular' };
 
   const LABELS = {
     pos:    'Part of Speech',
@@ -652,7 +652,7 @@ function userFormCardHTML(form, index, isActive) {
   const posLabels = {
     v:'verb', n:'noun', a:'adjective', d:'adverb', p:'pronoun',
     c:'conjunction', r:'adposition', l:'article', m:'numeral',
-    i:'interjection', u:'punctuation', e: 'exclamation'
+    i:'interjection', u:'punctuation', e: 'exclamation', x:'irregular'
   };
 
   const posChar = (form.postag || '')[0]?.toLowerCase() || '';
@@ -1271,7 +1271,8 @@ function shortPOS(postag = '') {
     m: 'numeral',
     i: 'interjection',
     u: 'punctuation',
-    e: 'exclamation'
+    e: 'exclamation',
+    x: 'irregular'
   };
   return map[c] || t || '';
 }

@@ -1,37 +1,27 @@
-/**
- * --------------------------------------------------------------------------
- * schemaValidator.js
- * --------------------------------------------------------------------------
- * Validates Treebank XML sentences and words for structural
- * and linguistic consistency.
- *
- * Adaptive validation:
- * - "Lenient" mode automatically activates when legacy or Morpheus-style
- *   XML is detected (lots of '-' placeholders or missing morphological fields).
- * - "Strict" mode is used for new Arethusa Lite treebanks under construction.
- *
- * --------------------------------------------------------------------------
- */
-
 import { createsCycle } from "../tree/treeUtils.js";
+import { getLanguage, normalizeLang } from "../input/language.js";
 
-const VALID_POS = new Set([
-    'n', // noun
-    'v', // verb
-    'a', // adjective
-    'd', // adverb
-    'p', // pronoun
-    'r', // adposition / preposition
-    'c', // conjunction
-    'l', // article
-    'm', // numeral
-    'i', // interjection
-    'u', // punctuation / unknown
-    '-'  // placeholder
+const BASE_VALID_POS = new Set([
+  'n','v','a','d','p','r','c','l','m','i','u','-','x'
 ]);
+
+function validPosForLang(lang) {
+  const L = normalizeLang(lang);
+  const set = new Set(BASE_VALID_POS);
+
+  if (L === 'lat') {
+    set.add('e');    // exclamation allowed in Latin
+    set.delete('l'); // optional: if you want to disallow article in Latin schema too
+  } else if (L === 'grc') {
+    set.delete('e'); // explicitly NOT allowed in Greek
+  }
+
+  return set;
+}
 
 const VALID_ATTRS = ['id', 'form', 'lemma', 'postag', 'relation', 'head'];
 
+// Not currently in use
 // === POS-specific whitelist of postag positions (0-based indexes) ===
 // These are positions that may contain a letter; all others must be '-'.
 // 0 = POS, 1 = Person, 2 = Number, 3 = Tense, 4 = Mood, 5 = Voice, 6 = Gender, 7 = Casus, 8 = Degree/Extra
@@ -89,6 +79,10 @@ function isDummyWord(wordEl) {
  * @returns {boolean} true if valid, throws Error otherwise.
  */
 export function validateTreebankSchema(xmlDoc) {
+  const lang = getLanguage();
+  const VALID_POS = validPosForLang(lang);
+  const isLatin = normalizeLang(lang) === 'lat';
+
   const sentences = xmlDoc.querySelectorAll('sentence');
   if (!sentences.length)
     throw new Error('XML must contain at least one <sentence>.');
@@ -178,6 +172,9 @@ export function validateTreebankSchema(xmlDoc) {
       // Allow postag="" (unset)
       if (postag !== "") {
         const pos = postag[0]?.toLowerCase() || '';
+        if (!isLatin && pos === 'e') {
+          throw new Error(`Word id="${wid}": POS 'e' (exclamation) is only allowed in Latin.`);
+        }
         if (!VALID_POS.has(pos))
           throw new Error(`Invalid POS '${pos}' in word id="${wid}".`);
 
@@ -186,40 +183,26 @@ export function validateTreebankSchema(xmlDoc) {
             `Word id="${wid}": postag must be exactly 9 characters (has ${postag.length}).`
           );
 
-        // Detect invalid characters directly
-        for (let i = 0; i < postag.length; i++) {
-          const ch = postag[i];
+      // Detect invalid characters directly (RELAXED + allow '_' globally)
+      for (let i = 0; i < postag.length; i++) {
+        const ch = postag[i];
 
-          // slot 2 (index 1) is "person" for verbs AND pronouns
-          const isPersonSlot = ((pos === 'v' || pos === 'p') && i === 1);
+        // Person slot is ALWAYS index 1, regardless of POS
+        const isPersonSlot = (i === 1);
 
-          const validChar = isPersonSlot
-            ? /^[a-z1-3-_]$/.test(ch)   // allow digits 1–3 here
-            : /^[a-z-_]$/.test(ch);    // elsewhere: only letters or '-'
+        const validChar = isPersonSlot
+          ? /^[a-z1-3-_]$/.test(ch)   // person slot: letters, 1-3, '-', '_'
+          : /^[a-z-_]$/.test(ch);    // other slots: letters, '-', '_'
 
-          if (!validChar) {
-            throw new Error(
-              `Word id="${wid}": invalid character '${ch}' at position ${i + 1} in postag '${postag}'. ` +
-              (isPersonSlot
-                ? "Only lowercase letters, digits 1–3, and '-' are allowed at this position."
-                : "Only lowercase letters and '-' are allowed.")
-            );
-          }
+        if (!validChar) {
+          throw new Error(
+            `Word id="${wid}": invalid character '${ch}' at position ${i + 1} in postag '${postag}'. ` +
+            (isPersonSlot
+              ? "Only lowercase letters, digits 1–3, '-', and '_' are allowed in the person slot."
+              : "Only lowercase letters, '-', and '_' are allowed.")
+          );
         }
-
-        // Check for forbidden morphology positions
-        const allowed = POSTAG_ALLOWED_POSITIONS[pos] || [];
-        for (let i = 1; i < postag.length; i++) {
-          const ch = postag[i];
-          const isAllowedField = allowed.includes(i);
-          const isDash = ch === '-';
-
-          if (!isAllowedField && !isDash) {
-            throw new Error(
-              `Word id="${wid}": POS '${pos}' cannot have morphology at position ${i + 1} (char '${ch}') in postag '${postag}'.`
-            );
-          }
-        }
+      }
       }
 
       // --- Relation validation ---

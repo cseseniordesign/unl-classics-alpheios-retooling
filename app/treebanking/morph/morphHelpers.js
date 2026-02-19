@@ -12,7 +12,8 @@ const POS_COLORS = {
   p: '#7a5aa9', // pronoun
   u: '#444',    // punctuation
   m: '#888',    // numeral
-  '': '#444' // unknown/other
+  '': '#444', // unknown/other
+  x: '#000000ff' // irregular
 };
 
 export function composeUserPostag(posChar, fields) {
@@ -131,6 +132,7 @@ export function composeUserPostag(posChar, fields) {
     case 'i':
     case 'u':
     case 'e':
+    case 'x':
       // Nothing except POS
       return tag.join('');
 

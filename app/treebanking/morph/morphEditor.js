@@ -40,6 +40,7 @@ export function renderCreateEditorBelow(word, toolBody, opts = {}) {
             <option value="m">numeral</option>
             <option value="i">interjection</option>
             <option value="u">punctuation</option>
+            <option value="x">irregular</option>
         </select>
         </div>
 
@@ -171,7 +172,7 @@ function createLabel(text){
 
 function renderDynamicForPOS(pos) {
     nfDyn.innerHTML = '';
-    if (pos === 'i' || pos === 'e' || pos === 'c' || pos === 'r' || pos === 'u') {
+    if (pos === 'i' || pos === 'e' || pos === 'c' || pos === 'r' || pos === 'u' || pos === 'x') {
         nfDyn.innerHTML = '';
         return;
     }

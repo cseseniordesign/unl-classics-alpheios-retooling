@@ -36,19 +36,26 @@ export function recomputeDirty(xmlDisplay) {
   // So: do NOT touch xmlDirty here.
 }
 
+function isPunctuationWord(w) {
+  const tag = (w._displayPostag || w.postag || '').toLowerCase();
+  const pos = tag[0] || '';
+  return pos === 'u'; // punctuation POS
+}
+
 function normalizeSentenceForTree(sentence) {
   if (!sentence || !Array.isArray(sentence.words)) return;
 
   sentence.words.forEach(w => {
-    // Tree renderers almost never like null heads.
-    // "0" is the safest ROOT head value.
-    if (w.head === null || w.head === undefined || String(w.head).toLowerCase() === "null" || String(w.head) === "") {
-      w.head = "0";
+    const headRaw = (w.head === null || w.head === undefined) ? "" : String(w.head);
+
+    // Keep head="" for non-punct (unattached). Only punctuation defaults to root.
+    if (headRaw.trim() === "" || headRaw.toLowerCase() === "null") {
+      w.head = isPunctuationWord(w) ? "0" : "";
     } else {
-      w.head = String(w.head);
+      w.head = headRaw;
     }
 
-    // Keep relation as a string (allow blank if you're allowing blank)
+    // relation stays string (as you already do)
     if (w.relation === null || w.relation === undefined || String(w.relation).toLowerCase() === "null") {
       w.relation = "";
     } else {
@@ -60,12 +67,15 @@ function normalizeSentenceForTree(sentence) {
 function syncIdParentPairsFromSentence(sentence) {
   if (!sentence || !Array.isArray(sentence.words)) return;
 
-  // Only do this if your app uses idParentPairs in rendering (many builds do).
-  window.idParentPairs = sentence.words.map(w => ({
+  const annotatedWords = sentence.words.filter(w => String(w.head ?? "") !== "");
+
+  window.idParentPairs = annotatedWords.map(w => ({
     id: String(w.id),
-    parentId: (w.head === null || w.head === undefined || String(w.head) === "") ? "0" : String(w.head),
+    parentId: (w.head === 0 || w.head === '0') ? 'root' : String(w.head),
     relation: String(w.relation ?? "")
   }));
+
+  window.idParentPairs.push({ id: 'root', parentId: null, form: 'ROOT', relation: '' });
 }
 
 /**
@@ -708,7 +718,7 @@ export function getCurrentSentenceXML() {
 
     // IMPORTANT: prevent "null" from being printed into XML
     const head =
-      (w.head === null || w.head === undefined || String(w.head).toLowerCase() === "null" || String(w.head) === "" || String(w.head) === "0")
+      (w.head === null || w.head === undefined || String(w.head).toLowerCase() === "null" || String(w.head) === "")
         ? ""
         : String(w.head);
 
