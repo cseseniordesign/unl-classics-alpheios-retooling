@@ -63,7 +63,7 @@ async function isRealISOLanguage(code) {
  * Validates XML content against the provided XSD schema.
  */
 async function validate(xmlContent) {
-  const schema = await fetch("/app/treebanking/schemas/treebank-1.7.xsd").then(r => r.text());
+  const schema = await fetch("./app/treebanking/schemas/treebank-1.7.xsd").then(r => r.text());
   const result = await validateXML({
     xml: xmlContent,
     schema
