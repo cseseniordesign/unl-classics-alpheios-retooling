@@ -1,6 +1,41 @@
 import { getLanguage } from "../input/language.js";
 import { updateTreebankSelectionBanner} from '../ui/sentenceDisplay.js'
 
+
+// Order of the main relation bases in the menu.
+const MAIN_BASES = [
+  "---",
+  "PRED",
+  "SBJ",
+  "OBJ",
+  "ATR",
+  "ADV",
+  "Aux",
+  "COORD",
+  "ATV",
+  "AtvV",
+  "PNOM",
+  "OCOMP",
+  "APOS",
+  "ExD"
+];
+
+// Aux variants for the submenu
+const AUX_VARIANTS = [
+  "AuxP",
+  "AuxC",
+  "AuxY",
+  "AuxZ",
+  "AuxV",
+  "AuxR",
+  "AuxG",
+  "AuxX",
+  "AuxK"
+];
+
+// suffix keys map to AP / CO pieces
+const SUFFIX_KEYS = ["", "CO", "AP", "AP_CO"];
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: setupSelector
@@ -82,18 +117,207 @@ function handleSelectClick() {
                         <input type="checkbox">
                     </div>
                 </div>
-                <label for="label">by label</label>
-                <!--FIll the dropdown accordingly-->
-                <div class="label-dropdown">
-                    <select name="" id="">
-                        <option value=""></option>
-                    </select>
-                    <select name="" id=""></select>
-                </div>
+
+                <label for="main-select">by label</label>
+                  <div class="label-dropdown">
+
+                    <!-- Main dropdown -->
+                    <div class="rel-dropdown rel-dropdown-main">
+                      <button type="button" class="rel-button" id="main-select">
+                        <span class="rel-button-label">---</span>
+                        <span class="rel-button-arrow">▾</span>
+                      </button>
+                      <ul class="nested-dropdown">
+                        <li class="rel-item" data-base="---">---</li>
+                        <li class="rel-item" data-base="PRED">PRED</li>
+                        <li class="rel-item" data-base="SBJ">SBJ</li>
+                        <li class="rel-item" data-base="OBJ">OBJ</li>
+                        <li class="rel-item" data-base="ATR">ATR</li>
+                        <li class="rel-item" data-base="ADV">ADV</li>
+
+                        <!-- Aux with flyout submenu -->
+                        <li class="rel-item rel-has-submenu" data-base="Aux">
+                          <span class="rel-label">Aux ▶</span>
+                          <ul class="rel-submenu">
+                            <li class="rel-subitem" data-base="Aux" data-variant="AuxP">AuxP</li>
+                            <li class="rel-subitem" data-base="Aux" data-variant="AuxC">AuxC</li>
+                            <li class="rel-subitem" data-base="Aux" data-variant="AuxY">AuxY</li>
+                            <li class="rel-subitem" data-base="Aux" data-variant="AuxZ">AuxZ</li>
+                            <li class="rel-subitem" data-base="Aux" data-variant="AuxV">AuxV</li>
+                            <li class="rel-subitem" data-base="Aux" data-variant="AuxR">AuxR</li>
+                            <li class="rel-subitem" data-base="Aux" data-variant="AuxG">AuxG</li>
+                            <li class="rel-subitem" data-base="Aux" data-variant="AuxX">AuxX</li>
+                            <li class="rel-subitem" data-base="Aux" data-variant="AuxK">AuxK</li>
+                          </ul>
+                        </li>
+
+                        <li class="rel-item" data-base="COORD">COORD</li>
+                        <li class="rel-item" data-base="ATV">ATV</li>
+                        <li class="rel-item" data-base="AtvV">AtvV</li>
+                        <li class="rel-item" data-base="PNOM">PNOM</li>
+                        <li class="rel-item" data-base="OCOMP">OCOMP</li>
+                        <li class="rel-item" data-base="APOS">APOS</li>
+                        <li class="rel-item" data-base="ExD">ExD</li>
+                      </ul>
+                    </div>
+
+                    <!-- Suffix dropdown -->
+                    <div class="rel-dropdown rel-dropdown-suffix">
+                      <button type="button" class="rel-button" id="suffix-select">
+                        <span class="rel-button-label">---</span>
+                        <span class="rel-button-arrow">▾</span>
+                      </button>
+                      <ul class="nested-dropdown suffix-menu">
+                        <li class="rel-item suffix-item" data-key="">---</li>
+                        <li class="rel-item suffix-item" data-key="CO">CO</li>
+                        <li class="rel-item suffix-item" data-key="AP">AP</li>
+                        <li class="rel-item suffix-item" data-key="AP_CO">AP_CO</li>
+                      </ul>
+                    </div>
+
+                  </div>
+
                 <p>Found Tokens</p>
                 <ul class = "found-tokens">
                 </ul>
   `;
+
+  // Dropdown logic for the HTML
+  const mainDropdown   = toolBody.querySelector(".rel-dropdown-main");
+  const mainLabelEl    = mainDropdown.querySelector(".rel-button-label");
+  const mainMenuEl     = mainDropdown.querySelector(".nested-dropdown");
+  const mainButton     = mainDropdown.querySelector(".rel-button");
+
+  const suffixDropdown = toolBody.querySelector(".rel-dropdown-suffix");
+  const suffixLabelEl  = suffixDropdown.querySelector(".rel-button-label");
+  const suffixMenuEl   = suffixDropdown.querySelector(".nested-dropdown");
+  const suffixButton   = suffixDropdown.querySelector(".rel-button");
+
+  let currentBase   = "---";
+  let currentAux    = null;
+  let currentSuffix = "";
+
+  mainButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    mainDropdown.classList.toggle("open");
+    suffixDropdown.classList.remove("open");
+  });
+
+  mainMenuEl.addEventListener("click", (evt) => {
+    const sub = evt.target.closest(".rel-subitem");
+    const item = evt.target.closest(".rel-item");
+
+    const selected = sub || item;
+    if (!selected || selected.classList.contains("rel-has-submenu")) return;
+
+    // Get the selected label (e.g. "SBJ", "AuxP", "ADV")
+    const relation = sub
+      ? sub.dataset.variant
+      : item.dataset.base;
+
+    if (!relation || relation === "---") return;
+
+    // Find all words in the current sentence matching this relation
+    const sentences = Array.isArray(window.treebankData) ? window.treebankData : [];
+    const currentSentence = sentences.find(s => s.id === String(window.currentIndex));
+    if (!currentSentence?.words) return;
+
+    window.batchSelection.clear();
+
+    currentSentence.words.forEach(word => {
+      if ((word.relation || "").trim() === relation) {
+        window.batchSelection.add(String(word.id));
+
+        // Highlight the token
+        const token = document.querySelector(`.token[data-word-id="${word.id}"]`);
+        if (token) token.classList.add("selected");
+
+        // Highlight the node
+        const node = document.querySelector(`.node[id="${word.id}"]`);
+        if (node) d3.select(node).classed("selected", true);
+      }
+    });
+
+    // Deselect anything not in the new batch
+    document.querySelectorAll(".token").forEach(token => {
+      if (!window.batchSelection.has(token.dataset.wordId)) {
+        token.classList.remove("selected");
+        const node = document.querySelector(`.node[id="${token.dataset.wordId}"]`);
+        if (node) d3.select(node).classed("selected", false);
+      }
+    });
+
+    updateFoundTokens();
+
+    // Update label and close
+    currentBase = sub ? "Aux" : item.dataset.base;
+    currentAux  = sub ? sub.dataset.variant : null;
+    mainLabelEl.textContent = sub ? sub.dataset.variant : item.dataset.base;
+    mainDropdown.classList.remove("open");
+  });
+
+  suffixButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    suffixDropdown.classList.toggle("open");
+    mainDropdown.classList.remove("open");
+  });
+
+  suffixMenuEl.addEventListener("click", (evt) => {
+    const item = evt.target.closest(".suffix-item");
+    if (!item) return;
+
+    currentSuffix = item.dataset.key || "";
+    suffixLabelEl.textContent = currentSuffix || "---";
+    suffixDropdown.classList.remove("open");
+
+    // Find all words matching this suffix
+    const sentences = Array.isArray(window.treebankData) ? window.treebankData : [];
+    const currentSentence = sentences.find(s => s.id === String(window.currentIndex));
+    if (!currentSentence?.words) return;
+
+    window.batchSelection.clear();
+
+    currentSentence.words.forEach(word => {
+      const rel = (word.relation || "").trim();
+      const matches = (() => {
+        if (!currentSuffix) return false; // "---" means no filter
+
+        if (currentSuffix === "AP_CO") return rel.includes("AP") && rel.includes("CO");
+        if (currentSuffix === "AP")    return rel.includes("AP") && !rel.includes("CO");
+        if (currentSuffix === "CO")    return rel.includes("CO") && !rel.includes("AP");
+
+        return false;
+      })();
+
+      if (matches) {
+        window.batchSelection.add(String(word.id));
+
+        const token = document.querySelector(`.token[data-word-id="${word.id}"]`);
+        if (token) token.classList.add("selected");
+
+        const node = document.querySelector(`.node[id="${word.id}"]`);
+        if (node) d3.select(node).classed("selected", true);
+      }
+    });
+
+    // Deselect anything not in the new batch
+    document.querySelectorAll(".token").forEach(token => {
+      if (!window.batchSelection.has(token.dataset.wordId)) {
+        token.classList.remove("selected");
+        const node = document.querySelector(`.node[id="${token.dataset.wordId}"]`);
+        if (node) d3.select(node).classed("selected", false);
+      }
+    });
+
+    updateFoundTokens();
+  });
+
+  document.addEventListener("click", () => {
+    mainDropdown.classList.remove("open");
+    suffixDropdown.classList.remove("open");
+  });
+
+
   updateFoundTokens();
   handleTokens();
   handleForm();
@@ -573,4 +797,4 @@ function removeTokenButton(targetForm) {
   })  
   updateFoundTokens();
 }
-    
+

@@ -1536,3 +1536,66 @@ body.mode-relation #tool-body {
   text-transform: uppercase;
   margin: 0 0 8px 0;
 }
+
+.rel-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.nested-dropdown {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid #ccc;
+  list-style: none;
+  padding: 4px 0;
+  margin: 0;
+  z-index: 1000;
+  min-width: 100px;
+}
+
+.rel-dropdown.open .nested-dropdown {
+  display: block;
+}
+
+.rel-item {
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.rel-item:hover {
+  background: #eee;
+}
+
+.rel-has-submenu {
+  position: relative;
+}
+
+.rel-submenu {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: 0;
+  background: white;
+  border: 1px solid #ccc;
+  list-style: none;
+  padding: 4px 0;
+  margin: 0;
+  z-index: 1001;
+  min-width: 80px;
+}
+
+.rel-has-submenu:hover .rel-submenu {
+  display: block;
+}
+
+.rel-subitem {
+  padding: 4px 12px;
+  cursor: pointer;
+}
+
+.rel-subitem:hover {
+  background: #eee;
+}
