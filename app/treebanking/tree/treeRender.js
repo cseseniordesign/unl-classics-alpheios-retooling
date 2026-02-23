@@ -48,24 +48,36 @@ export function createNodeHierarchy(sentenceId) {
     }
   });
 
-// Shift the forest roots to the right
-const horizontalGap = 90; // Distance between main tree and forest
+// Shift the forest roots to the right (NO overlap)
+// -----------------------------------------------
+const horizontalGap = 90;  // gap between main tree and first floating tree
+const forestGap = 90;      // gap between floating trees
+
 let currentForestX = maxMainX + horizontalGap;
 
 rootHierarchy.children?.forEach(child => {
-  if (child.data.isForestRoot) {
-    // Calculate how much we need to shift this specific sub-tree
-    const shiftAmount = currentForestX - child.x;
+  if (!child.data.isForestRoot) return;
 
-    // Move the entire sub-tree (parent and all its descendants)
-    child.each(node => {
-      node.x += shiftAmount;
-      node.y -= 10;
-    });
-    
-    // Increment for the next floating tree so they don't overlap each other
-    currentForestX += 120; 
-  }
+  // 1) Measure this subtree's current x-span
+  let minX = Infinity;
+  let maxX = -Infinity;
+
+  child.each(n => {
+    if (n.x < minX) minX = n.x;
+    if (n.x > maxX) maxX = n.x;
+  });
+
+  const subtreeWidth = (maxX - minX) || 0;
+
+  // 2) Shift so the LEFT edge of the subtree starts at currentForestX
+  const shiftAmount = currentForestX - minX;
+
+  child.each(n => {
+    n.x += shiftAmount;
+  });
+
+  // 3) Advance cursor by actual width + gap (prevents overlap)
+  currentForestX += subtreeWidth + forestGap;
 });
   // Make the current D3 root hierarchy globally accessible
   window.root = rootHierarchy;
