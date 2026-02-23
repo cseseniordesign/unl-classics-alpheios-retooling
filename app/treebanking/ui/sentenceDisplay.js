@@ -255,7 +255,7 @@ export function handleWordClick(event,wordId, word) {
   // EXECUTION PHASE (Plain click - no Ctrl)
   
   // Check if we are moving a batch of searched/ctrl-clicked words
-  // We look at the Set (window.batchSelection)
+  // We look at the Set (window.batchSelection) 
   if (window.batchSelection.size > 0) {
     if (window.batchSelection.has(newHeadId)) {
       resetSelection();
@@ -270,6 +270,13 @@ export function handleWordClick(event,wordId, word) {
       const dependent = currentSentence.words.find(w => String(w.id) === String(depId));
       if (dependent && String(dependent.id) !== newHeadId) {
         if (!createsCycle(currentSentence.words, depId, newHeadId)) {
+          dependent.head = newHeadId;
+          changesMade = true;
+        }
+        else {
+          const isRoot = newHeadId === "root";
+          const independent = isRoot ? { id: "root" } : currentSentence.words.find(word => word.id === newHeadId);
+          independent.head = dependent.head; 
           dependent.head = newHeadId;
           changesMade = true;
         }
@@ -362,6 +369,7 @@ export function handleWordClick(event,wordId, word) {
   if (createsCycle(currentSentence.words, selectedWordId, newHeadId)) {
     // Flip logic — make the old head now depend on the selected word
     independent.head = dependent.head;
+    dependent.head = newHeadId;
     triggerAutoSave();
   } else if(dependent) {
     // Normal assignment
