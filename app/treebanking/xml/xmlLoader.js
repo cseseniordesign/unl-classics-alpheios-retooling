@@ -144,7 +144,7 @@ export async function loadTreebankData(xmlContent) {
   if (!xmlContent) {
     if (window.treebankData) return window.treebankData;
     try {
-      const response = await fetch('../../assets/treebank.xml');
+      const response = await fetch('./assets/treebank.xml');
       const xmlText = await response.text();
       const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
       captureTreebankMeta(xmlDoc);
