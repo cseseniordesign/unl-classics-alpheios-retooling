@@ -1,0 +1,49 @@
+{
+  "plugins" : {
+    "relation" : {
+      "@include" : "./arethusa.relation/jmhgreek.json"
+    },
+    "morph" : {
+      "retrievers" : {
+        "BspMorphRetriever" : {
+          "resource" : "morphologyServiceGrc"
+        }
+      },
+      "postagSchema" : [
+        "pos",
+        "pers",
+        "num",
+        "tense",
+        "mood",
+        "voice",
+        "gend",
+        "case",
+        "degree"
+      ],
+      "styledThrough" : "pos",
+      "@include" : "./arethusa.morph/gr_attributes2.json",
+      "mappings" : {
+        "BspMorphRetriever" : {
+          "attributes" : {
+            "pofs" : "pos",
+            "comp" : "degree"
+          },
+          "values" : {
+            "pos" : {
+              "verb\nparticiple": "verb",
+              "particle": "adverb",
+              "preposition": "adposition",
+              "exclamation": "interjection"
+            },
+            "tense" : {
+              "pluperfect" : "plusquamperfect"
+            },
+            "voice" : {
+              "mediopassive" : "medio-passive"
+            }
+          }
+        }
+      }
+    }
+  }
+}

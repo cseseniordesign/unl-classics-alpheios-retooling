@@ -1,0 +1,48 @@
+{
+    "nested": {
+        "nmn": {
+            "short": "nmn",
+            "long": "nominative",
+            "italian": "nominativo",
+            "sections": "938-943",
+            "@include": "./arethusa.sg/sg_labels/nominative_cases.json"
+        },
+        "gnt": {
+            "short": "gnt",
+            "long": "genitive",
+            "italian": "genitivo",
+            "sections": "1289-1449",
+            "@include": "./arethusa.sg/sg_labels/genitive_cases.json"
+        },
+        "dtv": {
+            "short": "dtv",
+            "long": "dative",
+            "italian": "dativo",
+            "sections": "1450-1550",
+            "@include": "./arethusa.sg/sg_labels/dative_cases.json"
+        },
+        "acc": {
+            "short": "acc",
+            "long": "accusative",
+            "italian": "accusativo",
+            "sections": "1551-1635",
+            "@include": "./arethusa.sg/sg_labels/accusative_cases.json"
+        },
+        "vct": {
+            "short": "vct",
+            "long": "vocative",
+            "italian": "vocativo",
+            "sections": "1283-1288"
+        },
+        "nna": {
+            "short": "nna",
+            "long": "none of the above",
+            "italian": "nessuno dei precedenti"
+        },
+        "idk": {
+            "short": "idk",
+            "long": "I do not know",
+            "italian": "non so"
+        }
+    }
+}

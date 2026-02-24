@@ -1,0 +1,28 @@
+{
+  "nested" : {
+    "CP-TEMPOR" : {
+      "short" : "CP-TEMPOR",
+      "long" : "temporal circumstantial participle"
+    },
+    "CP-CAUSAL" : {
+      "short" : "CP-CAUSAL",
+      "long" : "causal circumstantial participle"
+    },
+    "CP-CONCESS" : {
+      "short" : "CP-CONCESS",
+      "long" : "concessive circumstantial participle"
+    },
+    "CP-FPPURP" : {
+      "short" : "CP-FPPURP",
+      "long" : "future participle of purpose"
+    },
+    "CP-PROTAS" : {
+      "short" : "CP-PROTAS",
+      "long" : "conditional circumstantial participle"
+    },
+    "SP-SUPPL" : {
+      "short" : "SP-SUPPL",
+      "long" : "supplementary participle"
+    }
+  }
+}

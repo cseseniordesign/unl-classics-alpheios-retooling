@@ -1,0 +1,55 @@
+{
+  "nested" : {
+    "dpd" : {
+      "short" : "dpd",
+      "long" : "dependent",
+      "italian" : "dipendente", 
+      "sections" : "938-939"
+    },
+    "ind" : {
+      "short" : "ind",
+      "long" : "independent",
+      "italian" : "indipendente", 
+      "sections" : "940-941",
+      "nested" : {
+        "ctc" : {
+          "short" : "ctc",
+          "long" : "citation",
+          "italian" : "citazione" 
+        },
+        "pnd" : {
+          "short" : "pnd",
+          "long" : "nominativus pendens",
+          "italian" : "nominativus pendens", 
+          "sections" : "941"
+        },
+        "exc" : {
+          "short" : "exc",
+          "long" : "exclamation",
+          "italian" : "esclamazione", 
+          "sections" : "1288"
+        },
+        "nna" : {
+          "short" : "nna",
+          "long" : "none of the above",
+          "italian" : "nessuno dei precedenti" 
+        },
+        "idk" : {
+          "short" : "idk",
+          "long" : "I do not know",
+          "italian" : "non so" 
+        }
+      }
+    },
+    "nna" : {
+          "short" : "nna",
+          "long" : "none of the above",
+          "italian" : "nessuno dei precedenti" 
+    },
+    "idk" : {
+          "short" : "idk",
+          "long" : "I do not know",
+          "italian" : "non so"
+    }
+  }
+}

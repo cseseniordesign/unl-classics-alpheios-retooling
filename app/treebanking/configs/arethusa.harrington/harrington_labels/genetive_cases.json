@@ -1,0 +1,36 @@
+{
+  "nested" : {
+    "G-POSS" : {
+      "short" : "G-POSS",
+      "long" : "genitive of possessive"
+    },
+    "G-PART" : {
+      "short" : "G-PART",
+      "long" : "partitive genitive"
+    },
+    "G-OBJEC" : {
+      "short" : "G-OBJEC",
+      "long" : "objective genitive"
+    },
+    "G-DESC" : {
+      "short" : "G-DESC",
+      "long" : "genitive of description"
+    },
+    "G-CHAR" : {
+      "short" : "G-CHAR",
+      "long" : "genitive of characteristic"
+    },
+    "G-VALUE" : {
+      "short" : "G-VALUE",
+      "long" : "genitive of value"
+    },
+    "G-MATER" : {
+      "short" : "G-MATER",
+      "long" : "genitive of material"    
+    },
+    "G-CHARGE" : {
+      "short" : "G-CHARGE",
+      "long" : "genitive of the charge"
+    }
+  }
+}

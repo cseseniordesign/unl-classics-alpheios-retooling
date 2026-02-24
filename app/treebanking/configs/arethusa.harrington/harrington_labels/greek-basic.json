@@ -1,0 +1,43 @@
+{
+  "nested": {
+      "PRED" : {
+        "short" : "PRED",
+        "long" : "predicate",
+        "style" : {
+          "color" : "rgb(223, 38, 38)"
+        },
+        "nested" : {
+           "PRED-HORT" : {
+             "short" : "PRED-HORT",
+             "long" : "hortatory subjunctive"
+           },
+           "PRED-DELIB" : {
+             "short" : "PRED-DELIB",
+             "long" : "deliberative subjunctive"
+           },
+           "PRED-POTENT" : {
+             "short" : "PRED-POTENT",
+             "long" : "potential subjunctive"
+           },
+           "PRED-OPT" : {
+             "short" : "PRED-OPT",
+             "long" : "optative subjunctive"
+           }
+        }
+      },
+      "INTRJ" : {
+        "short" : "INTRJ",
+        "long" : "interjection",
+        "style" : {
+          "color" : "rgb(255, 153, 51)"
+        }
+      },
+      "PARENTH" : {
+        "short" : "PARENTH",
+        "long" : "parenthetical statement",
+        "style" : {
+          "color" : "rgb(255, 153, 51)"
+         }
+      }
+    }
+}

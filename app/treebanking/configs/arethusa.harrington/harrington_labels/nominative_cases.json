@@ -1,0 +1,12 @@
+{
+  "nested" : {
+    "N-SUBJ" : {
+      "short" : "N-SUBJ",
+      "long" : "subject nominative"
+    },
+    "N-PRED" : {
+      "short" : "N-PRED",
+      "long" : "predicate nominative"
+    }
+  }
+}

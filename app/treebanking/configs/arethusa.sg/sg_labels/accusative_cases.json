@@ -1,0 +1,255 @@
+{
+  "nested" : {
+    "dpd" : {
+      "short" : "dpd",
+      "long" : "dependent",
+      "italian" : "dipendente",
+      "sections" : "1551-1653",
+      "nested" : {
+        "eff" : {
+          "short" : "eff",
+          "long" : "internal object",
+          "italian" : "oggetto interno",
+          "sections" : "1563-1579;1619-1627"
+        },
+        "aff" : {
+          "short" : "aff",
+          "long" : "external object",
+          "italian" : "oggetto esterno",
+          "sections" : "1590-1598;1613-1633"
+        },
+        "ext" : {
+          "short" : "ext",
+          "long" : "extent",
+          "italian" : "estensione",
+          "sections" : "1580-1587",
+          "nested" : {
+            "spc" : {
+              "short" : "spc",
+              "long" : "space",
+              "italian" : "spazio",
+              "sections" : "1581",
+              "nested" : {
+                "lct" : {
+                  "short" : "lct",
+                  "long" : "location",
+                  "italian" : "locazione",
+                  "@include" : "./arethusa.sg/sg_labels/figurative.json"
+                },
+                "pth" : {
+                  "short" : "pth",
+                  "long" : "path",
+                  "italian" : "attraverso",
+                  "@include" : "./arethusa.sg/sg_labels/figurative.json"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "tmp" : {
+              "short" : "tmp",
+              "long" : "time",
+              "italian" : "tempo",
+              "sections" : "1582-1586;1587",
+              "nested" : {
+                "sml_lct" : {
+                  "short" : "sml_lct",
+                  "long" : "simultaneous location",
+                  "italian" : "locazione simultanea"
+                },
+                "squ_lct" : {
+                  "short" : "squ_lct",
+                  "long" : "sequential location",
+                  "italian" : "locazione sequenziale"
+                },
+                "squ_drt" : {
+                  "short" : "squ_drt",
+                  "long" : "sequential-durative",
+                  "italian" : "sequenziale-durativo"
+                },
+                "tmp_dst" : {
+                  "short" : "tmp_dst",
+                  "long" : "temporal distance",
+                  "italian" : "distanza temporale"
+                },
+                "tmp_ext" : {
+                  "short" : "tmp_ext",
+                  "long" : "temporal extent",
+                  "italian" : "estensione temporale"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "msr" : {
+              "short" : "msr",
+              "long" : "measure",
+              "italian" : "misura",
+              "sections" : "1581"
+            },
+            "nna" : {
+              "short" : "nna",
+              "long" : "none of the above",
+              "italian" : "nessuno dei precedenti"
+            },
+            "idk" : {
+              "short" : "idk",
+              "long" : "I do not know",
+              "italian" : "non so"
+            }
+          }
+        },
+        "drc" : {
+          "short" : "drc",
+          "long" : "terminal",
+          "italian" : "terminale",
+          "sections" : "1588-1589",
+          "@include" : "./arethusa.sg/sg_labels/figurative.json"
+        },
+        "rsp" : {
+          "short" : "rsp",
+          "long" : "respect",
+          "italian" : "rispetto",
+          "sections" : "1600-1605"
+        },
+        "adp" : {
+          "short" : "adp",
+          "long" : "adpositional",
+          "italian" : "adposizionale",
+          "nested" : {
+            "mnn" : {
+              "short" : "mnn",
+              "long" : "manner",
+              "italian" : "modo"
+            },
+            "ins_mns" : {
+              "short" : "ins_mns",
+              "long" : "instrument or means",
+              "italian" : "strumento o mezzo"
+            },
+            "cau" : {
+              "short" : "cau",
+              "long" : "cause",
+              "italian" : "causa"
+            },
+            "fnl" : {
+              "short" : "fnl",
+              "long" : "purpose",
+              "italian" : "fine"
+            },
+            "stn_jdg" : {
+              "short" : "stn_jdg",
+              "long" : "standard of judgement",
+              "italian" : "parametro di giudizio"
+            },
+            "cmp" : {
+              "short" : "cmp",
+              "long" : "comparison",
+              "italian" : "comparazione"
+            },
+            "adv" : {
+              "short" : "adv",
+              "long" : "advantage",
+              "italian" : "vantaggio"
+            },
+            "dsd" : {
+              "short" : "dsd",
+              "long" : "disadvantage",
+              "italian" : "svantaggio"
+            },
+            "rcp_add" : {
+              "short" : "rcp_add",
+              "long" : "recipient or addressee",
+              "italian" : "recipiente o destinatario"
+            },
+            "cnf" : {
+              "short" : "cnf",
+              "long" : "conformity",
+              "italian" : "conformità"
+            },
+            "frd_ass" : {
+              "short" : "frd_ass",
+              "long" : "friendly association",
+              "italian" : "associazione amichevole"
+            },
+            "hst_ass" : {
+              "short" : "hst_ass",
+              "long" : "hostile association",
+              "italian" : "associazione ostile"
+            },
+            "nna" : {
+              "short" : "nna",
+              "long" : "none of the above",
+              "italian" : "nessuno dei precedenti"
+            },
+            "idk" : {
+              "short" : "idk",
+              "long" : "I do not know",
+              "italian" : "non so"
+            }
+          }
+        },
+        "nna" : {
+          "short" : "nna",
+          "long" : "none of the above",
+          "italian" : "nessuno dei precedenti"
+        },
+        "idk" : {
+          "short" : "idk",
+          "long" : "I do not know",
+          "italian" : "non so"
+        }
+      }
+    },
+    "ind" : {
+      "short" : "ind",
+      "long" : "independent",
+      "italian" : "independente",
+      "sections" : "1599",
+      "nested" : {
+        "ell" : {
+          "short" : "ell",
+          "long" : "elliptical",
+          "italian" : "ellittico",
+          "sections" : "1599"
+        },
+        "nna" : {
+          "short" : "nna",
+          "long" : "none of the above",
+          "italian" : "nessuno dei precedenti"
+        },
+        "idk" : {
+          "short" : "idk",
+          "long" : "I do not know",
+          "italian" : "non so"
+        }
+      }
+    },
+    "nna" : {
+      "short" : "nna",
+      "long" : "none of the above",
+      "italian" : "nessuno dei precedenti"
+    },
+      "idk" : {
+      "short" : "idk",
+      "long" : "I do not know",
+      "italian" : "non so"
+    }
+  }
+}

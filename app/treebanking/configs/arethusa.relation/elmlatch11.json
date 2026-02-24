@@ -1,0 +1,242 @@
+{"relations": {
+    "labels": {
+        "--": {
+            "short": "--",
+            "long": "nil"
+        },
+        "MnVb": {
+            "short": "MnVb",
+            "long": "Main Verb"
+        },
+        "Sbj": {
+            "short": "Sbj",
+            "long": "subject"
+        },
+        "Pnom": {
+            "short": "Pnom",
+            "long": "pred nom"
+        },
+        "Atr": {
+            "short": "Atr",
+            "long": "attribute"
+        },
+        "ADV": {
+            "short": "ADV",
+            "long": "adverb"
+        },
+        "C-Phr": {
+            "short": "C-Phr",
+            "long": "complement phrase"
+        },
+        "Poss": {
+            "short": "Poss",
+            "long": "possessive"
+        },
+        "Prep": {
+            "short": "Prep",
+            "long": "preposition"
+        },
+        "OPrep": {
+            "short": "OPrep",
+            "long": "Obj of prep"
+        },
+        "ACC*": {
+            "short": "Acc",
+            "long": "accusative* constructions",
+            "nested": {
+                "DirObj": {
+                    "short": "DirObj",
+                    "long": "direct obj"
+                },
+                "PlceTo": {
+                    "short": "PlceTo",
+                    "long": "place to which"
+                },
+                "Ocmp": {
+                    "short": "Ocmp",
+                    "long": "obj complement"
+                },
+                "Ext": {
+                    "short": "Ext",
+                    "long": "extent"
+                }
+            }
+        },
+        "DAT*": {
+            "short": "dat",
+            "long": "dative constructions",
+            "nested": {
+                "IndObj": {
+                    "short": "IndObj",
+                    "long": "idirect object"
+                },
+                "Ref": {
+                    "short": "Ref",
+                    "long": "indirect object"
+                },
+                "Purp": {
+                    "short": "Purp",
+                    "long": "purpose"
+                },
+                "Agt": {
+                    "short": "Agt",
+                    "long": "agent"
+                }
+            }
+        },
+        "ABL*": {
+            "short": "abl",
+            "long": "ablative constructions",
+            "nested": {
+                "Mns": {
+                    "short": "Mns",
+                    "long": "means"
+                },
+                "Mnr": {
+                    "short": "Mnr",
+                    "long": "manner"
+                },
+                "Acmp": {
+                    "short": "Acmp",
+                    "long": "accompaniment"
+                },
+                "Dscp": {
+                    "short": "Dscp",
+                    "long": "description"
+                },
+                "Sepr": {
+                    "short": "Sepr",
+                    "long": "separation"
+                },
+                "PlceFr": {
+                    "short": "PlceFr",
+                    "long": "place from"
+                },
+                "Plce": {
+                    "short": "Plce",
+                    "long": "place where"
+                },
+                "Rsp": {
+                    "short": "Rsp",
+                    "long": "respect"
+                },
+                "Caus": {
+                    "short": "Caus",
+                    "long": "cause"
+                },
+                "TWhen": {
+                    "short": "TWhen",
+                    "long": "time when"
+                },
+                "TWithin": {
+                    "short": "TWithin",
+                    "long": "time within which"
+                },
+                 "Cmpr": {
+                    "short": "Cmpr",
+                    "long": "comparison"
+                },
+                 "DgrDif": {
+                    "short": "DgrDif",
+                    "long": "degree of difference"
+                }
+            }
+        },
+        "Cl": {
+            "short": "Cl",
+            "long": "Clause",
+            "nested": {
+                "C-Cl": {
+                    "short": "CompCl",
+                    "long": "complement cl"
+                },
+                "CircCl": {
+                    "short": "CircCl",
+                    "long": "circumstance cl"
+                },
+                "AbsCl": {
+                    "short": "AbsCl",
+                    "long": "absolute cl"
+                },
+                "TmpCl": {
+                    "short": "TempCl",
+                    "long": "temporal cl"
+                },
+                "CausCl": {
+                    "short": "CausCl",
+                    "long": "causal cl"
+                },
+                "ConcesCl": {
+                    "short": "ConcesCl",
+                    "long": "concessive cl"
+                },
+                "CondCl": {
+                    "short": "CondCl",
+                    "long": "conditional cl"
+                },
+                "PrpCl": {
+                    "short": "PrpCl",
+                    "long": "purpose cl"
+                },
+                 "IndrStCl": {
+                    "short": "IndrStCl",
+                    "long": "indirect statement"
+                },
+                "IndrCmdCl": {
+                    "short": "IndrCmdCl",
+                    "long": "indirect command cl"
+                },
+                "RelCl": {
+                    "short": "RelCl",
+                    "long": "relative cl"
+                }
+            }
+        },
+        "APOS": {
+            "short": "APOS",
+            "long": "apposing element"
+        },
+        "COORD": {
+            "short": "COORD",
+            "long": ""
+        },
+        "SbConj": {
+            "short": "SbConj",
+            "long": "subord conj"
+        },
+        "SntAdv": {
+            "short": "SntAdv",
+            "long": "sentence adverbial"
+        },
+        "AuxV": {
+            "short": "AuxV",
+            "long": "auxilary verb"
+        },
+        "AuxZ": {
+            "short": "AuxZ",
+            "long": "emphatic adv"
+        },
+        "Adr": {
+            "short": "Adr",
+            "long": "address"
+        },
+        "AuxK": {
+            "short": "AuxK",
+            "long": "sentence final"
+        }
+    },
+    "suffixes": {
+        "AP": {
+            "short": "AP",
+            "long": ""
+        },
+        "CO": {
+            "short": "CO",
+            "long": ""
+        },
+        "AP_CO": {
+            "short": "AP_CO",
+            "long": ""
+        }
+    }
+}}

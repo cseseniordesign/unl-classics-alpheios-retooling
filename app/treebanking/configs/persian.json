@@ -1,0 +1,15 @@
+{
+  "plugins" : {
+    "morph" : {
+      "retrievers" : {
+        "BspMorphRetriever" : {
+          "resource" : "morphologyServicePer"
+        }
+      },
+      "@include" : "./arethusa.morph/per_attributes.json"
+    },
+    "relation" : {
+      "@include" : "./arethusa.relation/ud.json"
+    }
+  }
+}

@@ -1,0 +1,72 @@
+{
+  "nested" : {
+    "G-POSS" : {
+      "short" : "G-POSS",
+      "long" : "genitive of possessive"
+    },
+    "G-PART" : {
+      "short" : "G-PART",
+      "long" : "partitive genitive"
+    },
+    "G-OBJEC" : {
+      "short" : "G-OBJEC",
+      "long" : "objective genitive"
+    },
+    "G-DESC" : {
+      "short" : "G-DESC",
+      "long" : "genitive of description"
+    },
+    "G-CHAR" : {
+      "short" : "G-CHAR",
+      "long" : "genitive of characteristic"
+    },
+    "G-VALUE" : {
+      "short" : "G-VALUE",
+      "long" : "genitive of value"
+    },
+    "G-MATER" : {
+      "short" : "G-MATER",
+      "long" : "genitive of material"    
+    },
+    "G-CHARGE" : {
+      "short" : "G-CHARGE",
+      "long" : "genitive of the charge"
+    },
+    "G-TIMEWW" : {
+      "short" : "G-TIMEWW",
+      "long" : "genitive of the time within which"
+    },
+    "G-ORIENT" : {
+      "short" : "G-ORIENT",
+      "long" : "genitive of orientation"
+    },
+    "G-SOURCE" : {
+      "short" : "G-SOURCE",
+      "long" : "genitive of the source"
+    },
+    "G-SEPAR" : {
+      "short" : "G-SEPAR",
+      "long" : "genitive of separation"
+    },
+    "G-CAUSE" : {
+      "short" : "G-CAUSE",
+      "long" : "genitive of cause"
+    },
+    "G-AGENT" : {
+      "short" : "G-AGENT",
+      "long" : "genitive of agent"
+    },
+    "G-ABSOL" : {
+      "short" : "G-ABSOL",
+      "long" : "genitive absolute"
+    },
+    "G-COMPAR" : {
+      "short" : "G-COMPAR",
+      "long" : "genitive of comparison"
+    },
+    "G-ACCOMP" : {
+      "short" : "G-ACCOMP",
+      "long" : "genitive of accompaniment"
+    }
+  }
+}

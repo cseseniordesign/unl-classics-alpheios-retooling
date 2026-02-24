@@ -1,0 +1,60 @@
+{
+  "labels" : {
+    "NOM" : {
+      "short" : "NOM",
+      "long" : "nominative",
+      "dependency" : {
+        "case" : "nom"
+      },
+      "@include" : "./arethusa.harrington/harrington_labels/nominative_cases.json"
+    },
+    "GEN" : {
+      "short" : "GEN",
+      "long" : "genitive",
+      "dependency" : {
+        "case" : "gen"
+      },
+      "@include" : "./arethusa.harrington/harrington_labels/genetive_cases.json"
+    },
+    "DAT" : {
+      "short" : "DAT",
+      "long" : "dative",
+      "dependency" : {
+        "case" : "dat"
+      },
+      "@include" : "./arethusa.harrington/harrington_labels/dative_cases.json"
+    },
+    "ACC" : {
+      "short" : "ACC",
+      "long" : "accusative",
+      "dependency" : {
+        "case" : "acc"
+      },
+      "@include" : "./arethusa.harrington/harrington_labels/accusative_cases.json"
+    },
+    "VOC" : {
+      "short" : "VOC",
+      "long" : "vocative",
+      "dependency" : {
+        "case" : "voc"
+      }
+    },
+    "ABL" : {
+      "short" : "ABL",
+      "long" : "ablative",
+      "dependency" : {
+        "case" : "abl"
+      },
+      "@include" : "./arethusa.harrington/harrington_labels/ablative_cases.json"
+    },
+    "LOC" : {
+      "short" : "LOC",
+      "long" : "locative"
+    },
+    "cls" : {
+      "short" : "cls",
+      "long" : "clause",
+      "@include" : "./arethusa.harrington/harrington_labels/function_of_clauses.json"
+    }
+  }
+}

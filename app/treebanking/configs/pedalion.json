@@ -1,0 +1,41 @@
+{
+  "main" : {
+    "plugins" : [
+      "text",
+      "morph",
+      "relation",
+      "sg",
+      "artificialToken",
+      "search",
+      "history",
+      "comments",
+      "depTree"
+    ]
+  },
+  "plugins" : {
+    "sg" : {
+      "retriever" : {
+        "SgGrammarRetriever" : {
+          "resource" : "sgGrammar"
+        }
+      },
+      "template" : "js/templates/sg.html",
+      "contextMenu" : true,
+      "contextMenuTemplate": "js/arethusa.sg/templates/context_menu.html",
+      "@include" : "./arethusa.sg/sg_labels.json"
+    },
+    "morph" : {
+      "gloss" : true,
+      "additionalFields" : true,
+      "retrievers" : {
+        "BspMorphRetriever" : {
+          "resource" : "newMorphologyServiceGrc"
+        }
+      },
+      "@include" : "./arethusa.morph/gr_attributes_sg.json"
+    },
+    "relation" : {
+      "@include" : "./arethusa.relation/relations2.json"
+    }
+  }
+}

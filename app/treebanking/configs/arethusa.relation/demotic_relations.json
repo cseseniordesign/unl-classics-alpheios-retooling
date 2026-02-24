@@ -1,0 +1,236 @@
+{
+  "relations" : {
+    "labels" : {
+      "ADV" : {
+        "long" : "Adverb",
+        "short" : "ADV",
+        "nested" : {
+          "Tim" : {
+            "long" : "Time",
+            "short" : "Tim"
+          },
+          "Plc" : {
+            "long" : "Place",
+            "short" : "Plc"
+          },
+          "Qlt" : {
+            "long" : "Quality",
+            "short" : "Qlt"
+          },
+          "Caus" : {
+            "long" : "Cause",
+            "short" : "Caus"
+          },
+          "Purp" : {
+            "long" : "Purpose",
+            "short" : "Purp"
+          },
+          "Cond" : {
+            "long" : "Condition",
+            "short" : "Cond"
+          },
+          "Conc" : {
+            "long" : "Concessive",
+            "short" : "Conc"
+          },
+          "Cons" : {
+            "long" : "Consecutive",
+            "short" : "Cons"
+          },
+          "PreP" : {
+            "long" : "Prepositional Phrase",
+            "short" : "PreP"
+          }
+        }
+      },
+      "ATR" : {
+        "long" : "Attribute",
+        "short" : "ATR",
+        "nested" : {
+          "ADJ" : {
+            "long" : "Adjective",
+            "short" : "ADJ"
+          },
+          "APOS" : {
+            "long" : "Apposition",
+            "short" : "APOS"
+          },
+          "AdvA" : {
+            "long" : "Adverbial attribute",
+            "short" : "AdvA"
+          },
+          "GEN" : {
+            "long" : "Genitive",
+            "short" : "GEN",
+            "nested" : {
+              "DGen" : {
+                "long" : "Direct genitive",
+                "short" : "DGen"
+              },
+              "IGen" : {
+                "long" : "Indirect genitive",
+                "short" : "IGen"
+              }
+            }
+          },
+          "PrepA" : {
+            "long" : "Prepositional attribute",
+            "short" : "PrepA"
+          },
+          "REL" : {
+            "long" : "Relative clause",
+            "short" : "REL"
+          }
+        }
+      },
+      "AUG" : {
+        "long" : "Augentia",
+        "short" : "AUG"
+      },
+      "AUX" : {
+        "long" : "Auxiliary",
+        "short" : "AUX"
+      },
+      "BASE" : {
+        "long" : "Base",
+        "short" : "BASE"
+      },
+      "CAPT" : {
+        "long" : "Caption",
+        "short" : "CAPT"
+      },
+      "CCONJ" : {
+        "long" : "Clause conjugation",
+        "short" : "CCONJ",
+        "nested" : {
+          "Caus": {
+            "long": "Causative after di",
+            "short": "Caus"
+          },
+          "Juss" : {
+            "long" : "Jussive",
+            "short" : "Juss"
+          },
+          "Fin" : {
+            "long" : "Finalis",
+            "short" : "Fin"
+          },
+          "Temp" : {
+            "long" : "Temporalis",
+            "short" : "Temp"
+          },
+          "Term" : {
+            "long" : "Terminative",
+            "short" : "Term"
+          },
+          "SecT" : {
+            "long" : "Second Tense",
+            "short" : "SecT"
+          },
+          "Cond" : {
+            "long" : "Conditionalis",
+            "short" : "Cond"
+          },
+          "Cnjv" : {
+            "long" : "Conjunctive",
+            "short" : "Cnjv"
+          }
+        }
+      },
+      "COORD" : {
+        "long" : "Coordinator",
+        "short" : "COORD"
+      },
+      "COP" : {
+        "long" : "Copula",
+        "short" : "COP"
+      },
+      "DATE" : {
+        "long" : "Date",
+        "short" : "DATE"
+      },
+      "DET" : {
+        "long" : "Determiner",
+        "short" : "DET"
+      },
+      "DISJ" : {
+        "long" : "Disjunction",
+        "short" : "DISJ"
+      },
+      "MnV" : {
+        "long" : "Main verb",
+        "short" : "MnV"
+      },
+      "MWE" : {
+        "long" : "Multi word expression",
+        "short" : "MWE"
+      },
+      "OBJ" : {
+        "long" : "Object",
+        "short" : "OBJ",
+        "nested" : {
+          "DObj" : {
+            "long" : "Direct object",
+            "short" : "DObj"
+          },
+          "IObj" : {
+            "long" : "Indirect Object",
+            "short" : "IObj"
+          },
+          "OPrep" : {
+            "long" : "Object of preposition",
+            "short" : "OPrep"
+          },
+          "OVb" : {
+            "long" : "Object of verb",
+            "short" : "OVb"
+          }
+        }
+      },
+      "POSS" : {
+        "long" : "Possessive",
+        "short" : "POSS"
+      },
+      "PRED" : {
+        "long" : "Predicate",
+        "short" : "PRED",
+        "nested" : {
+          "PAdv" : {
+            "long" : "Predicate adverbial",
+            "short" : "PAdv"
+          },
+          "PNom" : {
+            "long" : "Predicate nominal",
+            "short" : "PNom"
+          },
+          "PVb" : {
+            "long" : "Predicate verbal",
+            "short" : "PVb"
+          }
+        }
+      },
+      "PREP" : {
+        "long" : "Preposition",
+        "short" : "PREP",
+        "nested" : {
+          "PDat" : {
+            "long" : "Dative preposition",
+            "short" : "PDat"
+          },
+          "PGen" : {
+            "long" : "Genitive preposition",
+            "short" : "PGen"
+          }
+        }
+      },
+      "PTCL" : {
+        "long" : "Particle",
+        "short" : "PTCL"
+      },
+      "SBJ" : {
+        "long" : "Subject",
+        "short" : "SBJ"
+      }
+    }
+  }
+}

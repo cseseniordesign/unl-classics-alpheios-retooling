@@ -1,0 +1,206 @@
+{
+  "relations" : {
+    "labels" : {
+      "BASIC" : {
+        "short" : "BASIC",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/greek-basic.json"
+      },
+      "Aux" : {
+        "short" : "Aux",
+        "long" : "auxiliary",
+        "nested" : {
+          "AuxC" : {
+            "short" : "AuxC",
+            "long" : "conjunction",
+            "style" : {
+              "color" : "deeppink"
+            }
+          },
+          "AuxP" : {
+            "short" : "AuxP",
+            "long" : "preposition",
+            "style" : {
+              "color" : "green"
+            }
+          },
+          "AuxV" : {
+            "short" : "AuxV",
+            "long" : "auxiliary verb",
+            "style" : {
+              "color" : "rgb(70, 96, 235)"
+            }
+          },
+          "AuxY" : {
+            "short" : "AuxY",
+            "long" : "sentence adverbial",
+            "style" : {
+              "color" : "rgb(139, 211, 31)"
+            }
+          },
+          "AuxZ" : {
+            "short" : "AuxZ",
+            "long" : "emphasizing particle",
+            "style" : {
+              "color" : "rgb(216, 57, 159)"
+            }
+          },
+          "AuxG" : {
+            "short" : "AuxG",
+            "long" : "bracketing punctuation",
+            "style" : {
+              "color" : "black"
+            }
+          },
+          "AuxK" : {
+            "short" : "AuxK",
+            "long" : "terminal punctuation",
+            "style" : {
+              "color" : "black"
+            }
+          },
+          "AuxX" : {
+            "short" : "AuxX",
+            "long" : "comma",
+            "style" : {
+              "color" : "black"
+            }
+          }      
+        }
+      },
+      "ATR" : {
+        "short" : "ATR",
+        "long" : "attribute",
+        "style" : {
+          "color" : "blue"
+        }
+      },
+      "ADV" : {
+        "short" : "ADV",
+        "long" : "adverbial",
+        "style" : {
+          "color" : "darkorange"
+        }
+      },
+      "COORD" : {
+        "short" : "COORD",
+        "long" : "coordinator",
+        "style" : {
+          "color" : "rgb(154, 130, 206)"
+        }
+      },
+      "APOS" : {
+        "short" : "APOS",
+        "long" : "apposing element",
+        "style" : {
+          "color" : "rgb(7, 95, 39)"
+          }
+      },
+      "nominative" : {
+        "short" : "nominative",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/greek-nominative_cases.json"
+      },
+      "genitive" : {
+        "short" : "genitive",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/greek-genitive_cases.json"
+      },
+      "dative" : {
+        "short" : "dative",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/greek-dative_cases.json"
+      },
+      "accusative" : {
+        "short" : "accusative",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/greek-accusative_cases.json"
+      },
+      "vocative" : {
+        "short" : "V-VOC",
+        "long" : "vocative"
+      },
+      "locative" : {
+        "short" : "L-LOCAT",
+        "long" : "locative"
+      },
+      "adjectival clause" : {
+        "short" : "adjectival clause",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/greek-adjectival_clauses.json"
+      },
+      "adverbial clause" : {
+        "short" : "adverbial clause",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/greek-adverbial_clauses.json"
+      },
+      "nominal clause" : {
+        "short" : "nominal clause",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/greek-nominal_clauses.json"
+      },
+      "participle uses" : {
+        "short": "participle uses",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/greek-participle_uses.json"
+      },
+      "infinitive_uses" : {
+        "short" : "infinitive uses",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/greek-infinitive_uses.json"
+      }
+    },
+    "suffixes" : {
+      "CO" : {
+        "short" : "CO",
+        "long" : ""
+      },
+      "AP" : {
+        "short" : "AP",
+        "long" : ""
+      },
+      "SBJ" : {
+        "short" : "SBJ",
+        "long" : "",
+        "nested" : {
+         "SUBJ-CO" : {
+           "short" : "SUBJ-CO",
+           "long" : "coordinated subject"
+         },
+         "SUBJ-AP" : {
+           "short" : "SUBJ-AP",
+           "long" : "subjecte in apposition"
+         }
+        }
+      },
+      "PRED" : {
+        "short" : "PRED",
+        "long" : "",
+        "nested" : {
+          "PRED-CO" : {
+           "short" : "PRED-CO",
+           "long" : "coordinated predicate"
+           },
+           "PRED-AP" : {
+             "short" : "PRED-AP",
+             "long" : "predicate in apposition"
+           }
+        }
+      },
+      "OBJ" : {
+        "short" : "OBJ",
+        "long" : "",
+        "nested" : {
+          "OBJ-CO" : {
+            "short" : "OBJ-CO",
+            "long" : "coordinated object"
+          },
+          "OBJ-AP" : {
+            "short" : "OBJ-AP",
+            "long" : "object in apposition"
+          }
+        }
+      }
+    }
+  }
+}

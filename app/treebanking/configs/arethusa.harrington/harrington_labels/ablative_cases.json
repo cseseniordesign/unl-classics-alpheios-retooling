@@ -1,0 +1,60 @@
+{
+  "nested" : {
+    "AB-ORIENT" : {
+      "short" : "AB-ORIENT",
+      "long" : "ablative of orientation"
+    },
+    "AB-SEPAR" : {
+      "short" : "AB-SEPAR",
+      "long" : "ablative of separation"
+    },
+    "AB-CAUSE" : {
+      "short" : "AB-CAUSE",
+      "long" : "ablative of cause"
+    },
+    "AB-AGENT" : {
+      "short" : "AB-AGENT",
+      "long" : "ablative of agent"
+    },
+    "AB-ABSOL" : {
+      "short" : "AB-ABSOL",
+      "long" : "ablative absolute"
+    },
+    "AB-COMPAR" : {
+      "short" : "AB-COMPAR",
+      "long" : "ablative of comparison"
+    },
+    "AB-LOCAT" : {
+      "short" : "AB-LOCAT",
+      "long" : "ablative of location"
+    },
+    "AB-RESPECT" : {
+      "short" : "AB-RESPECT",
+      "long" : "ablative of respect"
+    },
+    "AB-ACCOMP" : {
+      "short" : "AB-ACCOMP",
+      "long" : "ablative of accompaniment"
+    },
+    "AB-DECRIP" : {
+      "short" : "AB-DECRIP",
+      "long" : "ablative of description"
+    },
+    "AB-MEANS" : {
+      "short" : "AB-MEANS",
+      "long" : "ablative of means"
+    },
+    "AB-MANN" : {
+      "short" : "AB-MANN",
+      "long" : "ablative of manner"
+    },
+    "AB-PRICE" : {
+      "short" : "AB-PRICE",
+      "long" : "ablative of price"
+    },
+    "AB-DEGDIF" : {
+      "short" : "AB-DEGDIF",
+      "long" : "ablative of degree of difference"
+    }
+  }
+}

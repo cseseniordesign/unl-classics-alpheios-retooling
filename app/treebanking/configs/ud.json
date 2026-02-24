@@ -1,0 +1,11 @@
+{
+  "plugins": {
+    "morph" : {
+      "noRetrieval" : "online",
+      "@include" : "./arethusa.morph/ud_pos.json"
+    },
+    "relation" : {
+      "@include" : "./arethusa.relation/ud.json"
+    }
+  }
+}

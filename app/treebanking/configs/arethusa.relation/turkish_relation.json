@@ -1,0 +1,152 @@
+{
+  "relations" : {
+    "labels" : {
+      "YÜK" : {
+        "short" : "YÜK",
+        "long" : "yüklem",
+        "style" : {
+          "color" : "rgb(223, 38, 38)"
+        }
+      },
+      "ÖZN" : {
+        "short" : "ÖZN",
+        "long" : "özne",
+        "style" : {
+          "color" : "rgb(92, 201, 83)"
+        }
+      },
+      "NES" : {
+        "short" : "NES",
+        "long" : "nesne",
+        "style" : {
+          "color" : "rgb(11, 200, 216)"
+        }
+      },
+      "NTL" : {
+        "short" : "NTL",
+        "long" : "niteleyici",
+        "style" : {
+          "color" : "blue"
+        }
+      },
+      "BLT" : {
+        "short" : "BLT",
+        "long" : "belirtecimsi",
+        "style" : {
+          "color" : "darkorange"
+        }
+      },
+      "TÜM" : {
+        "short" : "TÜM",
+        "long" : "tümleç",
+        "style" : {
+          "color" : "rgb(131, 11, 16)"
+        }
+      },
+      "ADLY" : {
+        "short" : "ADLY",
+        "long" : "adılsıl yüklem",
+        "style" : {
+          "color" : "rgb(87, 160, 119)"
+        }
+      },
+      "NEST" : {
+        "short" : "NEST",
+        "long" : "nesne tümleci",
+        "style" : {
+          "color" : "rgb(92, 201, 83)"
+        }
+      },
+      "SRL" : {
+        "short" : "SRL",
+        "long" : "sıralayıcı",
+        "style" : {
+          "color" : "rgb(154, 130, 206)"
+        }
+      },
+      "EŞL" : {
+        "short" : "EŞL",
+        "long" : "eşleme",
+        "style" : {
+          "color" : "rgb(7, 95, 39)"
+        }
+      },
+      "Eks" : {
+        "short" : "Eks",
+        "long" : "eksilti",
+        "style" : {
+          "color" : "rgb(7, 95, 39)"
+        }
+      },
+      "Yar" : {
+        "short" : "Yar",
+        "long" : "yardımcı",
+        "nested" : {
+          "YarI" : {
+            "short" : "Yarİ",
+            "long" : "ilgeç",
+            "style" : {
+              "color" : "green"
+            }
+          },
+          "YarB" : {
+            "short" : "YarB",
+            "long" : "bağlaç",
+            "style" : {
+              "color" : "deeppink"
+            }
+          },
+          "YarD" : {
+            "short" : "YarD",
+            "long" : "dönüşlü edilgen",
+            "style" : {
+              "color" : "rgb(162, 70, 235)"
+            }
+          },
+          "YarE" : {
+            "short" : "YarE",
+            "long" : "yardımcı eylem",
+            "style" : {
+              "color" : "rgb(70, 96, 235)"
+            }
+          },
+          "YarV" : {
+            "short" : "YarV",
+            "long" : "virgüller",
+            "style" : {
+              "color" : "black"
+            }
+          },
+          "YarA" : {
+            "short" : "YarA",
+            "long" : "ayraç işaretleri",
+            "style" : {
+              "color" : "black"
+            }
+          },
+          "YarN" : {
+            "short" : "YarN",
+            "long" : "nokta",
+            "style" : {
+              "color" : "black"
+            }
+          },
+          "YarZ" : {
+            "short" : "YarZ",
+            "long" : "zarf tümcesi",
+            "style" : {
+              "color" : "rgb(139, 211, 31)"
+            }
+          },
+          "YarVP" : {
+            "short" : "YarVP",
+            "long" : "vurgulama parçacığı",
+            "style" : {
+              "color" : "rgb(216, 57, 159)"
+            }
+          }
+        }
+      }
+  }
+}
+}

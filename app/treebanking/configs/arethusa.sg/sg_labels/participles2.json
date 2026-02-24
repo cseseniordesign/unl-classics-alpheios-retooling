@@ -1,0 +1,156 @@
+{
+  "nested" : {
+    "atr" : {
+      "short" : "atr",
+      "long" : "attributive",
+      "italian" : "attributivo",
+      "sections" : "2049-2053"
+    },
+    "crc" : {
+      "short" : "crc",
+      "long" : "circumstantial",
+      "italian" : "circostanziale",
+      "sections" : "2054-2087",
+      "nested" : {
+        "tmp" : {
+          "short" : "tmp",
+          "long" : "time",
+          "italian" : "tempo",
+          "sections" : "2061",
+          "nested" : {
+            "sml_lct" : {
+              "short" : "sml_lct",
+              "long" : "simultaneous location",
+              "italian" : "locazione simultanea"
+            },
+            "squ_lct" : {
+              "short" : "squ_lct",
+              "long" : "sequential location",
+              "italian" : "locazione sequenziale"
+            },
+            "squ_drt" : {
+              "short" : "squ_drt",
+              "long" : "sequential-durative",
+              "italian" : "sequenziale-durativo"
+            },
+            "tmp_dst" : {
+              "short" : "tmp_dst",
+              "long" : "temporal distance",
+              "italian" : "distanza temporale"
+            },
+            "tmp_ext" : {
+              "short" : "tmp_ext",
+              "long" : "temporal extent",
+              "italian" : "estensione temporale"
+            },
+            "nna" : {
+              "short" : "nna",
+              "long" : "none of the above",
+              "italian" : "nessuno dei precedenti"
+            },
+            "idk" : {
+              "short" : "idk",
+              "long" : "I do not know",
+              "italian" : "non so"
+            }
+          }
+        },
+        "mnn" : {
+          "short" : "mnn",
+          "long" : "manner",
+          "italian" : "modo",
+          "sections" : "2062"
+        },
+        "mns" : {
+          "short" : "mns",
+          "long" : "means",
+          "italian" : "mezzo",
+          "sections" : "2063"
+        },
+        "cau" : {
+          "short" : "cau",
+          "long" : "cause",
+          "italian" : "causa",
+          "sections" : "2064"
+        },
+        "fnl" : {
+          "short" : "fnl",
+          "long" : "purpose",
+          "italian" : "fine",
+          "sections" : "2065"
+        },
+        "cnc" : {
+          "short" : "cnc",
+          "long" : "concession",
+          "italian" : "concessione",
+          "sections" : "2066"
+        },
+        "cnd" : {
+          "short" : "cnd",
+          "long" : "condition",
+          "italian" : "condizione",
+          "sections" : "2067"
+        },
+        "atd" : {
+          "short" : "atd",
+          "long" : "any attendant circumstance",
+          "italian" : "ogni circostanza",
+          "sections" : "2068"
+        },
+        "nna" : {
+          "short" : "nna",
+          "long" : "none of the above",
+          "italian" : "nessuno dei precedenti"
+        },
+        "idk" : {
+          "short" : "idk",
+          "long" : "I do not know",
+          "italian" : "non so"  
+        }
+      }
+    },
+    "spl" : {
+      "short" : "spl",
+      "long" : "supplementary",
+      "sections" : "2088-2148",
+      "nested" : {
+        "ind" : {
+          "short" : "ind",
+          "long" : "in indirect discourse",
+          "italian" : "nel discorso indiretto"
+        },
+        "not_ind" : {
+          "short" : "not_ind",
+          "long" : "not in indirect discourse",
+          "italian" : "non nel discorso indiretto"
+        },
+        "nna" : {
+          "short" : "nna",
+          "long" : "none of the above",
+          "italian" : "nessuno dei precedenti"
+        },
+        "idk" : {
+          "short" : "idk",
+          "long" : "I do not know",
+          "italian" : "non so"  
+        }
+      }
+    },
+    "prp" : {
+      "short" : "prp",
+      "long" : "periphrastic",
+      "italian" : "perifrastico",
+      "sections" : "2091"
+    },
+    "nna" : {
+      "short" : "nna",
+      "long" : "none of the above",
+      "italian" : "nessuno dei precedenti"
+    },
+    "idk" : {
+      "short" : "idk",
+      "long" : "I do not know",
+      "italian" : "non so"  
+    }
+  }
+}

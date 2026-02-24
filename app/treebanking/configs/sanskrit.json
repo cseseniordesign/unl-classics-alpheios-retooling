@@ -1,0 +1,13 @@
+{
+  "plugins": {
+    "morph" : {
+      "noRetrieval" : "online",
+      "retrievers" : {
+        "BspMorphRetriever" : {
+          "resource" : "newMorphologyServiceLat"
+        }
+      },
+      "@include" : "./arethusa.morph/sk_attributes.json"
+    }
+  }
+}

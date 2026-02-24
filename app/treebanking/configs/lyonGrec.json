@@ -1,0 +1,1 @@
+{"plugins": {"relation": {"@include": "./arethusa.relation/rel.lyonGrec.json"}, "morph": {"@include": "./arethusa.morph/gr_attributes.json", "retrievers": {"BspMorphRetriever": {"resource": "newMorphologyServiceGrc"}}}}}

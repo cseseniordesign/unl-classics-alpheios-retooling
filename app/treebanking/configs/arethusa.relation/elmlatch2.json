@@ -1,0 +1,92 @@
+{
+  "relations": {
+    "labels": {
+      "MnVb": {
+        "short": "MnVb",
+        "long": "main verb"
+      },
+      "Sbj": {
+        "short": "Sbj",
+        "long": "subject"
+      },
+      "Pnom": {
+        "short": "Pnom",
+        "long": "predicate nom"
+      },
+      "Poss": {
+        "short": "Poss",
+        "long": "possessive"
+      },
+      "DirObj": {
+        "short": "DirObj",
+        "long": "direct obj"
+      },
+      "IndObj": {
+        "short": "IndObj",
+        "long": "Indirect obj"
+      },
+      "Ref": {
+        "short": "Ref",
+        "long": "reference"
+      },
+      "Prep": {
+        "short": "Prep",
+        "long": "preposition"
+      },
+      "ObPrep": {
+        "short": "ObPrep",
+        "long": "obj of prep"
+      },
+      "Mns": {
+        "short": "Mns",
+        "long": "means"
+      },
+      "Acmp": {
+        "short": "Acmp",
+        "long": "accompaniment"
+      },
+      "Sepr": {
+        "short": "Sepr",
+        "long": "separation"
+      },
+      "C_Cl": {
+        "short": "C_Cl",
+        "long": "complement cl"
+      },
+      "APOS": {
+        "short": "APOS",
+        "long": "apposing element"
+      },
+      "COORD": {
+        "short": "COORD",
+        "long": "coordinator"
+      },
+      "SntAdv": {
+        "short": "SntAdv",
+        "long": "sentence adv"
+      },
+      "Adr": {
+        "short": "Adr",
+        "long": "address"
+      },
+      "AuxZ": {
+        "short": "AuxZ",
+        "long": "AuxZ (emph)"
+      }
+    },
+    "suffixes": {
+      "AP": {
+        "short": "AP",
+        "long": ""
+      },
+      "CO": {
+        "short": "CO",
+        "long": ""
+      },
+      "AP_CO": {
+        "short": "AP_CO",
+        "long": ""
+      }
+    }
+  }
+}

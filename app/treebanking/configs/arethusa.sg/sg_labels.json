@@ -1,0 +1,73 @@
+{
+  "labels" : {
+    "adj" : {
+      "short" : "adj",
+      "long" : "adjective",
+      "sections" : "1018-1093",
+      "dependency" : {
+        "pos" : "adj"
+      },
+      "@include" : "./arethusa.sg/sg_labels/adjectives.json"
+    },
+    "art" : {
+      "short" : "art",
+      "long" : "article",
+      "sections" : "1099-1189",
+      "dependency" : {
+        "pos" : "art"
+      }
+    },
+    "prn" : {
+      "short" : "prn",
+      "long" : "pronoun",
+      "sections" : "1190-1278",
+      "dependency" : {
+        "pos" : "pron"
+      },
+      "@include" : "./arethusa.sg/sg_labels/pronouns.json"
+    },
+    "adp" : {
+      "short" : "adp",
+      "long" : "adposition",
+      "sections" : "1636-1702",
+      "dependency" : {
+        "pos" : "prep"
+      }
+    },
+    "noun" : {
+      "short" : "noun",
+      "long" : "noun",
+      "sections" : "1279-1635",
+      "dependency" : {
+        "pos" : "noun"
+      },
+      "@include" : "./arethusa.sg/sg_labels/cases.json"
+    },
+    "verb" : {
+      "short" : "verb",
+      "long" : "verb",
+      "dependency" : {
+        "pos" : "verb"
+      },
+      "@include" : "./arethusa.sg/sg_labels/verbs.json"
+    },
+    "adv" : {
+      "short" : "adv",
+      "long" : "adverb",
+      "sections" : "1094-1098",
+      "dependency" : {
+        "pos" : "adv"
+      },
+      "@include" : "./arethusa.sg/sg_labels/adverbs.json"
+    },
+    "nrl" : {
+      "short" : "nrl",
+      "long" : "numeral",
+      "sections" : "",
+      "dependency" : {
+        "pos" : "nrl"
+      },
+      "@include" : "./arethusa.sg/sg_labels/numerals.json"
+    }
+  }
+}

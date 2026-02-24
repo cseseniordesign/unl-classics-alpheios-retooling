@@ -1,0 +1,398 @@
+{
+    "nested": {
+        "dpd": {
+            "short": "dpd",
+            "long": "dependent",
+            "italian": "dipendente",
+            "nested": {
+                "prp": {
+                    "short": "prp",
+                    "long": "proper",
+                    "italian": "proprio",
+                    "sections": "1457-1502",
+                    "nested": {
+                        "drc": {
+                            "short": "drc",
+                            "long": "direct complement of verbs",
+                            "italian": "complemento diretto di verbi",
+                            "sections": "1460-1468;1471-1473"
+                        },
+                        "ind": {
+                            "short": "ind",
+                            "long": "indirect complement of verbs",
+                            "italian": "complemento indiretto di verbi",
+                            "sections": "1469-1470;1471-1473"
+                        },
+                        "int": {
+                            "short": "int",
+                            "long": "interest",
+                            "italian": "interesse",
+                            "sections": "1474-1494",
+                            "nested": {
+                                "pss": {
+                                    "short": "pss",
+                                    "long": "possessor",
+                                    "italian": "possessore",
+                                    "sections": "1476-1480"
+                                },
+                                "adv": {
+                                    "short": "adv",
+                                    "long": "advantage",
+                                    "italian": "vantaggio",
+                                    "sections": "1481-1485"
+                                },
+                                "dsd": {
+                                    "short": "dsd",
+                                    "long": "disadvantage",
+                                    "italian": "svantaggio",
+                                    "sections": "1481-1485"
+                                },
+                                "fln": {
+                                    "short": "fln",
+                                    "long": "feeling",
+                                    "italian": "sentimento",
+                                    "sections": "1486"
+                                },
+                                "inc_avr": {
+                                    "short": "inc_avr",
+                                    "long": "with participle of inclination or aversion",
+                                    "italian": "con participio di inclinazione o avversione",
+                                    "sections": "1487"
+                                },
+                                "agn": {
+                                    "short": "agn",
+                                    "long": "agent",
+                                    "italian": "agente",
+                                    "sections": "1488-1494"
+                                },
+                                "nna": {
+                                    "short": "nna",
+                                    "long": "none of the above",
+                                    "italian": "nessuno dei precedenti"
+                                },
+                                "idk": {
+                                    "short": "idk",
+                                    "long": "I do not know",
+                                    "italian": "non so"
+                                }
+                            }
+                        },
+                        "rlt": {
+                            "short": "rlt",
+                            "long": "relation",
+                            "italian": "relazione",
+                            "sections": "1495-1498",
+                            "nested": {
+                                "prp": {
+                                    "short": "prp",
+                                    "long": "proper",
+                                    "italian": "proprio",
+                                    "sections": "1495"
+                                },
+                                "rfr": {
+                                    "short": "rfr",
+                                    "long": "reference",
+                                    "italian": "opinione",
+                                    "sections": "1496-1497"
+                                },
+                                "exp_tmp": {
+                                    "short": "exp_tmp",
+                                    "long": "with a participle of expressing time",
+                                    "sections": "1498"
+                                },
+                                "nna": {
+                                    "short": "nna",
+                                    "long": "none of the above",
+                                    "italian": "nessuno dei precedenti"
+                                },
+                                "idk": {
+                                    "short": "idk",
+                                    "long": "I do not know",
+                                    "italian": "non so"
+                                }
+                            }
+                        },
+                        "nna": {
+                            "short": "nna",
+                            "long": "none of the above",
+                            "italian": "nessuno dei precedenti"
+                        },
+                        "idk": {
+                            "short": "idk",
+                            "long": "I do not know",
+                            "italian": "non so"
+                        }
+                    }
+                },
+                "ins": {
+                    "short": "ins",
+                    "long": "instrumental",
+                    "italian": "strumentale",
+                    "sections": "1503-1529",
+                    "nested": {
+                        "prp": {
+                            "short": "prp",
+                            "long": "proper",
+                            "italian": "proper",
+                            "sections": "1506-1520",
+                            "nested": {
+                                "ins_mns": {
+                                    "short": "ins_mns",
+                                    "long": "instrument or means",
+                                    "italian": "strumento o mezzo",
+                                    "sections": "1507-1511"
+                                },
+                                "stn_jdg": {
+                                    "short": "stn_jdg",
+                                    "long": "standard of judgement",
+                                    "italian": "parametro di giudizio",
+                                    "sections": "1512"
+                                },
+                                "mnn": {
+                                    "short": "mnn",
+                                    "long": "manner",
+                                    "italian": "modo",
+                                    "sections": "1527"
+                                },
+                                "msr_dff": {
+                                    "short": "msr_dff",
+                                    "long": "measure of difference",
+                                    "italian": "misura di differenza",
+                                    "sections": "1513-1515"
+                                },
+                                "rsp": {
+                                    "short": "rsp",
+                                    "long": "respect",
+                                    "italian": "rispetto",
+                                    "sections": "1516"
+                                },
+                                "cau": {
+                                    "short": "cau",
+                                    "long": "cause",
+                                    "italian": "causa",
+                                    "sections": "1517-1520"
+                                },
+                                "nna": {
+                                    "short": "nna",
+                                    "long": "none of the above",
+                                    "italian": "nessuno dei precedenti"
+                                },
+                                "idk": {
+                                    "short": "idk",
+                                    "long": "I do not know",
+                                    "italian": "non so"
+                                }
+                            }
+                        },
+                        "cmt": {
+                            "short": "cmt",
+                            "long": "comitative",
+                            "italian": "comitativo",
+                            "sections": "1521-1528",
+                            "nested": {
+                                "frd_ass": {
+                                    "short": "frd_ass",
+                                    "long": "friendly association",
+                                    "italian": "associazione amichevole",
+                                    "sections": "1523"
+                                },
+                                "hst_ass": {
+                                    "short": "hst_ass",
+                                    "long": "hostile association",
+                                    "italian": "associazione ostile",
+                                    "sections": "1523"
+                                },
+                                "acm": {
+                                    "short": "acm",
+                                    "long": "accompaniment",
+                                    "italian": "accompagnamento",
+                                    "sections": "1524-1526"
+                                },
+                                "acm_crc": {
+                                    "short": "acm_crc",
+                                    "long": "accompanying circumstance",
+                                    "italian": "circostanza accompagnante",
+                                    "sections": "1527"
+                                },
+                                "nna": {
+                                    "short": "nna",
+                                    "long": "none of the above",
+                                    "italian": "nessuno dei precedenti"
+                                },
+                                "idk": {
+                                    "short": "idk",
+                                    "long": "I do not know",
+                                    "italian": "non so"
+                                }
+                            }
+                        },
+                        "nna": {
+                            "short": "nna",
+                            "long": "none of the above",
+                            "italian": "nessuno dei precedenti"
+                        },
+                        "idk": {
+                            "short": "idk",
+                            "long": "I do not know",
+                            "italian": "non so"
+                        }
+                    }
+                },
+                "lcv": {
+                    "short": "lcv",
+                    "long": "locative",
+                    "italian": "locativo",
+                    "sections": "1530-1543",
+                    "nested": {
+                        "plc": {
+                            "short": "plc",
+                            "long": "place",
+                            "italian": "luogo",
+                            "sections": "1531-1538",
+                            "nested": {
+                                "lct": {
+                                    "short": "lct",
+                                    "long": "location",
+                                    "italian": "locazione",
+                                    "@include" : "./arethusa.sg/sg_labels/figurative.json"
+                                },
+                                "drc": {
+                                    "short": "drc",
+                                    "long": "direction",
+                                    "italian": "direzione",
+                                    "@include" : "./arethusa.sg/sg_labels/figurative.json"
+                                },
+                                "pth": {
+                                    "short": "pth",
+                                    "long": "path",
+                                    "italian": "attraverso",
+                                    "@include" : "./arethusa.sg/sg_labels/figurative.json"
+                                },
+                                "nna": {
+                                    "short": "nna",
+                                    "long": "none of the above",
+                                    "italian": "nessuno dei precedenti"
+                                },
+                                "idk": {
+                                    "short": "idk",
+                                    "long": "I do not know",
+                                    "italian": "non so"
+                                }
+                            }
+                        },
+                        "tmp": {
+                            "short": "tmp",
+                            "long": "time",
+                            "italian": "tempo",
+                            "sections": "1539-1543",
+                            "nested": {
+                                "sml_lct": {
+                                    "short": "sml_lct",
+                                    "long": "simultaneous location",
+                                    "italian": "locazione simultanea"
+                                },
+                                "squ_lct": {
+                                    "short": "squ_lct",
+                                    "long": "sequential location",
+                                    "italian": "locazione sequenziale"
+                                },
+                                "squ_drt": {
+                                    "short": "squ_drt",
+                                    "long": "sequential-durative",
+                                    "italian": "sequenziale-durativo"
+                                },
+                                "tmp_dst": {
+                                    "short": "tmp_dst",
+                                    "long": "temporal distance",
+                                    "italian": "distanza temporale"
+                                },
+                                "tmp_ext": {
+                                    "short": "tmp_ext",
+                                    "long": "temporal extent",
+                                    "italian": "estensione temporale"
+                                },
+                                "nna": {
+                                    "short": "nna",
+                                    "long": "none of the above",
+                                    "italian": "nessuno dei precedenti"
+                                },
+                                "idk": {
+                                    "short": "idk",
+                                    "long": "I do not know",
+                                    "italian": "non so"
+                                }
+                            }
+                        },
+                        "nna": {
+                            "short": "nna",
+                            "long": "none of the above",
+                            "italian": "nessuno dei precedenti"
+                        },
+                        "idk": {
+                            "short": "idk",
+                            "long": "I do not know",
+                            "italian": "non so"
+                        }
+                    }
+                },
+                "adp": {
+                    "short": "adp",
+                    "long": "adpositional",
+                    "italian": "adposizionale",
+                    "nested": {
+                        "fnl": {
+                            "short": "fnl",
+                            "long": "purpose",
+                            "italian": "fine"
+                        },
+                        "cnf": {
+                            "short": "cnf",
+                            "long": "conformity",
+                            "italian": "conformità"
+                        },
+                        "prc_val": {
+                            "short": "prc_val",
+                            "long": "price and value",
+                            "italian": "prezzo"
+                        },
+                        "cnd": {
+                            "short": "cnd",
+                            "long": "condition",
+                            "italian": "condizione"
+                        },
+                        "nna": {
+                            "short": "nna",
+                            "long": "none of the above",
+                            "italian": "nessuno dei precedenti"
+                        },
+                        "idk": {
+                            "short": "idk",
+                            "long": "I do not know",
+                            "italian": "non so"
+                        }
+                    }
+                },
+                "nna": {
+                    "short": "nna",
+                    "long": "none of the above",
+                    "italian": "nessuno dei precedenti"
+                },
+                "idk": {
+                    "short": "idk",
+                    "long": "I do not know",
+                    "italian": "non so"
+                }
+            }
+        },
+        "nna": {
+            "short": "nna",
+            "long": "none of the above",
+            "italian": "nessuno dei precedenti"
+        },
+        "idk": {
+            "short": "idk",
+            "long": "I do not know",
+            "italian": "non so"
+        }
+    }
+}

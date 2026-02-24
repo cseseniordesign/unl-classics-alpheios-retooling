@@ -1,0 +1,40 @@
+{
+  "nested" : {
+    "prp" : {
+      "short" : "prp",
+      "long" : "adjective proper",
+      "italian" : "aggettivo proprio",
+      "sections" : "1018-1020"
+    },
+    "sbs" : {
+      "short" : "sbs",
+      "long" : "substantive adjective",
+      "italian" : "aggettivo sostantivato",
+      "sections" : "1021-1029",
+      "@include" : "./arethusa.sg/sg_labels/cases.json"
+    },
+    "vrb_prp" : {
+      "short" : "vrb_prp",
+      "long" : "verbal adjective proper",
+      "italian" : "aggettivo verbale proprio",
+      "sections" : "2149-2152"
+    },
+    "vrb_sbs" : {
+      "short" : "vrb_sbs",
+      "long" : "substantive verbal adjective",
+      "italian" : "aggettivo verbale sostantivato",
+      "sections" : "2149-2152",
+      "@include" : "./arethusa.sg/sg_labels/cases.json"
+    },
+    "nna" : {
+      "short" : "nna",
+      "long" : "none of the above",
+      "italian" : "nessuno dei precedenti"
+    },
+    "idk" : {
+      "short" : "idk",
+      "long" : "I do not know",
+      "italian" : "non so"
+    } 
+  }
+}

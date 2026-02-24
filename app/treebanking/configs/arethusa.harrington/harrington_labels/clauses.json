@@ -1,0 +1,19 @@
+{
+  "nested" : {
+    "ADV" : {
+      "short" : "ADV",
+      "long" : "adverbial",
+      "@include" : "./arethusa.harrington/harrington_labels/adverbial_clauses.json"
+    },
+    "ADJ" : {
+      "short" : "ADJ",
+      "long" : "adjectival",
+      "@include" : "./arethusa.harrington/harrington_labels/adjectival_clauses.json"
+    },
+    "NMN" : {
+      "short" : "NMN",
+      "long" : "nominal",
+      "@include" : "./arethusa.harrington/harrington_labels/nominal_clauses.json"
+    }
+  }
+}

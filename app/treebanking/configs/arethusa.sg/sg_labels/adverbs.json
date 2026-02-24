@@ -1,0 +1,147 @@
+{
+  "nested" : {
+    "tmp" : {
+      "short" : "tmp",
+      "long" : "time",
+      "italian" : "tempo",
+      "nested" : {
+        "sml_lct" : {
+          "short" : "sml_lct",
+          "long" : "simultaneous location",
+          "italian" : "locazione simultanea"
+        },
+        "squ_lct" : {
+          "short" : "squ_lct",
+          "long" : "sequential location",
+          "italian" : "locazione sequenziale"
+        },
+        "squ_drt" : {
+          "short" : "squ_drt",
+          "long" : "sequential-durative",
+          "italian" : "sequenziale-durativo"
+        },
+        "tmp_dst" : {
+          "short" : "tmp_dst",
+          "long" : "temporal distance",
+          "italian" : "distanza temporale"
+        },
+        "tmp_ext" : {
+          "short" : "tmp_ext",
+          "long" : "temporal extent",
+          "italian" : "estensione temporale"
+        },
+        "nna" : {
+          "short" : "nna",
+          "long" : "none of the above",
+          "italian" : "nessuno dei precedenti"
+        },
+        "idk" : {
+          "short" : "idk",
+          "long" : "I do not know",
+          "italian" : "non so"
+        }
+      }
+    },
+    "plc" : {
+      "short" : "plc",
+      "long" : "place",
+      "italian" : "luogo",
+      "nested" : {
+        "lct" : {
+          "short" : "lct",
+          "long" : "location",
+          "italian" : "locazione",
+          "@include" : "./arethusa.sg/sg_labels/figurative.json"
+        },
+        "drc" : {
+          "short" : "drc",
+          "long" : "direction",
+          "italian" : "direzione",
+          "@include" : "./arethusa.sg/sg_labels/figurative.json"
+        },
+        "pth" : {
+          "short" : "pth",
+          "long" : "path",
+          "italian" : "attraverso",
+          "@include" : "./arethusa.sg/sg_labels/figurative.json"
+        },
+        "spr" : {
+          "short" : "spr",
+          "long" : "separation",
+          "italian" : "separazione",
+          "@include" : "./arethusa.sg/sg_labels/figurative.json"
+        },
+        "nna" : {
+          "short" : "nna",
+          "long" : "none of the above",
+          "italian" : "nessuno dei precedenti"
+        },
+        "idk" : {
+          "short" : "idk",
+          "long" : "I do not know",
+          "italian" : "non so"
+        }
+      }
+    },
+    "src" : {
+      "short" : "src",
+      "long" : "source",
+      "italian" : "fonte"
+    },
+    "cau" : {
+      "short" : "cau",
+      "long" : "cause",
+      "italian" : "causa"
+    },
+    "cns" : {
+      "short" : "cns",
+      "long" : "result",
+      "italian" : "risultato"
+    },
+    "mnn" : {
+      "short" : "mnn",
+      "long" : "manner",
+      "italian" : "modo"
+    },
+    "msr" : {
+      "short" : "msr",
+      "long" : "measure",
+      "italian" : "misura"
+    },
+    "ins_mns" : {
+      "short" : "ins_mns",
+      "long" : "instrument or means",
+      "italian" : "strumento o mezzo"
+    },
+    "fnl" : {
+      "short" : "fnl",
+      "long" : "purpose",
+      "italian" : "fine"
+    },
+    "cnc" : {
+      "short" : "cnc",
+      "long" : "concession",
+      "italian" : "concessivo"
+    },
+    "ngt" : {
+      "short" : "ngt",
+      "long" : "negation",
+      "italian" : "negazione"
+    },
+    "prt" : {
+      "short" : "prt",
+      "long" : "particle",
+      "italian" : "particella"
+    },
+    "nna" : {
+      "short" : "nna",
+      "long" : "none of the above",
+      "italian" : "nessuno dei precedenti"
+    },
+    "idk" : {
+      "short" : "idk",
+      "long" : "I do not know",
+      "italian" : "non so"
+    }
+  }
+}

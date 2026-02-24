@@ -1,0 +1,354 @@
+{
+  "nested" : {
+    "dpd" : {
+      "short" : "dpd",
+      "long" : "dependent",
+      "italian" : "dipendente",
+      "nested" : {
+        "art" : {
+          "short" : "art",
+          "long" : "articular",
+          "italian" : "articolare",
+          "nested" : {
+            "nmn" : {
+              "short" : "nmn",
+              "sections" : "2031",
+              "long" : "nominative",
+              "italian" : "nominativo",
+              "@include" : "./arethusa.sg/sg_labels/nominative_cases.json"
+            },
+            "gnt" : {
+              "short" : "gnt",
+              "sections" : "2032",
+              "long" : "genitive",
+              "italian" : "genitivo",
+              "@include" : "./arethusa.sg/sg_labels/genitive_cases.json"
+            },
+            "dtv" : {
+              "short" : "dtv",
+              "sections" : "2033",
+              "long" : "dative",
+              "italian" : "dativo",
+              "@include" : "./arethusa.sg/sg_labels/dative_cases.json"
+            },
+            "acc" : {
+              "short" : "acc",
+              "sections" : "2034",
+              "long" : "accusative",
+              "italian" : "accusativo",
+              "@include" : "./arethusa.sg/sg_labels/accusative_cases.json"
+            },
+            "nna" : {
+              "short" : "nna",
+              "long" : "none of the above",
+              "italian" : "nessuno dei precedenti"
+            },
+            "idk" : {
+              "short" : "idk",
+              "long" : "I do not know",
+              "italian" : "non so"
+            }
+          }
+        },
+        "vrb" : {
+          "short" : "vrb",
+          "long" : "verbal",
+          "italian" : "verbale",
+          "nested" : {
+            "as_nmn" : {
+              "short" : "as_nmn",
+              "long" : "as nominative",
+              "italian" : "come nominativo",
+              "nested" : {
+                "ind" : {
+                  "short" : "ind",
+                  "long" : "in indirect discourse",
+                  "italian" : "nel discorso indiretto", 
+                  "sections" : "2589–2635",
+                  "nested" : {
+                    "stt" : {
+                      "short" : "stt",
+                      "long" : "statement",
+                      "italian" : "asserzione", 
+                      "sections" : "2153"
+                    },  
+                    "ass" : {
+                      "short" : "ass",
+                      "long" : "assumption",
+                      "italian" : "assunzione", 
+                      "sections" : "2154"
+                    },
+                    "cmm" : {
+                      "short" : "cmm",
+                      "long" : "command",
+                      "italian" : "comando", 
+                      "sections" : "2155"
+                    },
+                    "wsh" : {
+                      "short" : "wsh",
+                      "long" : "wish",
+                      "italian" : "desiderio", 
+                      "sections" : "2156"
+                    },
+                    "qst" : {
+                      "short" : "qst",
+                      "long" : "question",
+                      "italian" : "domanda", 
+                      "sections" : "2157"
+                    },
+                    "exc" : {
+                      "short" : "exc",
+                      "long" : "exclamation",
+                      "italian" : "esclamazione", 
+                      "sections" : "2158"
+                    },
+                    "nna" : {
+                      "short" : "nna",
+                      "long" : "none of the above",
+                      "italian" : "nessuno dei precedenti"
+                    },
+                    "idk" : {
+                      "short" : "idk",
+                      "long" : "I do not know",
+                      "italian" : "non so"
+                    }
+                  }
+                },
+                "not_ind" : {
+                  "short" : "not_ind",
+                  "long" : "not in indirect discourse",
+                  "italian" : "non nel discorso indiretto"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "as_acc" : {
+              "short" : "as_acc",
+              "long" : "as accusative",
+              "italian" : "come accusativo",
+              "nested" : {
+                "ind" : {
+                  "short" : "ind",
+                  "long" : "in indirect discourse",
+                  "italian" : "nel discorso indiretto", 
+                  "sections" : "2589–2635",
+                  "nested" : {
+                    "stt" : {
+                      "short" : "stt",
+                      "long" : "statement",
+                      "italian" : "asserzione", 
+                      "sections" : "2153"
+                    },  
+                    "ass" : {
+                      "short" : "ass",
+                      "long" : "assumption",
+                      "italian" : "assunzione", 
+                      "sections" : "2154"
+                    },
+                    "cmm" : {
+                      "short" : "cmm",
+                      "long" : "command",
+                      "italian" : "comando", 
+                      "sections" : "2155"
+                    },
+                    "wsh" : {
+                      "short" : "wsh",
+                      "long" : "wish",
+                      "italian" : "desiderio", 
+                      "sections" : "2156"
+                    },
+                    "qst" : {
+                      "short" : "qst",
+                      "long" : "question",
+                      "italian" : "domanda", 
+                      "sections" : "2157"
+                    },
+                    "exc" : {
+                      "short" : "exc",
+                      "long" : "exclamation",
+                      "italian" : "esclamazione", 
+                      "sections" : "2158"
+                    },
+                    "nna" : {
+                      "short" : "nna",
+                      "long" : "none of the above",
+                      "italian" : "nessuno dei precedenti"
+                    },
+                    "idk" : {
+                      "short" : "idk",
+                      "long" : "I do not know",
+                      "italian" : "non so"
+                    }
+                  }
+                },
+                "not_ind" : {
+                  "short" : "not_ind",
+                  "long" : "not in indirect discourse",
+                  "italian" : "non nel discorso indiretto"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "unc" : {
+              "short" : "unc",
+              "long" : "uncertain case",
+              "italian" : "caso incerto",
+              "nested" : {
+                "fnl" : {
+                  "short" : "fnl",
+                  "long" : "purpose",
+                  "italian" : "fine",
+                  "sections" : "2008-2010"
+                },
+                "cns" : {
+                  "short" : "cns",
+                  "long" : "result",
+                  "italian" : "risultato",
+                  "sections" : "2011"
+                },
+                "tmp" : {
+                  "short" : "tmp",
+                  "long" : "temporal",
+                  "italian" : "temporale",
+                  "sections" : "2453-2461",
+                  "nested" : {
+                    "sml_lct" : {
+                      "short" : "sml_lct",
+                      "long" : "simultaneous location",
+                      "italian" : "locazione simultanea"
+                    },
+                    "squ_lct" : {
+                      "short" : "squ_lct",
+                      "long" : "sequential location",
+                      "italian" : "locazione sequenziale"
+                    },
+                    "squ_drt" : {
+                      "short" : "squ_drt",
+                      "long" : "sequential-durative",
+                      "italian" : "sequenziale-durativo"
+                    },
+                    "tmp_dst" : {
+                      "short" : "tmp_dst",
+                     "long" : "temporal distance",
+                      "italian" : "distanza temporale"
+                    },
+                    "tmp_ext" : {
+                      "short" : "tmp_ext",
+                      "long" : "temporal extent",
+                      "italian" : "estensione temporale"
+                    },
+                    "nna" : {
+                      "short" : "nna",
+                      "long" : "none of the above",
+                      "italian" : "nessuno dei precedenti"
+                    },
+                    "idk" : {
+                      "short" : "idk",
+                      "long" : "I do not know",
+                      "italian" : "non so"
+                    }
+                  }
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "nna" : {
+              "short" : "nna",
+              "long" : "none of the above",
+              "italian" : "nessuno dei precedenti"
+            },
+            "idk" : {
+            "short" : "idk",
+            "long" : "I do not know",
+            "italian" : "non so"
+            }
+          }
+        },
+        "nna" : {
+          "short" : "nna",
+          "long" : "none of the above",
+          "italian" : "nessuno dei precedenti"
+        },
+        "idk" : {
+          "short" : "idk",
+          "long" : "I do not know",
+          "italian" : "non so"
+        }  
+      }  
+    },
+    "ind" : {
+      "short" : "ind",
+      "long" : "independent",
+      "italian" : "indipendente",
+      "nested" : {
+        "cmm" : {
+          "short" : "cmm",
+          "long" : "command",
+          "italian" : "comando"
+        },
+        "wsh" : {
+          "short" : "wsh",
+          "long" : "wish",
+          "italian" : "desiderio"
+        },
+        "exc" : {
+          "short" : "exc",
+          "long" : "exclamation",
+          "italian" : "esclamazione"
+        },
+        "abs" : {
+          "short" : "abs",
+          "long" : "absolute",
+          "italian" : "assoluto"
+        },
+        "nna" : {
+          "short" : "nna",
+          "long" : "none of the above",
+          "italian" : "nessuno dei precedenti"
+        },
+        "idk" : {
+          "short" : "idk",
+          "long" : "I do not know",
+          "italian" : "non so"
+        }
+      }
+    },
+    "nna" : {
+      "short" : "nna",
+      "long" : "none of the above",
+      "italian" : "nessuno dei precedenti"
+    },
+    "idk" : {
+      "short" : "idk",
+      "long" : "I do not know",
+      "italian" : "non so"
+    }
+  }
+}

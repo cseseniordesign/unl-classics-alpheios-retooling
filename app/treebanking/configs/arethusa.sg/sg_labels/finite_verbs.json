@@ -1,0 +1,773 @@
+{
+  "nested" : {
+    "ind" : {
+      "short" : "ind",
+      "long" : "independent",
+      "italian" : "indipendente",
+      "nested" : {
+        "stt" : {
+          "short" : "stt",
+          "long" : "statement",
+          "italian" : "asserzione", 
+          "sections" : "2153"
+        },  
+        "ass" : {
+          "short" : "ass",
+          "long" : "assumption",
+          "italian" : "assunzione", 
+          "sections" : "2154"
+        },
+        "cmm" : {
+          "short" : "cmm",
+          "long" : "command",
+          "italian" : "comando", 
+          "sections" : "2155"
+        },
+        "wsh" : {
+          "short" : "wsh",
+          "long" : "wish",
+          "italian" : "desiderio", 
+          "sections" : "2156"
+        },
+        "qst" : {
+          "short" : "qst",
+          "long" : "question",
+          "italian" : "domanda", 
+          "sections" : "2157"
+        },
+        "exc" : {
+          "short" : "exc",
+          "long" : "exclamation",
+          "italian" : "esclamazione", 
+          "sections" : "2158"
+        },
+        "nna" : {
+          "short" : "nna",
+          "long" : "none of the above",
+          "italian" : "nessuno dei precedenti"
+        },
+        "idk" : {
+          "short" : "idk",
+          "long" : "I do not know",
+          "italian" : "non so"
+        }
+      }
+    },
+    "dpn" : {
+      "short" : "dpn",
+      "long" : "dependent",
+      "italian" : "dipendente",
+      "nested" : {
+        "sbs_cls" : {
+          "short" : "sbs_cls",
+          "long" : "substantive clause",
+          "italian" : "proposizione sostantiva",
+          "nested" : {
+            "stt" : {
+             "short" : "stt",
+             "long" : "statement",
+             "italian" : "asserzione", 
+             "sections" : "2576–2588",
+             "nested" : {
+                "ind" : {
+                  "short" : "ind",
+                  "long" : "in indirect discourse",
+                  "italian" : "nel discorso indiretto", 
+                  "sections" : "2589–2635"
+                },
+                "not_ind" : {
+                  "short" : "not_ind",
+                  "long" : "not in indirect discourse",
+                  "italian" : "non nel discorso indiretto"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "wll_dsr" : {
+              "short" : "wll_dsr",
+              "long" : "will or desire",
+              "sections" : " 2207–2239",
+              "nested" : {
+                "ind" : {
+                  "short" : "ind",
+                  "long" : "in indirect discourse",
+                  "italian" : "nel discorso indiretto", 
+                  "sections" : "2589–2635"
+                },
+                "not_ind" : {
+                  "short" : "not_ind",
+                  "long" : "not in indirect discourse",
+                  "italian" : "non nel discorso indiretto"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "qst" : {
+              "short" : "qst",
+              "long" : "question",
+              "italian" : "domanda", 
+              "sections" : " 2663–2680",
+              "nested" : {
+                "ind" : {
+                  "short" : "ind",
+                  "long" : "in indirect discourse",
+                  "italian" : "nel discorso indiretto", 
+                  "sections" : "2589–2635"
+                },
+                "not_ind" : {
+                  "short" : "not_ind",
+                  "long" : "not in indirect discourse",
+                  "italian" : "non nel discorso indiretto"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "exc" : {
+              "short" : "exc",
+              "long" : "exclamation",
+              "italian" : "esclamazione", 
+              "sections" : " 2681–2687",
+              "nested" : {
+                "ind" : {
+                  "short" : "ind",
+                  "long" : "in indirect discourse",
+                  "italian" : "nel discorso indiretto", 
+                  "sections" : "2589–2635"
+                },
+                "not_ind" : {
+                  "short" : "not_ind",
+                  "long" : "not in indirect discourse",
+                  "italian" : "non nel discorso indiretto"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "nna" : {
+             "short" : "nna",
+             "long" : "none of the above",
+             "italian" : "nessuno dei precedenti"
+            },
+            "idk" : {
+             "short" : "idk",
+             "long" : "I do not know",
+             "italian" : "non so"
+            }
+          }
+        },
+        "adj_cls" : {
+          "short" : "adj_cls",
+          "long" : "adjective clause",
+          "italian" : "proposizione aggettiva",
+          "nested" : {
+            "prp" : {
+              "short" : "prp",
+              "long" : "adjective clause proper",
+              "italian" : "proposizione aggettiva propria",
+              "nested" : {
+                "ord" : {
+                  "short" : "ord",
+                  "long" : "ordinary relative clause",
+                  "italian" : "relativa ordinaria",
+                  "sections" : "2553",
+                  "nested" : {
+                    "ind" : {
+                      "short" : "ind",
+                      "long" : "in indirect discourse",
+                      "italian" : "nel discorso indiretto", 
+                      "sections" : "2589–2635"
+                    },
+                    "not_ind" : {
+                      "short" : "not_ind",
+                      "long" : "not in indirect discourse",
+                      "italian" : "non nel discorso indiretto"
+                    },
+                    "nna" : {
+                      "short" : "nna",
+                      "long" : "none of the above",
+                      "italian" : "nessuno dei precedenti"
+                    },
+                    "idk" : {
+                      "short" : "idk",
+                      "long" : "I do not know",
+                      "italian" : "non so"
+                    }
+                  }
+                },
+                "fnl" : {
+                  "short" : "fnl",
+                  "long" : "final relative clause",
+                  "italian" : "relativa finale",
+                  "sections" : "2554",
+                  "nested" : {
+                    "ind" : {
+                      "short" : "ind",
+                      "long" : "in indirect discourse",
+                      "italian" : "nel discorso indiretto", 
+                      "sections" : "2589–2635"
+                    },
+                    "not_ind" : {
+                      "short" : "not_ind",
+                      "long" : "not in indirect discourse",
+                      "italian" : "non nel discorso indiretto"
+                    },
+                    "nna" : {
+                      "short" : "nna",
+                      "long" : "none of the above",
+                      "italian" : "nessuno dei precedenti"
+                    },
+                    "idk" : {
+                      "short" : "idk",
+                      "long" : "I do not know",
+                      "italian" : "non so"
+                    }
+                  }
+                },
+                "cau" : {
+                  "short" : "cau",
+                  "long" : "cause relative clause",
+                  "italian" : "relativa causale",
+                  "sections" : "2555",
+                  "nested" : {
+                    "ind" : {
+                      "short" : "ind",
+                      "long" : "in indirect discourse",
+                      "italian" : "nel discorso indiretto", 
+                      "sections" : "2589–2635"
+                    },
+                    "not_ind" : {
+                      "short" : "not_ind",
+                      "long" : "not in indirect discourse",
+                      "italian" : "non nel discorso indiretto"
+                    },
+                    "nna" : {
+                      "short" : "nna",
+                      "long" : "none of the above",
+                      "italian" : "nessuno dei precedenti"
+                    },
+                    "idk" : {
+                      "short" : "idk",
+                      "long" : "I do not know",
+                      "italian" : "non so"
+                    }
+                  }
+                },
+                "cns" : {
+                  "short" : "cns",
+                  "long" : "consecutive relative clause",
+                  "italian" : "relativa consecutiva",
+                  "sections" : " 2556–2559",
+                  "nested" : {
+                    "ind" : {
+                      "short" : "ind",
+                      "long" : "in indirect discourse",
+                      "italian" : "nel discorso indiretto", 
+                      "sections" : "2589–2635"
+                    },
+                    "not_ind" : {
+                      "short" : "not_ind",
+                      "long" : "not in indirect discourse",
+                      "italian" : "non nel discorso indiretto"
+                    },
+                    "nna" : {
+                      "short" : "nna",
+                      "long" : "none of the above",
+                      "italian" : "nessuno dei precedenti"
+                    },
+                    "idk" : {
+                      "short" : "idk",
+                      "long" : "I do not know",
+                      "italian" : "non so"
+                    }
+                  }
+                },
+                "cnd" : {
+                  "short" : "cnd",
+                  "long" : "conditional relative clause",
+                  "italian" : "relativa condizionale",
+                  "sections" : "2560–2573",
+                  "nested" : {
+                    "ind" : {
+                      "short" : "ind",
+                      "long" : "in indirect discourse",
+                      "italian" : "nel discorso indiretto", 
+                      "sections" : "2589–2635"
+                    },
+                    "not_ind" : {
+                      "short" : "not_ind",
+                      "long" : "not in indirect discourse",
+                      "italian" : "non nel discorso indiretto"
+                    },
+                    "nna" : {
+                      "short" : "nna",
+                      "long" : "none of the above",
+                      "italian" : "nessuno dei precedenti"
+                    },
+                    "idk" : {
+                      "short" : "idk",
+                      "long" : "I do not know",
+                      "italian" : "non so"
+                    }
+                  }
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "sbs" : {
+             "short" : "sbs",
+             "long" : "substantivized adjective clause",
+             "italian" : "proposizione aggettiva sostantivizzata",
+             "nested" : {
+                "ind" : {
+                  "short" : "ind",
+                  "long" : "in indirect discourse",
+                  "italian" : "nel discorso indiretto", 
+                  "sections" : "2589–2635",
+                  "@include" : "./arethusa.sg/sg_labels/cases.json"
+                },
+                "not_ind" : {
+                  "short" : "not_ind",
+                  "long" : "not in indirect discourse",
+                  "italian" : "non nel discorso indiretto",
+                  "@include" : "./arethusa.sg/sg_labels/cases.json"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "nna" : {
+             "short" : "nna",
+             "long" : "none of the above",
+             "italian" : "nessuno dei precedenti"
+            },
+            "idk" : {
+             "short" : "idk",
+             "long" : "I do not know",
+             "italian" : "non so"
+            }
+          }
+        },
+        "adv_cls" : {
+          "short" : "adv_cls",
+          "long" : "adverb clause",
+          "nested" : {
+            "fnl" : {
+              "short" : "fnl",
+              "long" : "final clause",
+              "italian" : "proposizione finale",
+              "sections" : "2193–2206",
+              "nested" : {
+                "ind" : {
+                  "short" : "ind",
+                  "long" : "in indirect discourse",
+                  "italian" : "nel discorso indiretto", 
+                  "sections" : "2589–2635"
+                },
+                "not_ind" : {
+                  "short" : "not_ind",
+                  "long" : "not in indirect discourse",
+                  "italian" : "non nel discorso indiretto"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "cau" : {
+              "short" : "cau",
+              "long" : "causal clause",
+              "italian" : "proposizione causale",
+              "sections" : "2240–2248",
+              "nested" : {
+                "ind" : {
+                  "short" : "ind",
+                  "long" : "in indirect discourse",
+                  "italian" : "nel discorso indiretto", 
+                  "sections" : "2589–2635"
+                },
+                "not_ind" : {
+                  "short" : "not_ind",
+                  "long" : "not in indirect discourse",
+                  "italian" : "non nel discorso indiretto"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "cns" : {
+              "short" : "cns",
+              "long" : "consecutive clause",
+              "italian" : "proposizione consecutiva",
+              "sections" : "2249–2278",
+              "nested" : {
+                "ind" : {
+                  "short" : "ind",
+                  "long" : "in indirect discourse",
+                  "italian" : "nel discorso indiretto", 
+                  "sections" : "2589–2635"
+                },
+                "not_ind" : {
+                  "short" : "not_ind",
+                  "long" : "not in indirect discourse",
+                  "italian" : "non nel discorso indiretto"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "cnd" : {
+              "short" : "cnd",
+              "long" : "conditional clause",
+              "italian" : "proposizione condizionale",
+              "sections" : "2280–2368",
+              "nested" : {
+                "ind" : {
+                  "short" : "ind",
+                  "long" : "in indirect discourse",
+                  "italian" : "nel discorso indiretto", 
+                  "sections" : "2589–2635"
+                },
+                "not_ind" : {
+                  "short" : "not_ind",
+                  "long" : "not in indirect discourse",
+                  "italian" : "non nel discorso indiretto"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "cnc" : {
+              "short" : "cnc",
+              "long" : "concessive clause",
+              "italian" : "proposizione concessiva",
+              "sections" : "2369–2382",
+              "nested" : {
+                "ind" : {
+                  "short" : "ind",
+                  "long" : "in indirect discourse",
+                  "italian" : "nel discorso indiretto", 
+                  "sections" : "2589–2635"
+                },
+                "not_ind" : {
+                  "short" : "not_ind",
+                  "long" : "not in indirect discourse",
+                  "italian" : "non nel discorso indiretto"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "tmp" : {
+              "short" : "tmp",
+              "long" : "temporal clause",
+              "italian" : "proposizione temporale",
+              "sections" : "2383–2461",
+              "nested" : {
+                "sml_lct" : {
+                  "short" : "sml_lct",
+                  "long" : "simultaneous location",
+                  "italian" : "locazione simultanea",
+                  "nested" : {
+                    "ind" : {
+                      "short" : "ind",
+                      "long" : "in indirect discourse",
+                      "italian" : "nel discorso indiretto", 
+                      "sections" : "2589–2635"
+                    },
+                    "not_ind" : {
+                      "short" : "not_ind",
+                      "long" : "not in indirect discourse",
+                      "italian" : "non nel discorso indiretto"
+                    },
+                    "nna" : {
+                      "short" : "nna",
+                      "long" : "none of the above",
+                      "italian" : "nessuno dei precedenti"
+                    },
+                    "idk" : {
+                      "short" : "idk",
+                      "long" : "I do not know",
+                      "italian" : "non so"
+                    }
+                  }
+                },
+                "squ_lct" : {
+                  "short" : "squ_lct",
+                  "long" : "sequential location",
+                  "italian" : "locazione sequenziale",
+                  "nested" : {
+                    "ind" : {
+                      "short" : "ind",
+                      "long" : "in indirect discourse",
+                      "italian" : "nel discorso indiretto", 
+                      "sections" : "2589–2635"
+                    },
+                    "not_ind" : {
+                      "short" : "not_ind",
+                      "long" : "not in indirect discourse",
+                      "italian" : "non nel discorso indiretto"
+                    },
+                    "nna" : {
+                      "short" : "nna",
+                      "long" : "none of the above",
+                      "italian" : "nessuno dei precedenti"
+                    },
+                    "idk" : {
+                      "short" : "idk",
+                      "long" : "I do not know",
+                      "italian" : "non so"
+                    }
+                  }
+                },
+                "squ_drt" : {
+                  "short" : "squ_drt",
+                  "long" : "sequential-durative",
+                  "italian" : "sequenziale-durativo",
+                  "nested" : {
+                    "ind" : {
+                      "short" : "ind",
+                      "long" : "in indirect discourse",
+                      "italian" : "nel discorso indiretto", 
+                      "sections" : "2589–2635"
+                    },
+                    "not_ind" : {
+                      "short" : "not_ind",
+                      "long" : "not in indirect discourse",
+                      "italian" : "non nel discorso indiretto"
+                    },
+                    "nna" : {
+                      "short" : "nna",
+                      "long" : "none of the above",
+                      "italian" : "nessuno dei precedenti"
+                    },
+                    "idk" : {
+                      "short" : "idk",
+                      "long" : "I do not know",
+                      "italian" : "non so"
+                    }
+                  }
+                },
+                "tmp_dst" : {
+                  "short" : "tmp_dst",
+                  "long" : "temporal distance",
+                  "italian" : "distanza temporale",
+                  "nested" : {
+                    "ind" : {
+                      "short" : "ind",
+                      "long" : "in indirect discourse",
+                      "italian" : "nel discorso indiretto", 
+                      "sections" : "2589–2635"
+                    },
+                    "not_ind" : {
+                      "short" : "not_ind",
+                      "long" : "not in indirect discourse",
+                      "italian" : "non nel discorso indiretto"
+                    },
+                    "nna" : {
+                      "short" : "nna",
+                      "long" : "none of the above",
+                      "italian" : "nessuno dei precedenti"
+                    },
+                    "idk" : {
+                      "short" : "idk",
+                      "long" : "I do not know",
+                      "italian" : "non so"
+                    }
+                  }
+                },
+                "tmp_ext" : {
+                  "short" : "tmp_ext",
+                  "long" : "temporal extent",
+                  "italian" : "estensione temporale",
+                  "nested" : {
+                    "ind" : {
+                      "short" : "ind",
+                      "long" : "in indirect discourse",
+                      "italian" : "nel discorso indiretto", 
+                      "sections" : "2589–2635"
+                    },
+                    "not_ind" : {
+                      "short" : "not_ind",
+                      "long" : "not in indirect discourse",
+                      "italian" : "non nel discorso indiretto"
+                    },
+                    "nna" : {
+                      "short" : "nna",
+                      "long" : "none of the above",
+                      "italian" : "nessuno dei precedenti"
+                    },
+                    "idk" : {
+                      "short" : "idk",
+                      "long" : "I do not know",
+                      "italian" : "non so"
+                    }
+                  }
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "cmp" : {
+              "short" : "cmp",
+              "long" : "clause of comparison",
+              "italian" : "proposizione comparativa",
+              "sections" : "2462–2487",
+              "nested" : {
+                "ind" : {
+                  "short" : "ind",
+                  "long" : "in indirect discourse",
+                  "italian" : "nel discorso indiretto", 
+                  "sections" : "2589–2635"
+                },
+                "not_ind" : {
+                  "short" : "not_ind",
+                  "long" : "not in indirect discourse",
+                  "italian" : "non nel discorso indiretto"
+                },
+                "nna" : {
+                  "short" : "nna",
+                  "long" : "none of the above",
+                  "italian" : "nessuno dei precedenti"
+                },
+                "idk" : {
+                  "short" : "idk",
+                  "long" : "I do not know",
+                  "italian" : "non so"
+                }
+              }
+            },
+            "nna" : {
+              "short" : "nna",
+              "long" : "none of the above",
+              "italian" : "nessuno dei precedenti"
+            },
+            "idk" : {
+              "short" : "idk",
+              "long" : "I do not know",
+              "italian" : "non so"
+            }
+          }
+        },
+        "nna" : {
+          "short" : "nna",
+          "long" : "none of the above",
+          "italian" : "nessuno dei precedenti"
+        },
+        "idk" : {
+          "short" : "idk",
+          "long" : "I do not know",
+          "italian" : "non so"
+        }
+      } 
+    },
+    "nna" : {
+      "short" : "nna",
+      "long" : "none of the above",
+      "italian" : "nessuno dei precedenti"
+    },
+    "idk" : {
+      "short" : "idk",
+      "long" : "I do not know",
+      "italian" : "non so"
+    }
+  }
+}

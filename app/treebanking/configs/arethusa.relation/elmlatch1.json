@@ -1,0 +1,64 @@
+{
+  "relations": {
+    "labels": {
+      "Sbj": {
+        "short": "Sbj",
+        "long": "subject"
+      },
+      "Poss": {
+        "short": "Poss",
+        "long": "possessive"
+      },
+      "DirObj": {
+        "short": "DirObj",
+        "long": "direct obj"
+      },
+      "IndObj": {
+        "short": "IndObj",
+        "long": "Indirect obj"
+      },
+      "Prep": {
+        "short": "Prep",
+        "long": "preposition"
+      },
+      "ObPrep": {
+        "short": "ObPrep",
+        "long": "obj of prep"
+      },
+      "Mns": {
+        "short": "Mns",
+        "long": "means"
+      },
+      "Acmp": {
+        "short": "Acmp",
+        "long": "accompaniment"
+      },
+      "Sepr": {
+        "short": "Sepr",
+        "long": "separation"
+      },
+      "COORD": {
+        "short": "COORD",
+        "long": "coordinator"
+      },
+      "Adr": {
+        "short": "Adr",
+        "long": "address"
+      }
+    },
+    "suffixes": {
+      "AP": {
+        "short": "AP",
+        "long": ""
+      },
+      "CO": {
+        "short": "CO",
+        "long": ""
+      },
+      "AP_CO": {
+        "short": "AP_CO",
+        "long": ""
+      }
+    }
+  }
+}

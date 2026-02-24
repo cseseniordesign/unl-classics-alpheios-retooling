@@ -1,0 +1,60 @@
+{
+  "nested" : {
+          "AuxC" : {
+            "short" : "AuxC",
+            "long" : "conjunction",
+            "style" : {
+              "color" : "deeppink"
+            }
+          },
+          "AuxP" : {
+            "short" : "AuxP",
+            "long" : "preposition",
+            "style" : {
+              "color" : "green"
+            }
+          },
+          "AuxV" : {
+            "short" : "AuxV",
+            "long" : "auxiliary verb",
+            "style" : {
+              "color" : "rgb(70, 96, 235)"
+            }
+          },
+          "AuxY" : {
+            "short" : "AuxY",
+            "long" : "sentence adverbial",
+            "style" : {
+              "color" : "rgb(139, 211, 31)"
+            }
+          },
+          "AuxZ" : {
+            "short" : "AuxZ",
+            "long" : "emphasizing particle",
+            "style" : {
+              "color" : "rgb(216, 57, 159)"
+            }
+          },
+          "AuxG" : {
+            "short" : "AuxG",
+            "long" : "bracketing punctuation",
+            "style" : {
+              "color" : "black"
+            }
+          },
+          "AuxK" : {
+            "short" : "AuxK",
+            "long" : "terminal punctuation",
+            "style" : {
+              "color" : "black"
+            }
+          },
+          "AuxX" : {
+            "short" : "AuxX",
+            "long" : "comma",
+            "style" : {
+              "color" : "black"
+            }
+          }      
+    }
+}

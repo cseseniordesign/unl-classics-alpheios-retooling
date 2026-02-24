@@ -1,0 +1,1 @@
+{"plugins": {"relation": {"@include": "./arethusa.relation/rel.lyonLatin.json"}, "morph": {"@include": "./arethusa.morph/lat_attributes.json", "retrievers": {"BspMorphRetriever": {"resource": "newMorphologyServiceLat"}}}}}

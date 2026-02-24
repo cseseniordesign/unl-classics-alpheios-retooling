@@ -1,0 +1,25 @@
+{
+  "nested" : {
+    "INF-COMP" : {
+      "short" : "INF-COMP",
+      "long" : "complimentary infinitive"
+    },
+    "INF-HIST" : {
+      "short" : "INF-HIST",
+      "long" : "historical infinitive"
+    },
+    "INF-EXPL" : {
+      "short" : "INF-EXPL",
+      "long" : "explanatory infinitive"
+    },
+    "INF-PURP" : {
+      "short" : "INF-PURP",
+      "long" : "infinitive of purpose"
+    },
+    "INF-EXCLAM" : {
+      "short" : "INF-EXCLAM",
+      "long" : "exclamatory infinitive"
+    }
+  }
+}
+

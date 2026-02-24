@@ -1,0 +1,19 @@
+{
+  "nested" : {
+    "ADV" : {
+      "short" : "ADV",
+      "long" : "adverbial",
+      "@include" : "./arethusa.harrington/harrington_labels/greek-adverbial_clauses.json"
+    },
+    "ADJ" : {
+      "short" : "ADJ",
+      "long" : "adjectival",
+      "@include" : "./arethusa.harrington/harrington_labels/greek-adjectival_clauses.json"
+    },
+    "NMN" : {
+      "short" : "NMN",
+      "long" : "nominal",
+      "@include" : "./arethusa.harrington/harrington_labels/greek-nominal_clauses.json"
+    }
+  }
+}

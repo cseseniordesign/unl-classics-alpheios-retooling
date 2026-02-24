@@ -1,0 +1,24 @@
+{
+  "main": {
+    "plugins" : [
+      "text",
+      "relation",
+      "history",
+      "comments",
+      "search"
+    ]
+  },
+  "plugins": {
+    "morph" : {
+      "noRetrieval" : "online",
+      "retrievers" : {
+        "BspMorphRetriever" : {
+          "resource" : "newMorphologyServiceLat"
+        }
+      }
+    },
+    "relation" : {
+      "@include" : "./arethusa.relation/vortex.json"
+    }
+  }
+}

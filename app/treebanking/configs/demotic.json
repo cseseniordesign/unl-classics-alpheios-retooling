@@ -1,0 +1,13 @@
+{
+  "plugins": {
+    "morph" : {
+      "noRetrieval" : "online",
+      "gloss" : true,
+      "additionalFields" : true,
+      "@include" : "./arethusa.morph/demotic_attributes.json"
+    },
+    "relation" : {
+      "@include" : "./arethusa.relation/demotic_relations.json"
+    }
+  }
+}

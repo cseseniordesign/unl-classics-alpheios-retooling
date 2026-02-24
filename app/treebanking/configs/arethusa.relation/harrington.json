@@ -1,0 +1,149 @@
+{
+  "relations" : {
+    "labels" : {
+      "BASIC" : {
+        "short" : "BASIC",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/basic.json"
+      },
+      "AUX" : {
+        "short" : "Aux",
+        "long" : "auxiliary",
+        "@include" : "./arethusa.harrington/harrington_labels/aux.json"
+      },
+      "ATR" : {
+        "short" : "ATR",
+        "long" : "attribute",
+        "style" : {
+          "color" : "blue"
+        }
+      },
+      "ADV" : {
+        "short" : "ADV",
+        "long" : "adverbial",
+        "style" : {
+          "color" : "darkorange"
+        }
+      },
+      "COORD" : {
+        "short" : "COORD",
+        "long" : "coordinator",
+        "style" : {
+          "color" : "rgb(154, 130, 206)"
+        }
+      },
+      "APOS" : {
+        "short" : "APOS",
+        "long" : "apposing element",
+        "style" : {
+          "color" : "rgb(7, 95, 39)"
+          }
+      },
+      "nominative" : {
+        "short" : "nominative",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/nominative_cases.json"
+      },
+      "genitive" : {
+        "short" : "genitive",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/genetive_cases.json"
+      },
+      "dative" : {
+        "short" : "dative",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/dative_cases.json"
+      },
+      "accusative" : {
+        "short" : "accusative",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/accusative_cases.json"
+      },
+      "ablative" : {
+        "short" : "ablative",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/ablative_cases.json"
+      },
+      "vocative" : {
+        "short" : "V-VOC",
+        "long" : "vocative"
+      },
+      "locative" : {
+        "short" : "L-LOCAT",
+        "long" : "locative"
+      },
+      "adjectival clause" : {
+        "short" : "adjectival clause",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/adjectival_clauses.json"
+      },
+      "adverbial clause" : {
+        "short" : "adverbial clause",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/adverbial_clauses.json"
+      },
+      "nominal clause" : {
+        "short" : "nominal clause",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/nominal_clauses.json"
+      },
+      "infinitive_uses" : {
+        "short" : "infinitive uses",
+        "long" : "",
+        "@include" : "./arethusa.harrington/harrington_labels/infinitive_uses.json"
+      }
+    },
+    "suffixes" : {
+      "CO" : {
+        "short" : "CO",
+        "long" : ""
+      },
+      "AP" : {
+        "short" : "AP",
+        "long" : ""
+      },
+      "SBJ" : {
+        "short" : "SBJ",
+        "long" : "",
+        "nested" : {
+         "SUBJ-CO" : {
+           "short" : "SUBJ-CO",
+           "long" : "coordinated subject"
+         },
+         "SUBJ-AP" : {
+           "short" : "SUBJ-AP",
+           "long" : "subjecte in apposition"
+         }
+        }
+      },
+      "PRED" : {
+        "short" : "PRED",
+        "long" : "",
+        "nested" : {
+          "PRED-CO" : {
+           "short" : "PRED-CO",
+           "long" : "coordinated predicate"
+           },
+           "PRED-AP" : {
+             "short" : "PRED-AP",
+             "long" : "predicate in apposition"
+           }
+        }
+      },
+      "OBJ" : {
+        "short" : "OBJ",
+        "long" : "",
+        "nested" : {
+          "OBJ-CO" : {
+            "short" : "OBJ-CO",
+            "long" : "coordinated object"
+          },
+          "OBJ-AP" : {
+            "short" : "OBJ-AP",
+            "long" : "object in apposition"
+          }
+        }
+      }
+    }
+  }
+}

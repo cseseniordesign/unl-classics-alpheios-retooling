@@ -1,0 +1,96 @@
+{
+  "relations": {
+    "labels": {
+      "MnVb": {
+        "short": "MnVb",
+        "long": "main verb"
+      },
+      "Sbj": {
+        "short": "Sbj",
+        "long": "subject"
+      },
+      "PrNom": {
+        "short": "PrNom",
+        "long": "predicate nominal"
+      },
+      "Atr": {
+        "short": "Atr",
+        "long": "attribute"
+      },
+      "Adv": {
+        "short": "Adv",
+        "long": "adverbial"
+      },
+      "SntAdv": {
+        "short": "SntAdv",
+        "long": "sentence adverbial"
+      },
+      "Poss": {
+        "short": "Poss",
+        "long": "possessive"
+      },
+      "DirObj": {
+        "short": "DirObj",
+        "long": "direct obj"
+      },
+      "IndObj": {
+        "short": "IndObj",
+        "long": "Indirect obj"
+      },
+      "Prep": {
+        "short": "Prep",
+        "long": "preposition"
+      },
+      "ObPrep": {
+        "short": "ObPrep",
+        "long": "obj of prep"
+      },
+      "Mns": {
+        "short": "Mns",
+        "long": "means"
+      },
+      "Mnr": {
+        "short": "Mnr",
+        "long": "manner"
+      },
+      "Time": {
+        "short": "Time",
+        "long": "TimeWhenOrWithin"
+      },
+      "CmplCl": {
+        "short": "CmplCl",
+        "long": "complement clause"
+      },
+      "RelCl": {
+        "short": "RelCl",
+        "long": "relative clause"
+      },
+      "COORD": {
+        "short": "COORD",
+        "long": "coordinator"
+      },
+      "APOS": {
+        "short": "APOS",
+        "long": "appossitor"
+      },
+      "Adr": {
+        "short": "Adr",
+        "long": "address"
+      }
+    },
+    "suffixes": {
+      "AP": {
+        "short": "AP",
+        "long": ""
+      },
+      "CO": {
+        "short": "CO",
+        "long": ""
+      },
+      "AP_CO": {
+        "short": "AP_CO",
+        "long": ""
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+	"plugins": {
+		"morph": {
+			"@include" : "./arethusa.morph/turkish_morph.json"
+		},
+		"relation": {
+			"@include": "./arethusa.relation/turkish_relation.json"
+		}
+	}
+}

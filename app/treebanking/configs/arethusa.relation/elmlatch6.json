@@ -1,0 +1,165 @@
+{"relations": {
+    "labels": {
+        "MnVb": {
+            "short": "MnVb",
+            "long": "main verb"
+        },
+        "Sbj": {
+            "short": "Sbj",
+            "long": "subject"
+        },
+        "Atr": {
+            "short": "Atr",
+            "long": "attribute"
+        },
+        "Adv": {
+            "short": "Adv",
+            "long": "adverbial"
+        },
+        "Pnom": {
+            "short": "Pnom",
+            "long": "predicate nom"
+        },
+        "C-Phr": {
+            "short": "C-Phr",
+            "long": "complement phrase"
+        },
+        "Poss": {
+            "short": "Poss",
+            "long": "possessive"
+        },
+        "DirObj": {
+            "short": "DirObj",
+            "long": "direct obj"   
+        },
+        
+        "PlceTo": {
+            "short": "PlceTo",
+            "long": "place to"
+        },
+        
+        "IndObj": {
+            "short": "IndObj",
+            "long": "Indirect obj"
+        },
+        "Ref": {
+            "short": "Ref",
+            "long": "reference"
+        },
+        "Prep": {
+            "short": "Prep",
+            "long": "preposition"
+        },
+        "ObPrep": {
+            "short": "ObPrep",
+            "long": "obj of prep"
+        },
+        "Mns": {
+            "short": "Mns",
+            "long": "means"
+        },
+        "Mnr": {
+            "short": "Mnr",
+            "long": "manner"
+        },
+        "Acmp": {
+            "short": "Acmp",
+            "long": "accompaniment"
+        },
+              
+        "Sepr": {
+            "short": "Sepr",
+            "long": "separation"
+        },
+        
+         "PlceFr": {
+            "short": "PlceFr",
+            "long": "place from"
+        },
+        
+        "PlceAt": {
+            "short": "PlceAt",
+            "long": "place where"
+        },
+        
+        "Rsp": {
+            "short": "Rsp",
+            "long": "respect"
+        },
+        
+        "Caus": {
+            "short": "Caus",
+            "long": "cause"
+        },
+        
+        "APOS": {
+            "short": "APOS",
+            "long": "apposing element"
+        },
+        "COORD": {
+            "short": "COORD",
+            "long": "coordinator"
+        },
+        "SubConj": {
+            "short": "SubConj",
+            "long": "subordinating conj"
+        },
+        "SntAdv": {
+            "short": "SntAdv",
+            "long": "sentence adv"
+        },
+        "Adr": {
+            "short": "Adr",
+            "long": "address"
+        },
+        "AuxZ": {
+            "short": "AuxZ",
+            "long": "AuxZ (emph)"
+        },
+        
+        "AuxV": {
+            "short": "AuxV",
+            "long": "auxiliary verb)"
+        },        
+        
+        "C-Cl": {
+            "short": "C-Cl",
+            "long": "complement cl"
+        },
+        "Tmp-Cl": {
+            "short": "Tmp-Cl",
+            "long": "temporal cl"
+        },
+        "Circ-Cl": {
+            "short": "Circ-Cl",
+            "long": "circumstance cl"
+        },
+        "Caus-Cl": {
+            "short": "Caus-Cl",
+            "long": "causal cl"
+        },
+        "Cond-Cl": {
+            "short": "Cond-Cl",
+            "long": "conditional cl"
+        },
+        "Conc-Cl": {
+            "short": "Conc-Cl",
+            "long": "concessive cl"
+        }
+        
+    },
+    "suffixes": {
+        "AP": {
+            "short": "AP",
+            "long": ""
+        },
+        "CO": {
+            "short": "CO",
+            "long": ""
+        },
+        "AP_CO": {
+            "short": "AP_CO",
+            "long": ""
+        }
+    }
+}}

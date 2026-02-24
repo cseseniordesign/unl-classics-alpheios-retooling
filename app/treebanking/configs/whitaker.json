@@ -1,0 +1,12 @@
+{
+  "plugins" : {
+    "morph" : {
+      "retrievers" : {
+        "BspMorphRetriever" : {
+          "resource" : "morphologyServiceLat2"
+        }
+      },
+      "@include" : "./arethusa.morph/lat_attributes.json"
+    }
+  }
+}

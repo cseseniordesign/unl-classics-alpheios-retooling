@@ -1,0 +1,48 @@
+{
+  "nested" : {
+    "D-IO" : {
+      "short" : "D-IO",
+      "long" : "dative indirect object"
+    },
+    "D-INTER" : {
+      "short" : "D-INTER",
+      "long" : "dative of interest"
+    },
+    "D-POSS" : {
+      "short" : "D-POSS",
+      "long" : "dative of possessive"
+    },
+    "D-REFER" : {
+      "short" : "D-REFER",
+      "long" : "dative of reference"
+    },
+    "D-AGENT" : {
+      "short" : "D-AGENT",
+      "long" : "dative of agent"
+    },
+    "D-LOCAT" : {
+      "short" : "D-LOCAT",
+      "long" : "dative of location"
+    },
+    "D-RESPECT" : {
+      "short" : "D-RESPECT",
+      "long" : "dative of respect"
+    },
+    "D-ACCOMP" : {
+      "short" : "D-ACCOMP",
+      "long" : "dative of accompaniment"
+    },
+    "D-MEANS" : {
+      "short" : "D-MEANS",
+      "long" : "dative of means"
+    },
+    "D-MANN" : {
+      "short" : "D-MANN",
+      "long" : "dative of manner"
+    },
+    "D-DEGDIF" : {
+      "short" : "D-DEGDIF",
+      "long" : "dative of degree of difference"
+    } 
+  }
+}

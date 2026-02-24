@@ -1,0 +1,24 @@
+{
+    "nested": {
+        "cnc": {
+            "short": "cnc",
+            "long": "concrete",
+            "italian": "concreto"
+        },
+        "fgr": {
+            "short": "fgr",
+            "long": "figurative",
+            "italian": "figurato"
+        },
+        "nna": {
+            "short": "nna",
+            "long": "none of the above",
+            "italian": "nessuno dei precedenti"
+        },
+        "idk": {
+            "short": "idk",
+            "long": "I do not know",
+            "italian": "non so"
+        }
+    }
+}

@@ -1,0 +1,16 @@
+{
+  "nested" : {
+    "ADJ-RC" : {
+      "short" : "ADJ-RC",
+      "long" : "relative clause"
+    },
+    "ADJ-RCCHAR" : {
+      "short" : "ADJ-RCCHAR",
+      "long" : "relative clause of characteristic"
+    },
+    "ADJ-RCINDSTAT" : {
+      "short" : "ADJ-RCINDSTAT",
+      "long" : "relative clause within indirect statement"
+    }
+  }
+}

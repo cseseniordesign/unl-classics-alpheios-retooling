@@ -1,0 +1,42 @@
+{
+  "nested" : {
+    "NOM-SUBST" : {
+      "short" : "NOM-SUBST",
+      "long" : "substantive noun clause"
+    },
+    "NOM-FEARCL" : {
+      "short" : "NOM-FEARCL",
+      "long" : "fear clause"
+    },
+    "NOM-INDQUES" : {
+      "short" : "NOM-INDQUES",
+      "long" : "indirect question"
+    },
+    "NOM-INDSTAT" : {
+      "short" : "NOM-INDSTAT",
+      "long" : "indirect statement"
+    },
+    "NOM-DIRSTAT" : {
+      "short" : "NOM-DIRSTAT",
+      "long" : "direct statement",
+      "nested": {
+        "NOM-DS-HORT": {
+          "short": "NOM-DS-HORT",
+          "long": "Hortatory Subjunctive in Direct Statement"
+        },
+        "NOM-DS-DELIB": {
+          "short": "NOM-DS-DELIB",
+          "long": "Deliberative Subjunctive in Direct Statement"
+        },
+        "NOM-DS-POTENT": {
+          "short": "NOM-DS-POTENT",
+          "long": "Potential Subjunctive in Direct Statement"
+        },
+        "NOM-DS-OPT": {
+          "short": "NOM-DS-OPT",
+          "long": "Optative Subjunctive in Direct Statement"
+        }
+      }
+    }
+  }
+}

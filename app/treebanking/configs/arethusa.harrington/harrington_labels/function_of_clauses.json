@@ -1,0 +1,19 @@
+{
+  "nested" : {
+    "SUBJ" : {
+      "short" : "SUBJ",
+      "long" : "as subject",
+      "@include" : "./arethusa.harrington/harrington_labels/clauses.json"
+    },
+    "OBJ" : {
+      "short" : "OBJ",
+      "long" : "as object",
+      "@include" : "./arethusa.harrington/harrington_labels/clauses.json"
+    },
+    "PRED" : {
+      "short" : "PRED",
+      "long" : "as predicate",
+      "@include" : "./arethusa.harrington/harrington_labels/clauses.json"
+    }
+  }
+}

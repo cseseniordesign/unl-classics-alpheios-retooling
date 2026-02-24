@@ -1,0 +1,16 @@
+{
+  "plugins": {
+    "morph" : {
+      "noRetrieval" : "online",
+      "retrievers" : {
+        "BspMorphRetriever" : {
+          "resource" : "newMorphologyServiceLat"
+ }
+      },
+      "@include" : "./arethusa.morph/lattest_attributes.json"
+      },
+    "relation" : {
+      "@include" : "./arethusa.relation/testlat.json"
+    }
+  }
+}
