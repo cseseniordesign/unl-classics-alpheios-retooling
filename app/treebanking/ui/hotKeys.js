@@ -22,8 +22,15 @@ export function setupEscapeHotkey() {
       const hasId       = !!window.currentSelectedWordId;
       const hasFirstClick =
         window.selectedWordId !== null && window.selectedWordId !== undefined;
+      
+      const hasBatch = window.batchSelection && window.batchSelection.size > 0;
 
-      if (hasTokenSel || hasNodeSel || hasId || hasFirstClick) {
+      if (hasTokenSel || hasNodeSel || hasId || hasFirstClick || hasBatch) {
+        // clear batch selection state
+        if (window.batchSelection && typeof window.batchSelection.clear === 'function') {
+          window.batchSelection.clear();
+        }
+
         if (typeof window.resetSelection === 'function') {
           window.resetSelection();
         }

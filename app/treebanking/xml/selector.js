@@ -317,6 +317,43 @@ function handleSelectClick() {
     suffixDropdown.classList.remove("open");
   });
 
+  // Public reset so None/ESC can clear the Selector tab UI
+  window.resetSelectorUI = function resetSelectorUI() {
+    // Clear selection model
+    window.batchSelection?.clear();
+
+    // IMPORTANT: reset internal state so next click becomes the “first click”
+    if (typeof window.resetSelection === "function") {
+      window.resetSelection();
+    } else {
+      document.querySelectorAll(".token.selected, .token.highlight")
+        .forEach(t => t.classList.remove("selected", "highlight"));
+      if (typeof d3 !== "undefined") {
+        d3.selectAll(".node.selected, .node.highlight")
+          .classed("selected", false)
+          .classed("highlight", false);
+      }
+    }
+
+    // Clear selector inputs (if selector tab is open)
+    const tokenInput = document.querySelector(".token-input");
+    const formInput  = document.querySelector(".form-input");
+    if (tokenInput) tokenInput.value = "";
+    if (formInput)  formInput.value  = "";
+
+    // Clear persisted input values you use to restore text
+    window.selectorInputValue = "";
+    window.formInputValue = "";
+
+    // Clear “Found Tokens” list
+    const found = document.querySelector(".found-tokens");
+    if (found) found.replaceChildren();
+
+    // Banner refresh
+    if (typeof updateTreebankSelectionBanner === "function") {
+      updateTreebankSelectionBanner();
+    }
+  };
 
   updateFoundTokens();
   handleTokens();

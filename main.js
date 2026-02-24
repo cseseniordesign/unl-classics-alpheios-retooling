@@ -138,18 +138,56 @@ function setupNoneButton() {
       const selectedNodes = d3.selectAll('.node.selected');
       console.log('Found selected nodes:', selectedNodes.size());
         
-      // Now try to clear
+      // Clear batch first
       window.batchSelection?.clear();
-        
-      selectedElements.forEach(element => {
-        console.log('Removing selected from:', element);
-        element.classList.remove('selected');
-      });
+
+      if (typeof window.resetSelection === "function") {
+        window.resetSelection();
+      } else {
+        document.querySelectorAll(".token.selected, .token.highlight")
+          .forEach(el => el.classList.remove("selected", "highlight"));
+        if (typeof d3 !== "undefined") {
+          d3.selectAll(".node.selected, .node.highlight")
+            .classed("selected", false)
+            .classed("highlight", false);
+        }
+      }
         
       d3.selectAll('.node.selected').classed('selected', false);
         
       console.log('After clear - batchSelection size:', window.batchSelection?.size);
       updateTreebankSelectionBanner();
+
+      // ---------------------------------------------------------
+      // Clear tool UIs that depend on selection (Morph + Relation)
+      // ---------------------------------------------------------
+
+      // Morph
+      if (window.isMorphActive) {
+        const pinned = document.getElementById('morph-pinned');
+        const hover  = document.getElementById('morph-hover');
+        if (pinned) pinned.innerHTML = `<p style="padding:8px;">Click a word to view morphological info.</p>`;
+        if (hover)  hover.innerHTML  = '';
+      }
+
+      // Relation
+      if (window.isRelationActive) {
+        const pinned = document.getElementById('relation-pinned');
+        const hover  = document.getElementById('relation-hover');
+        if (pinned) pinned.innerHTML = `<p style="padding:8px;">Click a word to edit its dependency relation.</p>`;
+        if (hover)  hover.innerHTML  = '';
+      }
+
+      // Selector
+      if (typeof window.resetSelectorUI === "function") {
+        window.resetSelectorUI();
+      } else {
+        // Selector tab may not be initialized/open; at least clear found list if present
+        const found = document.querySelector(".found-tokens");
+        if (found) found.replaceChildren();
+        window.selectorInputValue = "";
+        window.formInputValue = "";
+      }
     });
   }
 }
