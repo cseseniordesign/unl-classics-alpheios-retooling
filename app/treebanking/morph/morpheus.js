@@ -17,18 +17,33 @@ function val(obj, path) {
  * Returns one flat result object per <infl> in ALL lemma entries.
  */
 export async function fetchMorphology(word, lang) {
+  //Default to Morpheus, but allow override
+  const defaultBase = "https://services.perseids.org/bsp/morphologyservice/analysis/word";
+  
+  // Retrieve custom address from window state or localStorage
+  const customAddress = window.customMorphServiceAddress || localStorage.getItem('customMorphService');
+  
+  const baseServiceUrl = customAddress || defaultBase;
+  
   const engine = lang === "grc" ? "morpheusgrc" : "morpheuslat";
-  const url = `https://services.perseids.org/bsp/morphologyservice/analysis/word?lang=${lang}&engine=${engine}&word=${encodeURIComponent(word)}`;
+  
+  const url = `${baseServiceUrl}?lang=${lang}&engine=${engine}&word=${encodeURIComponent(word)}`;
 
-  const response = await fetch(url);
-  const rawText = await response.text();
-
-  let json;
+  try {
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      enterReadOnly();
+      throw new Error(`Service Error: ${response.status}`);
+    }
+    const rawText = await response.text();
+    
+    let json;
   try {
     json = JSON.parse(rawText);
   } catch (err) {
     console.error("Failed to parse JSON from Morpheus:", err, rawText);
-    return [];
+    return false;
   }
 
   const results = [];
@@ -100,6 +115,11 @@ export async function fetchMorphology(word, lang) {
   }
 
   return results;
+    
+  } catch (err) {
+    console.error("Morphology Service Connection Failed:", err);
+    throw err;
+  }
 }
 
 // Expose for console testing

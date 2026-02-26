@@ -1,4 +1,4 @@
-import { colorForPOS, fitTreeToView } from './treeUtils.js';
+import { colorForPOS, fitTreeToView} from './treeUtils.js';
 import {handleWordClick} from '../ui/sentenceDisplay.js'
 import { setupWordHoverSync } from './hoverSync.js';
 window.selectedWordId = null; // keeps track of first clicked node

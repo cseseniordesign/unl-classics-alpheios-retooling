@@ -432,7 +432,9 @@ html, body{
   transition: opacity 0.2s ease, transform 0.1s ease;
   height: 30px;
 }
-
+#sentence-select {
+  width: auto;
+}
 .nav-btn:hover:not(:disabled) {
   opacity: 1;
   transform: scale(1.08);
@@ -1413,6 +1415,7 @@ body.mode-relation #tool-body {
   padding: 0 15px;
   height: 40px;
 }
+
 .batch-token-btn {
   background: none;
   border: none;
@@ -1421,6 +1424,22 @@ body.mode-relation #tool-body {
 .batch-token-btn:hover {
   background-color: lightblue;
 }
+#alternateBtn {
+  font-size: 16px;
+  background-color: #0a7e8c;
+  border-radius: 8px;
+  margin: 10px;
+}
+.morph-config {
+  display: none;
+}
+.morph-config.hidden {
+  display: none;
+}
+.morph-config.block {
+  display: block;
+}
+
 .morph-gear-btn{
   position: absolute;
   top: 6px;          

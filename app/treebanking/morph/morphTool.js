@@ -82,6 +82,14 @@ export function setupMorphTool() {
       morphBtn.style.backgroundColor = 'green';
 
       toolBody.innerHTML = `
+        <button id="alternateBtn">Alternate Morph</button>
+        <div class="morph-config">
+          <label for="morph-service-url">Alternative Microservice Address:</label>
+          <input type="text" id="morph-service-url" placeholder="https://custom-service.org/api">
+          <button id="save-morph-config">Save</button>
+          <button id="clear-morph-config">Reset to Default</button>
+        </div>
+
         <div id="morph-panel">
           <div id="morph-pinned" class="morph-slot">
             <p style="padding:8px;">Click a word to view morphological info.</p>
@@ -89,7 +97,8 @@ export function setupMorphTool() {
           <div id="morph-hover" class="morph-slot"></div>
         </div>
       `;
-
+      handleAlternateMorphConfig();
+      
       // --- mount gear + dropdown as children of toolBody (top-right of the tool box) ---
       toolBody.insertAdjacentHTML("beforeend", `
         <button id="morph-settings-btn" type="button" class="morph-gear-btn" aria-label="Settings">
@@ -197,6 +206,46 @@ export function setupMorphTool() {
   });
 }
 
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: handleAlternateMorphConfig
+ * --------------------------------------------------------------------------
+ * Enables the "Morph" tab on the right-hand toolbar.
+ * When the Morph button is active, clicking a word displays its morph info.
+ * --------------------------------------------------------------------------
+ */
+function handleAlternateMorphConfig() {
+  //handle alternate morph config
+      const alternateBtn = document.getElementById("alternateBtn")
+      alternateBtn.addEventListener("click", ()=> {
+        const morphConfig = document.querySelector(".morph-config");
+        morphConfig.classList.toggle("block")
+      }) 
+      const inputField = document.getElementById('morph-service-url');
+
+      // Load saved value on init
+      inputField.value = localStorage.getItem('customMorphService') || "";
+
+      document.getElementById('save-morph-config').addEventListener('click', () => {
+        const url = inputField.value.trim();
+        if (url && confirm(` Are you sure you want to switch morphology service to ${url}?`)) {
+          localStorage.setItem('customMorphService', url);
+          window.customMorphServiceAddress = url;
+          //enable preselect to inform user if the service is valid
+          preselectMissingMorphForCurrentSentence();
+        }
+        else {
+          inputField.value = "";
+        }
+      });
+
+      document.getElementById('clear-morph-config').addEventListener('click', () => {
+        //User can clear custom address to revert back to default
+        localStorage.removeItem('customMorphService');
+        window.customMorphServiceAddress = null;
+        inputField.value = "";
+});
+}
 export function applyActiveSelectionToWord(word) {
   const af = Number(word.activeForm);
   word.activeForm = Number.isFinite(af) ? af : -1;  
@@ -344,8 +393,8 @@ export async function preselectMissingMorphForCurrentSentence(toolBody = null) {
   }
 
   let changed = 0;
-
-  for (const word of sentence.words) {
+  try{
+    for (const word of sentence.words) {
     // Ensure doc snapshot exists so we can detect "already has morph"
     ensureDocumentSnapshot(word);
 
@@ -387,6 +436,16 @@ export async function preselectMissingMorphForCurrentSentence(toolBody = null) {
     triggerAutoSave();
     console.log(`[Preselect] Applied first morph to ${changed} word(s).`);
   }
+  }
+  catch(err){
+    const inputField = document.getElementById('morph-service-url');
+    console.error("Batch halted:", err);
+    alert("Morphology service is unreachable. Reverting to default.");
+    localStorage.removeItem('customMorphService');
+    window.customMorphServiceAddress = null;
+    inputField.value = "";
+  }
+  
 }
 
 // =====================================================
@@ -1123,31 +1182,28 @@ async function attachMorpheusSuggestions(word, toolBody) {
 
   let results = [];
   let usedQuery = '';
-
   try {
-    // 1) surface
+    // 1) Try surface
     if (surfaceRaw) {
-      usedQuery = surfaceRaw;
       results = await fetchMorphology(surfaceRaw, lang);
     }
 
-    // 2) cleaned surface
+    // 2) Try cleaned surface
     if ((!results || results.length === 0) && cleanedSurface && cleanedSurface !== surfaceRaw) {
-      usedQuery = cleanedSurface;
       results = await fetchMorphology(cleanedSurface, lang);
     }
 
-    // 3) lemma fallback
+    // 3) Try lemma fallback
     if ((!results || results.length === 0) && lemmaRaw) {
-      usedQuery = lemmaRaw;
       results = await fetchMorphology(lemmaRaw, lang);
     }
+
+    
   } catch (err) {
-    console.error('[Morph] Morpheus fetch failed for', usedQuery || surfaceRaw || lemmaRaw, err);
-    word._morpheusLoading = false;
-    // IMPORTANT: do NOT mark loaded; allow retry later
-    return;
-  }
+    // If fetchMorphology threw an error (like a 404 or connection refused)
+    // we re-throw it so the BATCH loop knows to stop.
+    throw err; 
+}
 
   // If still nothing, allow retry later (don’t permanently lock out)
   if (!Array.isArray(results) || results.length === 0) {
@@ -1196,7 +1252,7 @@ async function attachMorpheusSuggestions(word, toolBody) {
   }
 
   word._morpheusLoading = false;
-}
+} 
 
 function wireMorphSettingsUI(toolBody) {
   const settingsBtn = toolBody.querySelector('#morph-settings-btn');
@@ -1249,7 +1305,7 @@ function wireMorphSettingsUI(toolBody) {
     // If we *do* want it to persist across refresh, then uncomment:
     // localStorage.setItem('morphPreselectEnabled', enabled ? 'true' : 'false');
 
-    if (enabled) {
+    if (enabled) {     
       await preselectMissingMorphForCurrentSentence(toolBody);
       try { triggerAutoSave(); } catch {}
     }
