@@ -33,7 +33,6 @@ export async function fetchMorphology(word, lang) {
     const response = await fetch(url);
     
     if (!response.ok) {
-      enterReadOnly();
       throw new Error(`Service Error: ${response.status}`);
     }
     const rawText = await response.text();
