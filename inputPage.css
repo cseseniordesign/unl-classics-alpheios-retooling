@@ -259,3 +259,74 @@ a {
   pointer-events: none;
   z-index: 1000;
 }
+
+.ts-wrapper {
+  margin-bottom: 10px;
+}
+
+.ts-label {
+  display: block;
+  font-size: 0.78rem;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ts-row {
+  display: flex;
+  gap: 0;
+}
+
+.ts-select {
+  width: 100%;
+  padding: 5px 8px;
+  font-size: 0.88rem;
+  font-family: Arial, sans-serif;
+  border: 2px solid darkgray;
+  border-radius: 5px;
+  background: #fff;
+  color: #222;
+  cursor: pointer;
+}
+
+.ts-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px lightgray;
+}
+
+.ts-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+  align-items: center;
+  font-size: 0.75rem;
+  color: #555;
+  margin-top: 4px;
+}
+
+.ts-sep {
+  color: #bbb;
+}
+
+.ts-beta {
+  background: #e08c00;
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: bold;
+  padding: 1px 5px;
+  border-radius: 3px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ts-status {
+  min-height: 1.2em;
+  font-size: 0.78rem;
+  margin-top: 3px;
+}
+
+.ts-status--loading { color: #555; font-style: italic; }
+.ts-status--success { color: #2a7a3b; font-weight: 600; }
+.ts-status--error   { color: #c0392b; font-weight: 600; }

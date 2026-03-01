@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -49,14 +48,16 @@
         <p>or</p>
 
         <div class="URL-box">
-          <textarea class="URL-input" title="URL Input" rows="1" cols="50" placeholder= "Enter URL of the Treebank Template"></textarea>
+          <textarea class="URL-input" title="URL Input" rows="1" cols="50" placeholder="Enter URL of the Treebank Template"></textarea>
           <button class="enter-url-btn" type="submit" title="Enter URL" aria-label="Enter URL">Enter URL</button>
         </div>
-
       </div>
     </div>
 
     <div id="input-manipulation">
+
+      <div id="tagset-selector-root"></div>
+
       <fieldset class="lang-btns">
         <legend>Language</legend>
         <input type="radio" id="lang-grc" name="lang" value="grc">
@@ -79,11 +80,12 @@
         <label for="ltr">Left to Right</label>
         <input type="radio" id="rtl" name="direction" value="rlt">
         <label for="rtl">Right to Left</label>
-      </fieldset> 
-      
+      </fieldset>
+
       <button type="submit" class="edit-button" id="editBtn">Edit</button>
     </div>
   </div>
+
   <div id="toast"></div>
 </body>
 <script type="module" src="/app/treebanking/input/input.js"></script>
