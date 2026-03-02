@@ -266,11 +266,8 @@ a {
 
 .ts-label {
   display: block;
-  font-size: 0.78rem;
   font-weight: bold;
-  color: #333;
   margin-bottom: 4px;
-  text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
