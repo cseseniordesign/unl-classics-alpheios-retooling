@@ -246,12 +246,12 @@ a {
 }
 
 #toast {
-  position: absolute;
-  top: 235.5px;        /* fixed vertical position */
-  right: 355px;       /* fixed from right */
+  position: fixed;
+  bottom: 20px;        
+  right: 20px;       
   background-color: #e85146;
   color: white;
-  padding: 10px 16px;
+  padding: 12px 16px;
   border-radius: 6px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.2);
   opacity: 0;
@@ -330,3 +330,61 @@ a {
 .ts-status--loading { color: #555; font-style: italic; }
 .ts-status--success { color: #2a7a3b; font-weight: 600; }
 .ts-status--error   { color: #c0392b; font-weight: 600; }
+
+#advanced-container {
+  margin-top: 2%;
+  margin-left: 13px;
+  font-size: medium;
+}
+
+#toggleAdvanced {
+  color: #008CBA;
+  font-style: italic;
+  cursor: pointer;
+  display: inline-block;
+  font-size: smaller;
+  font-size: 0.85rem;
+}
+
+#toggleAdvanced:hover {
+  text-decoration: underline;
+  color: #82878b;
+}
+
+.advanced-options {
+  font-size: smaller;
+  font-weight: bold;
+  font-family: "Arial", sans-serif;
+  padding: 5px;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 1s ease;
+  opacity: 0;
+}
+
+.advanced-options.open {
+  max-height: 500px;
+  opacity: 1;
+}
+
+.save-default-btn {
+  margin: 2px 0;
+  padding: 2px 12px;
+  font-size: 12px;
+  border: 2px solid #ccc;
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  border-radius: 8px;
+  outline: none;
+  height: 32px;
+  box-sizing: border-box;
+  background: #008CBA;
+  color: white;
+}
+
+.save-default-btn:hover {
+  background-color: #82878b;
+  opacity: 1;
+  transform: translateY(0);
+  transition-duration: .35s;
+}

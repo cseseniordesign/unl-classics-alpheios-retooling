@@ -1,9 +1,27 @@
 import { showToast } from '/main.js'
 import { getActiveTagset } from '/app/treebanking/tags/tagsetStore.js';
 import { initTagsetSelector } from '/app/treebanking/tags/tagsetSelector.js';
+import { isValidLLTResponse } from '../xml/tokenizer.js';
 
 // Attach click event after input page loads for the edit button
 document.getElementById("editBtn").addEventListener("click", sendSentence);
+
+// Toggles advanced options section
+document.getElementById("toggleAdvanced").addEventListener("click", () => {
+  document.getElementById("advancedOptions").classList.toggle("open")
+});
+
+// Loads previously saved tokenizer (if any)
+document.addEventListener("DOMContentLoaded", () => {
+  const saved = localStorage.getItem("tokenizer-URL");
+  if (saved) {
+    document.getElementById("tokenizer-URL").value = saved;
+  }
+});
+
+// Save and Reset buttons
+document.getElementById("saveTokenizer").addEventListener("click", handleSave);
+document.getElementById("resetTokenizer").addEventListener("click", handleReset);
 
 /**
  * --------------------------------------------------------------------------
@@ -66,3 +84,66 @@ function sendSentence() {
       }
     }
   });
+  
+  /**
+ * --------------------------------------------------------------------------
+ * FUNCTION: handleSave
+ * --------------------------------------------------------------------------
+ * Handles save button, validates service, and saves URL if valid
+ */
+async function handleSave() {
+  const url = document.getElementById("tokenizer-URL").value.trim();
+  
+  if (!url) {
+    showToast("Please enter a URL.");
+    return;
+  }
+
+  try {
+    await validateTokenizer(url);
+    localStorage.setItem("tokenizer-URL", url);
+    showToast("Tokenizer service saved sucessfully.");
+  } catch (err) {
+    showToast("Invalid Tokenizer Service: " + err.message);
+  }
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: handleReset
+ * --------------------------------------------------------------------------
+ * Handles reset button click, clears storage, and clears input
+ */
+function handleReset() {
+  localStorage.removeItem("tokenizer-URL");
+  document.getElementById("tokenizer-URL").value = "";
+  showToast("Tokenizer Service Reset to Default");
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: validateTokenizer
+ * --------------------------------------------------------------------------
+ * Validates tokenizer service
+ */
+async function validateTokenizer(url) {
+  const testResponse = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: "text=test",
+  });
+
+  if (!testResponse.ok) {
+    throw new Error("Service returned " + testResponse.status);
+  }
+
+  const xmlText = await testResponse.text();
+
+  if (!isValidLLTResponse(xmlText)) {
+    throw new Error("Response is not LLT-compatible XML.");
+  }
+
+  return true;
+}

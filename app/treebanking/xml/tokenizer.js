@@ -1,13 +1,61 @@
 import parseTreeBankXML from "./parser.js";
 import { getLanguage } from "../input/language.js";
 
+export const default_tokenizer = `https://services.perseids.org/llt/segtok`;
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: getTokenizer
+ * --------------------------------------------------------------------------
+ * Returns a user's custom tokenizer URL or defaults to the LLT services
+ * 
+ * @returns {string} - tokenizer URL
+ */
+export function getTokenizer() {
+  return localStorage.getItem("tokenizer-URL") || default_tokenizer;
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: isValidLLTResponse
+ * --------------------------------------------------------------------------
+ * Performs basic validation of whether the provided XML string conforms to 
+ * the LLT schema by checking the presence of sentence and token elements
+ * 
+ * NOTE: This does not perform full schema validation
+ * 
+ * @param {string} - XML string response from tokenization service
+ * @returns {boolean} - True if XML response appears structurally valid
+ */
+export function isValidLLTResponse(xmlString) {
+  const parser = new DOMParser();
+  const xmlText = parser.parseFromString(xmlString, "text/xml");
+
+  const parserError = xmlText.getElementsByTagName("parsererror");
+  if (parserError.length > 0) {
+    return false;
+  }
+
+  const sentences = xmlText.getElementsByTagName("s");
+  if (sentences.length === 0) {
+    return false;
+  }
+
+  const tokens = xmlText.getElementsByTagName("w");
+  if (tokens.length === 0) {
+    return false;
+  }
+
+  return true;
+}
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: tokenizer
  * --------------------------------------------------------------------------
- * Connects to Perseids LLT services (outputs segmented and tokenized XML), 
- * parses user input into a normalized XML and returns an array object of 
- * parsed sentences
+ * Connects to default Perseids LLT services (outputs segmented and tokenized 
+ * XML) or custom tokenizer, parses user input into a normalized XML and 
+ * returns an array object of parsed sentences
  * 
  * @param {string} input - user input sentence
  * @returns {Array<Object>} - parsed sentences
@@ -15,8 +63,7 @@ import { getLanguage } from "../input/language.js";
 export async function tokenizer(input) {
   const encoded = encodeURIComponent(input);
 
-  const response = await fetch(
-    `https://services.perseids.org/llt/segtok`,
+  const response = await fetch(getTokenizer(),
     {
       method: "POST",
       headers: {
@@ -27,10 +74,14 @@ export async function tokenizer(input) {
   );
 
   if (!response.ok) {
-    throw new Error("LLT service failed: " + response.status);
+    throw new Error("Tokenizer Service Failed: " + response.status);
   }
 
   const xmlText = await response.text(); // outputs XML (different structure than internal model)
+
+  if (!isValidLLTResponse) {
+    throw new error ("Invalid LLT-compatible XML.");
+  }
 
   // normalize XML and parse into array object
   const newXML = normalizeXML(xmlText);
