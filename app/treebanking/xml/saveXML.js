@@ -167,7 +167,7 @@ function getTreebankMetaForSave() {
   const version = meta.version || "1.5";
 
   // required, unknown languages get a predictable placeholder:
-  const format = meta.format || `morph${xmlLang}`;
+  const format = localStorage.getItem("activeTagsetId");
 
   const xmlnsSaxon = meta.xmlnsSaxon || "http://saxon.sf.net/";
 
