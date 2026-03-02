@@ -869,7 +869,5 @@ window.renderRelationInfo = function (wordOrWords, opts = {}) {
   // Normal single (no advanced header present)
   renderRelationEditor(words[0], root);
 };
-
-
   window.renderRelationEditor = window.renderRelationInfo;
 }
