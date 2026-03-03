@@ -89,7 +89,7 @@ export async function tokenizer(input) {
 
   parsedSentences.forEach(sentence => {
     sentence.words.forEach(word => {
-      const punctuationMarks = [",", ".", "·", ";", ":"];
+      const punctuationMarks = [",", ".", "·", ";", ":", "?", "!", "...", "-", "(", ")", "`", "'", '"', "«", "»"];
       if (punctuationMarks.includes(word.form)) {
         word.head = 0;
         word.relation = "AuxX";
