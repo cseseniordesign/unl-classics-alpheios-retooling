@@ -120,7 +120,6 @@ export function setupMorphTool() {
       morphBtn.style.backgroundColor = 'green';
 
       toolBody.innerHTML = `
-        <button id="alternateBtn">Alternate Morph</button>
         <div class="morph-config">
           <label for="morph-service-url">Alternative Microservice Address:</label>
           <input type="text" id="morph-service-url" placeholder="https://custom-service.org/api">
@@ -135,7 +134,6 @@ export function setupMorphTool() {
           <div id="morph-hover" class="morph-slot"></div>
         </div>
       `;
-      handleAlternateMorphConfig();
       
       // --- mount gear + dropdown as children of toolBody (top-right of the tool box) ---
       toolBody.insertAdjacentHTML("beforeend", `
@@ -174,9 +172,14 @@ export function setupMorphTool() {
             <input type="checkbox" id="morph-preselect-checkbox" />
             <span>Preselect</span>
           </label>
+          
+           <label style="display:flex; gap:10px; align-items:center; margin:0;">
+            <input type="checkbox" id="alternate-morph-checkbox" />
+            <span>Alternate Morph</span>
+          </label>
         </div>
       `);
-
+      handleAlternateMorphConfig(toolBody);
       wireMorphSettingsUI(toolBody);
 
       // If there are already selected nodes BEFORE opening Morph,
@@ -248,40 +251,42 @@ export function setupMorphTool() {
  * --------------------------------------------------------------------------
  * FUNCTION: handleAlternateMorphConfig
  * --------------------------------------------------------------------------
- * Enables the "Morph" tab on the right-hand toolbar.
- * When the Morph button is active, clicking a word displays its morph info.
+ * Toggles dropdown area for alternate morph url input 
+ * Handles switching morpholgy service
  * --------------------------------------------------------------------------
  */
-function handleAlternateMorphConfig() {
-  //handle alternate morph config
-      const alternateBtn = document.getElementById("alternateBtn")
-      alternateBtn.addEventListener("click", ()=> {
-        const morphConfig = document.querySelector(".morph-config");
-        morphConfig.classList.toggle("block")
-      }) 
-      const inputField = document.getElementById('morph-service-url');
+function handleAlternateMorphConfig(toolBody) {
+  const alternateCb = toolBody.querySelector("#alternate-morph-checkbox")
+  
+  alternateCb.addEventListener("click", ()=> {
+    const morphConfig = document.querySelector(".morph-config");
+    morphConfig.classList.toggle("block");
+    const settingsBox = toolBody.querySelector('#morph-settings');
+    settingsBox.style.display = "none";
+  }) 
+  const inputField = document.getElementById('morph-service-url');
 
-      // Load saved value on init
-      inputField.value = localStorage.getItem('customMorphService') || "";
+  // Load saved value on init
+  inputField.value = localStorage.getItem('customMorphService') || "";
 
-      document.getElementById('save-morph-config').addEventListener('click', () => {
-        const url = inputField.value.trim();
-        if (url && confirm(` Are you sure you want to switch morphology service to ${url}?`)) {
-          localStorage.setItem('customMorphService', url);
-          window.customMorphServiceAddress = url;
-          //enable preselect to inform user if the service is valid
-          preselectMissingMorphForCurrentSentence();
-        }
-        else {
-          inputField.value = "";
-        }
-      });
+  document.getElementById('save-morph-config').addEventListener('click', () => {
+    const url = inputField.value.trim();
+    if (url && confirm(` Are you sure you want to switch morphology service to ${url}?`)) {
+      localStorage.setItem('customMorphService', url);
+      window.customMorphServiceAddress = url;
+      //enable preselect to inform user if the service is valid
+      preselectMissingMorphForCurrentSentence();
+    }
+    else {
+      inputField.value = "";
+    }
+  });
 
-      document.getElementById('clear-morph-config').addEventListener('click', () => {
-        //User can clear custom address to revert back to default
-        localStorage.removeItem('customMorphService');
-        window.customMorphServiceAddress = null;
-        inputField.value = "";
+  document.getElementById('clear-morph-config').addEventListener('click', () => {
+    //User can clear custom address to revert back to default
+    localStorage.removeItem('customMorphService');
+    window.customMorphServiceAddress = null;
+    inputField.value = "";
 });
 }
 export function applyActiveSelectionToWord(word) {

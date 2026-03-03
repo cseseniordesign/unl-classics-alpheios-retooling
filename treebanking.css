@@ -1427,8 +1427,8 @@ body.mode-relation #tool-body {
 #alternateBtn {
   font-size: 16px;
   background-color: #0a7e8c;
-  border-radius: 8px;
-  margin: 10px;
+  border-radius: 4px;
+  margin: 5px;
 }
 .morph-config {
   display: none;
@@ -1438,6 +1438,7 @@ body.mode-relation #tool-body {
 }
 .morph-config.block {
   display: block;
+  margin: 10px;
 }
 
 .morph-gear-btn{
