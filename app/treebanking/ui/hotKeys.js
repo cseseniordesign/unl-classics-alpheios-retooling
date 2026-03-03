@@ -1,4 +1,4 @@
-\import { handleWordClick } from './sentenceDisplay.js';
+import { handleWordClick } from './sentenceDisplay.js';
 
 
 export function setupEscapeHotkey() {
