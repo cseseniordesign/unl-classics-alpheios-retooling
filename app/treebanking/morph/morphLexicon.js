@@ -27,7 +27,7 @@
  */
 
 const DB_NAME = 'arethusa_morph_lexicon';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_FORMS = 'forms';
 
 let _dbPromise = null;
@@ -54,13 +54,19 @@ function openDB() {
     const req = indexedDB.open(DB_NAME, DB_VERSION);
 
     req.onupgradeneeded = () => {
-      const db = req.result;
+    const db = req.result;
 
-      // Create store if it doesn't exist yet
-      const store = db.createObjectStore(STORE_FORMS, { keyPath: 'id' });
+    // Create store if it doesn't exist yet
+    let store;
+    if (!db.objectStoreNames.contains(STORE_FORMS)) {
+        store = db.createObjectStore(STORE_FORMS, { keyPath: 'id' });
+        store.createIndex('bySurface', ['lang', 'surfaceKey'], { unique: false });
+    } else {
+        store = req.transaction.objectStore(STORE_FORMS);
+        // index already exists in your v1 schema; if not, you'd create it here
+    }
 
-      // Fast lookup: all forms for a given (lang + surfaceKey)
-      store.createIndex('bySurface', ['lang', 'surfaceKey'], { unique: false });
+    // No special migration needed: old rows just won't have `source` set.
     };
 
     req.onsuccess = () => resolve(req.result);
@@ -170,7 +176,7 @@ function makeFormId(lang, surfaceKey, lemma, postag) {
  * @param {string} args.postag - postag for the form
  * @returns {Promise<void>}
  */
-export async function upsertForm({ lang, surface, lemma, postag }) {
+export async function upsertForm({ lang, surface, lemma, postag, source = 'you' }) {
   const surfaceKey = normalizeSurface(surface);
   if (!lang || !surfaceKey) return;
 
@@ -190,6 +196,7 @@ export async function upsertForm({ lang, surface, lemma, postag }) {
         surfaceRaw: surface || '',
         lemma: lemma || '',
         postag: postag || '',
+        source: source || 'you',
         count: 0,
         lastUsed: 0
       });
@@ -215,7 +222,7 @@ export async function upsertForm({ lang, surface, lemma, postag }) {
  * @param {string} args.postag - postag string
  * @returns {Promise<void>}
  */
-export async function incrementUsage({ lang, surface, lemma, postag }) {
+export async function incrementUsage({ lang, surface, lemma, postag, source = 'you' }) {
   const surfaceKey = normalizeSurface(surface);
   if (!lang || !surfaceKey) return;
 
@@ -236,6 +243,7 @@ export async function incrementUsage({ lang, surface, lemma, postag }) {
           surfaceRaw: surface || '',
           lemma: lemma || '',
           postag: postag || '',
+          source: source || 'you',
           count: 1,
           lastUsed: now
         });
@@ -244,9 +252,17 @@ export async function incrementUsage({ lang, surface, lemma, postag }) {
 
       row.count = (row.count || 0) + 1;
       row.lastUsed = now;
+      if (!row.source) row.source = source || 'you';
       store.put(row);
     };
   });
+}
+
+function normalizeStoredSource(src) {
+  const s = String(src || '').trim().toLowerCase();
+  if (s === 'document') return 'document';           // probably won't be stored, but safe
+  if (s.includes('morpheus')) return 'bsp/morpheus';
+  return 'you';
 }
 
 /**
@@ -287,7 +303,7 @@ export async function getFormsForSurface({ lang, surface }) {
   return rows.map(r => ({
     lemma: r.lemma || '',
     postag: r.postag || '',
-    source: 'you',
+    source: normalizeStoredSource(r.source),
     _count: r.count || 0
   }));
 }
@@ -317,7 +333,16 @@ export async function mergeFormsIntoWord({ lang, word }) {
   for (const f of forms) {
     const exists = word.forms.some(x => (x.lemma || '') === f.lemma && (x.postag || '') === f.postag);
     if (!exists) {
-      word.forms.push({ lemma: f.lemma, postag: f.postag, source: 'you' });
+        word.forms.push({
+            lemma: f.lemma,
+            postag: f.postag,
+            source: f.source,
+            _count: f._count || 0
+        });
+    } else {
+    // If it exists, still refresh count so sorting works
+    const match = word.forms.find(x => (x.lemma || '') === f.lemma && (x.postag || '') === f.postag);
+    if (match) match._count = Math.max(Number(match._count) || 0, Number(f._count) || 0);
     }
   }
 
@@ -368,7 +393,7 @@ export async function pickTopLexiconForm({ lang, surface }) {
   return forms.length ? forms[0] : null;
 }
 
-export async function deleteForm({ lang, surface, lemma, postag }) {
+export async function deleteLexiconForm({ lang, surface, lemma, postag }) {
   if (!lang) return;
   const surfaceKey = normalizeSurface(surface);
   const id = makeFormId(lang, surfaceKey, lemma, postag);
@@ -377,3 +402,4 @@ export async function deleteForm({ lang, surface, lemma, postag }) {
     store.delete(id);
   });
 }
+

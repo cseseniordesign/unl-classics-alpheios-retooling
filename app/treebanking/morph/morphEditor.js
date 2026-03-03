@@ -3,6 +3,7 @@ import { applyActiveSelectionToWord, renderUserFormsList } from './morphTool.js'
 import { triggerAutoSave } from '../xml/saveXML.js';
 import { showConfirmDialog } from '../ui/modal.js';
 import { getLanguage } from '../input/language.js';
+import { initMorphLexicon, incrementUsage, upsertForm, mergeIntoAllTokens, pickTopLexiconForm } from './morphLexicon.js';
 
 // Inline editor that appears under the button and closes on save
 export function renderCreateEditorBelow(word, toolBody, opts = {}) {
@@ -504,29 +505,68 @@ host.querySelector('#nf-save').addEventListener('click', async () => {
     }
 }
 
-  // -------------------------
-  // SAVE (compose supports blanks using '-' slots)
-  // -------------------------
-  const postag = composeUserPostag(posChar, fields);
+// -------------------------
+// SAVE (compose supports blanks using '-' slots)
+// -------------------------
+const postag = composeUserPostag(posChar, fields);
 
-  word.forms.push({ lemma: lemmaVal, postag, source: 'you' });
+// 1) Persist in IndexedDB + mark as used
+try {
+  await initMorphLexicon();
+  const lang = getLanguage();
+  await upsertForm({ lang, surface: word.form, lemma: lemmaVal, postag });
+  await incrementUsage({ lang, surface: word.form, lemma: lemmaVal, postag });
+  try {
+    const best = await pickTopLexiconForm({ lang, surface: word.form });
+    if (best && best.lemma && best.postag) {
+        const bestKey = `${best.lemma.trim()}::${best.postag}`;
+        const match = word.forms.find(f => `${(f.lemma || '').trim()}::${f.postag || ''}` === bestKey);
+        if (match) match._count = Math.max(Number(match._count) || 0, Number(best._count) || 0);
+    }
+    } catch {}
+} catch (err) {
+  console.warn('Could not persist morph form to lexicon:', err);
+}
+
+// 2) Update in-memory immediately (include _count so sorting/preselect works)
+const key = `${lemmaVal.trim()}::${postag}`;
+const existingIdx = (word.forms || []).findIndex(
+  f => `${(f.lemma || '').trim()}::${f.postag || ''}` === key
+);
+
+if (existingIdx >= 0) {
+  const f = word.forms[existingIdx];
+  f.source = f.source || 'you';
+  f._count = Math.max(Number(f._count) || 0, 1);
+  word.activeForm = existingIdx;
+} else {
+  word.forms.push({ lemma: lemmaVal, postag, source: 'you', _count: 1 });
   word.activeForm = word.forms.length - 1;
+}
 
-  triggerAutoSave();
+applyActiveSelectionToWord(word);
 
-  applyActiveSelectionToWord(word);
-  renderUserFormsList(word, toolBody);
-  host.remove();
+// 3) Merge into all tokens so other identical words can use it immediately
+try {
+  const lang = getLanguage();
+  await mergeIntoAllTokens({ lang });
+} catch (err) {
+  console.warn('Could not merge lexicon forms into tokens:', err);
+}
 
-  if (typeof window.fastRefreshTree === 'function') window.fastRefreshTree();
+await renderUserFormsList(word, toolBody);
 
-  triggerAutoSave();
+host.remove();
 
-  const docEntry = toolBody.querySelector('.morph-entry[data-index="-1"]');
-  const topCheckbox = docEntry?.querySelector('input[type="checkbox"]');
-  if (topCheckbox) topCheckbox.checked = false;
+if (typeof window.fastRefreshTree === 'function') window.fastRefreshTree();
 
-  if (typeof window.renderMorphInfo === 'function') window.renderMorphInfo(word);
-  if (typeof window.updateXMLIfActive === 'function') window.updateXMLIfActive();
+triggerAutoSave();
+
+const docEntry = toolBody.querySelector('.morph-entry[data-index="-1"]');
+const topCheckbox = docEntry?.querySelector('input[type="checkbox"]');
+if (topCheckbox) topCheckbox.checked = false;
+
+if (typeof window.renderMorphInfo === 'function') window.renderMorphInfo(word);
+if (typeof window.updateXMLIfActive === 'function') window.updateXMLIfActive();
 });
 }

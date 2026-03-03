@@ -4,7 +4,45 @@ import { colorForPOS } from '../tree/treeUtils.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
 import { fetchMorphology } from './morpheus.js';
 import { showConfirmDialog } from '../ui/modal.js';
-import { isMorpheusSupported, getLanguage } from '../input/language.js';
+import { isMorpheusSupported, getLanguage, normalizeLang } from '../input/language.js';
+import { initMorphLexicon, incrementUsage, pickTopLexiconForm, mergeFormsIntoWord, mergeIntoAllTokens, deleteLexiconForm } from './morphLexicon.js';
+
+function _mostUsedFormIndex(forms = []) {
+  let bestIdx = -1;
+  let bestCount = -1;
+  for (let i = 0; i < forms.length; i++) {
+    const c = Number(forms[i]?._count) || 0;
+    if (c > bestCount) {
+      bestCount = c;
+      bestIdx = i;
+    }
+  }
+  return bestIdx;
+}
+
+function _sortedFormIndicesByCount(forms = []) {
+  return forms
+    .map((f, i) => ({ i, c: Number(f?._count) || 0 }))
+    .sort((a, b) => b.c - a.c || a.i - b.i)
+    .map(x => x.i);
+}
+
+function normalizeSource(src) {
+  const s = String(src || '').trim().toLowerCase();
+
+  if (s === 'document') return 'document';
+
+  // anything that indicates Morpheus
+  if (s === 'bsp/morpheus' || s === 'morpheus' || s.includes('morpheus')) {
+    return 'bsp/morpheus';
+  }
+
+  // only true user-owned
+  if (s === 'you' || s === 'user') return 'you';
+
+  // fallback: treat unknown as 'you' 
+  return 'you';
+}
 
 
 // =====================================================
@@ -261,7 +299,7 @@ export function applyActiveSelectionToWord(word) {
     if (f) {
       word._displayLemma  = (f.lemma  || word._doc.lemma);
       word._displayPostag = (f.postag || word._doc.postag);
-      word.source = 'you';
+      word.source = normalizeSource(f.source);
     }
   }
   const tok = document.querySelector(`.token[data-word-id="${word.id}"]`);
@@ -283,17 +321,44 @@ export function applyActiveSelectionToWord(word) {
   }
 }
 
-export function renderUserFormsList(word, toolBody) {
+export async function renderUserFormsList(word, toolBody) {
   ensureFormsArray(word);
   // Normalize activeForm
+  const lang = getLanguage();
+
+  try {
+    await initMorphLexicon();
+    await mergeFormsIntoWord({ lang, word });
+  } catch (e) {}
+
+  // Try to pull the single best lexicon form for this surface (helps preselect)
+  try {
+    const bestLex = await pickTopLexiconForm({ lang, surface: word.form });
+    if (bestLex && bestLex.lemma && bestLex.postag) {
+      const key = `${bestLex.lemma.trim()}::${bestLex.postag}`;
+      const match = word.forms.find(ff => `${(ff.lemma || '').trim()}::${ff.postag || ''}` === key);
+
+      if (!match) {
+        word.forms.push({
+          lemma: bestLex.lemma,
+          postag: bestLex.postag,
+          source: normalizeSource(bestLex.source),
+          _count: bestLex._count || 0
+        });
+      } else {
+        match._count = Math.max(Number(match._count) || 0, Number(bestLex._count) || 0);
+        match.source = normalizeSource(match.source);
+      }
+    }
+  } catch (e) {}
   const af = Number(word.activeForm);
   word.activeForm = Number.isFinite(af) ? af : -1;
 
-  // If Preselect is enabled and we have forms, ensure something is selected
-  // (your requirement: pick the first Morpheus form)
-  if (window.morphPreselectEnabled && word.activeForm < 0 && Array.isArray(word.forms) && word.forms.length > 0) {
-    word.activeForm = 0;
-    applyActiveSelectionToWord(word);  // makes tree/token color consistent too
+  // If preselect enabled and nothing selected yet, choose most-used
+  if (window.morphPreselectEnabled && word.activeForm < 0 && word.forms.length > 0) {
+    const bestIdx = _mostUsedFormIndex(word.forms);
+    word.activeForm = bestIdx >= 0 ? bestIdx : 0;
+    applyActiveSelectionToWord(word);
   }
 
   let list = toolBody.querySelector('.user-forms-list');
@@ -302,16 +367,21 @@ export function renderUserFormsList(word, toolBody) {
     list.className = 'user-forms-list';
     toolBody.querySelector('.morph-container')?.appendChild(list);
   }
-  list.innerHTML = word.forms.map((f, i) =>
-    userFormCardHTML(f, i, Number(word.activeForm) === i)
-  ).join('');
+
+  // Render sorted by count (display order only)
+  const order = _sortedFormIndicesByCount(word.forms);
+
+  list.innerHTML = order.map((realIdx) => {
+    const f = word.forms[realIdx];
+    return userFormCardHTML(f, realIdx, Number(word.activeForm) === realIdx);
+  }).join('');
 
   const mc = toolBody.querySelector('.morph-container');
   if (mc) enableMorphEntryExpansion(mc);
 
   // When a checkbox is toggled, make that form active
   list.querySelectorAll('.morph-entry input[type="checkbox"]').forEach(cb => {
-    cb.addEventListener('change', (e) => {
+    cb.addEventListener('change', async (e) => {
       if (!e.target.checked) return; // only handle when checked
 
       // uncheck all other boxes
@@ -326,8 +396,26 @@ export function renderUserFormsList(word, toolBody) {
       // update active form and apply globally
       word.activeForm = idx;
       applyActiveSelectionToWord(word);
-      triggerAutoSave(); // autosave after switching active form
 
+      // record usage (IndexedDB) + bump in-memory count for instant resorting
+      const f = word.forms?.[idx];
+      if (f) {
+        try {
+          await initMorphLexicon();
+          await incrementUsage({
+            lang,
+            surface: word.form,
+            lemma: (f.lemma || '').trim(),
+            postag: (f.postag || '').trim(),
+            source: normalizeSource(f.source)
+          });
+          f._count = (Number(f._count) || 0) + 1;
+        } catch (err) {
+          // non-fatal
+        }
+      }
+      triggerAutoSave(); // autosave after switching active form
+      void renderUserFormsList(word, toolBody);
       // re-render Morph panel and update XML tab
       window.renderMorphInfo(word);
       if (typeof window.updateXMLIfActive === 'function') {
@@ -354,10 +442,7 @@ export function renderUserFormsList(word, toolBody) {
       );
       if (!confirmDelete) return;
 
-      removeForm(word, idx);
-      renderUserFormsList(word, toolBody);
-      window.renderMorphInfo(word);
-      triggerAutoSave(); // autosave after deleting a form
+      await removeForm(word, idx, { lang, toolBody});
     });
   });
 
@@ -410,6 +495,46 @@ export async function preselectMissingMorphForCurrentSentence(toolBody = null) {
     // Make sure we have morpheus/user forms available
     ensureFormsArray(word);
 
+    try {
+      await initMorphLexicon();
+      await mergeFormsIntoWord({ lang, word });
+    } catch (e) {}
+
+    // 1) Try lexicon first (most-used persistent form)
+    try {
+      const bestLex = await pickTopLexiconForm({ lang, surface: word.form });
+
+      if (bestLex && bestLex.lemma && bestLex.postag) {
+        const key = `${bestLex.lemma.trim()}::${bestLex.postag}`;
+        const exists = word.forms.some(ff => `${(ff.lemma || '').trim()}::${ff.postag || ''}` === key);
+
+        if (!exists) {
+          word.forms.push({
+            lemma: bestLex.lemma,
+            postag: bestLex.postag,
+            source: normalizeSource(bestLex.source),
+            _count: bestLex._count || 0
+          });
+        } else {
+          // ensure count is present for sorting/preselect
+          const match = word.forms.find(ff => `${(ff.lemma || '').trim()}::${ff.postag || ''}` === key);
+          if (match) {
+            match._count = Math.max(Number(match._count) || 0, Number(bestLex._count) || 0);
+            match.source = normalizeSource(match.source);
+          }
+        }
+
+        // If preselect is enabled, select it immediately and skip Morpheus
+        const bestIdx = _mostUsedFormIndex(word.forms);
+        word.activeForm = bestIdx >= 0 ? bestIdx : 0;
+        applyActiveSelectionToWord(word);
+        changed++;
+        continue; // move to next word (don’t call Morpheus)
+      }
+    } catch (e) {
+      // non-fatal, Morpheus fallback will still work
+    }
+
     // If we haven't fetched Morpheus yet (or no forms exist), fetch now
     if (!word._morpheusLoaded || word.forms.length === 0) {
       await attachMorpheusSuggestions(word, toolBody);
@@ -417,7 +542,8 @@ export async function preselectMissingMorphForCurrentSentence(toolBody = null) {
     if (!Array.isArray(word.forms) || word.forms.length === 0) continue;
 
     // Select the FIRST suggestion
-    word.activeForm = 0;
+    const bestIdx = _mostUsedFormIndex(word.forms);
+    word.activeForm = bestIdx >= 0 ? bestIdx : 0;
     applyActiveSelectionToWord(word);
     changed++;
   }
@@ -434,7 +560,7 @@ export async function preselectMissingMorphForCurrentSentence(toolBody = null) {
       window.updateXMLIfActive();
     }
     triggerAutoSave();
-    console.log(`[Preselect] Applied first morph to ${changed} word(s).`);
+    console.log(`[Preselect] Applied best morph to ${changed} word(s).`);
   }
   }
   catch(err){
@@ -606,11 +732,11 @@ function enableMorphEntryExpansion(scopeEl) {
   });
 }
 
-function appendCreateAndUserForms(word, toolBody) {
+async function appendCreateAndUserForms(word, toolBody) {
   ensureFormsArray(word);
 
   // Render user forms list
-  renderUserFormsList(word, toolBody);
+  await renderUserFormsList(word, toolBody);
 
   // ---------- Document (top) card wiring ----------
   const docEntry = toolBody.querySelector('.morph-entry[data-index="-1"]');
@@ -682,7 +808,12 @@ function appendCreateAndUserForms(word, toolBody) {
     const btn = document.createElement('button');
     btn.className = 'morph-create';
     btn.textContent = 'Create New Form';
-    toolBody.querySelector('.morph-container')?.appendChild(btn);
+    const container = toolBody.querySelector('.morph-container');
+    const list = toolBody.querySelector('.user-forms-list');
+    if (container) {
+      if (list) list.insertAdjacentElement('afterend', btn);
+      else container.appendChild(btn);
+    }
 
     btn.addEventListener('click', () => renderCreateEditorBelow(word, toolBody));
   }
@@ -730,11 +861,11 @@ function userFormCardHTML(form, index, isActive) {
   const expandedClass = isActive ? ' expanded' : '';
   const expandedAttr  = isActive ? 'true' : 'false';
   const cbId = `uf-check-${index}`;
-  const src = form.source || 'you';
+  const src = normalizeSource(form.source);
 
   // Always allow deleting the document form (index === -1),
   // and allow deleting "you" forms (and optionally morpheus too later)
-  const canDelete = (src !== '');
+  const canDelete = (src == 'you' || src === 'document');
 
   const createBtn = `
     <button class="clone-form" type="button"
@@ -778,35 +909,115 @@ function userFormCardHTML(form, index, isActive) {
   `;
 }
 
-function removeForm(word, index) {
+async function removeForm(word, index, opts = {}) {
+  const { lang, toolBody } = opts;
+
   if (!Array.isArray(word.forms)) return;
 
-  // If index < 0, it's the document form
+  // ---- Document form (index < 0) stays as your current behavior ----
   if (index < 0) {
-    // Clear both display and XML-level values
     word._doc = { lemma: '', postag: '' };
     word._displayLemma = '';
     word._displayPostag = '';
-    word.lemma = '';     // clear from actual XML-bound field
-    word.postag = '';    // clear from actual XML-bound field
+    word.lemma = '';
+    word.postag = '';
     word.source = 'document';
 
-    // Update token color + tree
     applyActiveSelectionToWord(word);
-
-    // Re-render XML view if open
-    if (typeof window.updateXMLIfActive === 'function') {
-      window.updateXMLIfActive();
-    }
+    if (typeof window.updateXMLIfActive === 'function') window.updateXMLIfActive();
+    triggerAutoSave();
     return;
   }
 
-  // Otherwise delete user/morpheus form
-  word.forms.splice(index, 1);
-  if (word.activeForm === index) word.activeForm = -1;
-  else if (word.activeForm > index) word.activeForm -= 1;
+  const removed = word.forms[index];
+  const src = normalizeSource(removed.source);
+
+  // Only delete from IndexedDB if it's a user form
+  const shouldDeleteFromLexicon = (src === 'you');
+  if (!removed) return;
+
+  const surface = (word.form || '').toString();
+  const lemma   = (removed.lemma || '').trim();
+  const postag  = (removed.postag || '').trim();
+
+  // -------- 1) Delete from IndexedDB (so it never returns) --------
+  if (shouldDeleteFromLexicon) {
+    try {
+      await initMorphLexicon();
+      await deleteLexiconForm({ lang, surface, lemma, postag });
+    } catch (e) {
+      console.warn('deleteLexiconForm failed:', e);
+    }
+  }
+
+  // local normalizer (match your lexicon normalizeSurface closely)
+  const norm = (s) => (s || '').toString().trim().toLowerCase();
+
+  const targetSurface = norm(surface);
+  const targetKey = `${lemma}::${postag}`;
+
+  // -------- 2) Prune from EVERYWHERE in memory --------
+  const sentences = Array.isArray(window.treebankData) ? window.treebankData : [];
+  for (const s of sentences) {
+    if (!Array.isArray(s?.words)) continue;
+
+    for (const w of s.words) {
+      if (!w) continue;
+
+      // only touch same surface token
+      if (norm(w.form) !== targetSurface) continue;
+
+      if (!Array.isArray(w.forms) || w.forms.length === 0) continue;
+
+      // remove ALL matching forms (regardless of source: you/morpheus/etc)
+      const oldForms = w.forms;
+      const newForms = [];
+      let removedActive = false;
+
+      for (let i = 0; i < oldForms.length; i++) {
+        const f = oldForms[i];
+        const k = `${(f?.lemma || '').trim()}::${(f?.postag || '').trim()}`;
+        if (k === targetKey) {
+          if (Number(w.activeForm) === i) removedActive = true;
+          continue;
+        }
+        newForms.push(f);
+      }
+
+      if (newForms.length !== oldForms.length) {
+        w.forms = newForms;
+
+        // fix activeForm
+        const af = Number(w.activeForm);
+        if (removedActive) {
+          w.activeForm = -1;
+        } else if (Number.isFinite(af) && af >= 0) {
+          // count how many removed were before af (so we can shift index)
+          let removedBefore = 0;
+          for (let i = 0; i < Math.min(af, oldForms.length); i++) {
+            const f = oldForms[i];
+            const k = `${(f?.lemma || '').trim()}::${(f?.postag || '').trim()}`;
+            if (k === targetKey) removedBefore++;
+          }
+          w.activeForm = af - removedBefore;
+          if (w.activeForm < 0 || w.activeForm >= w.forms.length) w.activeForm = -1;
+        }
+      }
+    }
+  }
+
+  // -------- 3) Refresh visuals for the word you’re looking at --------
   applyActiveSelectionToWord(word);
-  triggerAutoSave(); // autosave after deletion
+
+  // re-render the morph panel list for THIS open card
+  if (toolBody) {
+    await renderUserFormsList(word, toolBody);
+  }
+  if (typeof window.renderMorphInfo === 'function') window.renderMorphInfo(word);
+  if (typeof window.updateXMLIfActive === 'function') window.updateXMLIfActive();
+  if (typeof window.fastRefreshTree === 'function') window.fastRefreshTree();
+
+  triggerAutoSave();
 }
 
 // ---------------------------------------------------------
@@ -1234,6 +1445,7 @@ async function attachMorpheusSuggestions(word, toolBody) {
     if (existing.has(key)) return;
 
     existing.add(key);
+    form.source = 'bsp/morpheus';
     word.forms.push(form);
   });
 
@@ -1242,10 +1454,10 @@ async function attachMorpheusSuggestions(word, toolBody) {
   word.activeForm = Number.isFinite(af2) ? af2 : -1;
 
   if (window.morphPreselectEnabled && word.activeForm < 0 && word.forms.length > 0) {
-    word.activeForm = 0;
+    const bestIdx = _mostUsedFormIndex(word.forms);
+    word.activeForm = bestIdx >= 0 ? bestIdx : 0;
     applyActiveSelectionToWord(word);
   }
-
 
   if (toolBody) {
     appendCreateAndUserForms(word, toolBody);
