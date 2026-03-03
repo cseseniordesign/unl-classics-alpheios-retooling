@@ -13,9 +13,17 @@
 
 export const TAGSET_REGISTRY = [
   {
-    id: 'aldt',
+    id: 'aldt-lat',
     label: 'Ancient Language Dependency Treebank',
     distFile: '/app/treebanking/dist/aldt-misc.json',
+    format: 'aldt',
+    lang: 'lat',
+    hasMorph: true,
+  },
+  {
+    id: 'aldt-grc',
+    label: 'Ancient Language Dependency Treebank',
+    distFile: '/app/treebanking/dist/aldt-misc-grc.json',
     format: 'aldt',
     lang: 'grc',
     hasMorph: true,

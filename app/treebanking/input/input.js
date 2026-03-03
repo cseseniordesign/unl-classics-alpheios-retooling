@@ -2,6 +2,7 @@ import { showToast } from '/main.js'
 import { getActiveTagset } from '/app/treebanking/tags/tagsetStore.js';
 import { initTagsetSelector } from '/app/treebanking/tags/tagsetSelector.js';
 import { isValidLLTResponse } from '../xml/tokenizer.js';
+import { getRegistryEntry } from '../tags/tagsetRegistry.js';
 
 // Attach click event after input page loads for the edit button
 document.getElementById("editBtn").addEventListener("click", sendSentence);
@@ -51,10 +52,16 @@ function sendSentence() {
   }
 
   // Validate that an annotation format has been loaded
-  const tagset = getActiveTagset();
+  var tagset = getActiveTagset();
   if (!tagset) {
-    showToast("Please select an annotation format.");
-    return;
+    if(language.value === "grc") {
+      tagset = getRegistryEntry("aldt-grc"); // default to ALDT-GRC for Greek if no selection
+    }else if(language.value === "lat") {
+      tagset = getRegistryEntry("aldt-lat"); // default to ALDT-LAT for Latin if no selection
+    } else {
+      showToast("Please select an annotation format.");
+      return;
+    }
   }
 
   localStorage.setItem("textDirection", direction.value);
