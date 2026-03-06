@@ -1,3 +1,5 @@
+import { getPosColorByChar   } from "../tags/tagsetStore.js";
+
 // ===== POS color utilities =====
 const POS_COLORS = {
   v: '#c65a5a', // verb
@@ -205,5 +207,5 @@ export function ensureDocumentSnapshot(word) {
 
 export function colorForTag(tag) {
   const ch = (tag && tag[0]) ? tag[0].toLowerCase() : '';
-  return POS_COLORS[ch] || POS_COLORS[''];
+  return getPosColorByChar(ch) || '';
 }

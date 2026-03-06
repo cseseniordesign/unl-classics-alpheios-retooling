@@ -171,7 +171,7 @@ export function fastRefreshTree() {
       (d.data.postag && d.data.postag[0]) ? d.data.postag[0] : ''
     )
     .select('text')
-    .style('fill', d => colorForPOS({ postag: d.data.postag }));
+    .style('fill', d => colorForPOS(d.data));
 }
 window.fastRefreshTree = fastRefreshTree;
 
@@ -210,7 +210,7 @@ export function prepareSentenceData(sentence) {
       parentId: pId,
       form: w.form || '',
       relation: w.relation || '',
-      postag: w.postag || w._displayPostag || '',
+      postag: w._displayPostag || w.postag || '',
       //flag to identify forest-roots for visual styling
       isForestRoot: !hasHead && pId === 'root' && !isComma && w.head !== 0
     };
@@ -298,7 +298,7 @@ export function drawNodes(gx, rootHierarchy) {
     .attr('text-anchor', 'middle')
     .style('font-family', 'sans-serif')
     .style('font-size', '14px')
-    .style('fill', d => colorForPOS({ postag: d.data.postag }))
+    .style('fill', d => colorForPOS(d.data))
     .text(d => d.data.form)
     .each(function() {
       // Measure the text and insert a rect *behind* it

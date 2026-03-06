@@ -1,5 +1,6 @@
 import { setupWordHoverSync } from './hoverSync.js';
 import { buildHierarchy, drawLinks, drawNodes, createNodeHierarchy } from './treeRender.js';
+import { getPosColorByChar } from '../tags/tagsetStore.js';
 
 export const POS_COLORS = {
   v:'#c65a5a', c:'#c77d9b', d:'#e69109', i:'#b29100', e:'#b29100',
@@ -15,9 +16,14 @@ export const getPOSChar = w => {
 export function colorForPOS(w) {
   const tag = (w?._displayPostag || w?.postag || '');
   const ch = tag[0] ? tag[0].toLowerCase() : '';
+
+  // 1) config-driven
+  const cfgColor = getPosColorByChar(ch);
+  if (cfgColor) return cfgColor;
+
+  // 2) fallback
   return POS_COLORS[ch] || POS_COLORS[''];
 }
-
 
 /**
  * --------------------------------------------------------------------------

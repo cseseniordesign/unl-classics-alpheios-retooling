@@ -1,8 +1,10 @@
 import { showToast } from '/main.js'
-import { getActiveTagset } from '/app/treebanking/tags/tagsetStore.js';
+import { getActiveTagset, setActiveTagset } from '/app/treebanking/tags/tagsetStore.js';
 import { initTagsetSelector } from '/app/treebanking/tags/tagsetSelector.js';
 import { isValidLLTResponse } from '../xml/tokenizer.js';
 import { getRegistryEntry } from '../tags/tagsetRegistry.js';
+
+let userPickedTagset = false;
 
 // Attach click event after input page loads for the edit button
 document.getElementById("editBtn").addEventListener("click", sendSentence);
@@ -51,6 +53,12 @@ function sendSentence() {
     return;
   }
 
+  // If user didn't explicitly pick a tagset this run, don't reuse an old one
+  if (!userPickedTagset) {
+    localStorage.removeItem("activeTagsetId");
+    setActiveTagset(null);
+  }
+
   // Validate that an annotation format has been loaded
   var tagset = getActiveTagset();
   if (!tagset) {
@@ -81,6 +89,7 @@ function sendSentence() {
   initTagsetSelector({
     containerId: 'tagset-selector-root',
     onLoaded: (config) => {
+      userPickedTagset = !!config?.id;
       // The config is now in tagsetStore — treebanking.html will read it on load.
       // Optionally auto-set the language radio to match the tagset's language.
       const langMap = { grc: 'lang-grc', lat: 'lang-lat', eng: 'lang-eng', per: 'lang-per' };

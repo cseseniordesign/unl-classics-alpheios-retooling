@@ -98,6 +98,20 @@ function _attachEvents(container, { onLoaded, defaultId }) {
       const config = await loadTagsetConfig(entry.distFile, entry);
       setActiveTagset(config);
 
+      // also persist for the next page
+      localStorage.setItem('activeTagsetId', entry.id);
+
+      // ---- STAMP REGISTRY METADATA ONTO THE CONFIG (so input.js can store config.id) ----
+      config.id       = entry.id;
+      config.label    = entry.label;
+      config.lang     = entry.lang;
+      config.hasMorph = (config.hasMorph ?? entry.hasMorph); // keep config value if present
+      config._sourceDistFile = entry.distFile;               // optional, for debugging
+      // ----------------------------------------------------------------------------------
+
+setActiveTagset(config);
+localStorage.setItem('activeTagsetId', entry.id);
+
       const morphNote = config.hasMorph
         ? `${Object.keys(config.morphAttributes).length} morph attributes`
         : 'syntax only';

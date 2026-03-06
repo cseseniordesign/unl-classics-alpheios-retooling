@@ -19,25 +19,40 @@
 // Public API
 // ---------------------------------------------------------------------------
 
+// tagsetConfig.js
+
 /**
- * Fetch and parse a dist JSON file.
- * Returns a normalized tagset config object, or throws on failure.
+ * Loads a tagset dist JSON and returns a normalized TagsetConfig.
+ * If you pass the registry entry, we stamp id/label/lang/hasMorph onto the config
+ * so downstream code (tagsetStore, UI, tree coloring) can rely on them.
  *
- * @param {string} distFilePath  - e.g. 'dist/aldt.json'
- * @param {object} registryEntry - the matching entry from tagsetRegistry.js
- * @returns {Promise<TagsetConfig>}
+ * @param {string} distFile - path/URL to the dist JSON
+ * @param {object|null} entry - optional registry entry { id, label, lang, hasMorph, ... }
  */
-export async function loadTagsetConfig(distFilePath, registryEntry) {
-  let raw;
-  try {
-    const res = await fetch(distFilePath);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    raw = await res.json();
-  } catch (err) {
-    throw new Error(`Failed to load tagset config from "${distFilePath}": ${err.message}`);
+export async function loadTagsetConfig(distFile, meta = null) {
+  const res = await fetch(distFile);
+  if (!res.ok) {
+    throw new Error(`Failed to fetch dist file: ${distFile} (${res.status})`);
   }
 
-  return parseDistJson(raw, registryEntry);
+  const distJson = await res.json();
+  if (!distJson) {
+    throw new Error(`Dist JSON empty/undefined: ${distFile}`);
+  }
+
+  const cfg = parseDistJson(distJson, distFile);
+
+  // Attach registry metadata (dist files usually don't include these)
+  if (meta) {
+    cfg.id      = meta.id      ?? cfg.id;
+    cfg.label   = meta.label   ?? cfg.label;
+    cfg.lang    = meta.lang    ?? cfg.lang;
+    cfg.beta    = meta.beta    ?? cfg.beta;
+    cfg.format  = meta.format  ?? cfg.format;
+    cfg.hasMorph = meta.hasMorph ?? cfg.hasMorph;
+  }
+
+  return cfg;
 }
 
 // ---------------------------------------------------------------------------
