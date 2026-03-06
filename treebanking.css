@@ -516,19 +516,19 @@ html, body{
   fill: #fff;
 }
 
-.node[data-pos="v"] text { fill: #c65a5a !important; }         /* verb */
-.node[data-pos="c"] text { fill: #c77d9b !important; }        /* conjunction */
-.node[data-pos="d"] text { fill: #e69109 !important; }      /* adverb */
-.node[data-pos="i"] text { fill: #b29100 !important; }      /* interjection */
-.node[data-pos="n"] text { fill: #487a6f !important; }        /* noun */
-.node[data-pos="a"] text { fill: #5a78c6 !important; }        /* adjective */
-.node[data-pos="r"] text { fill: #5a9b6b !important; }       /* adposition */
-.node[data-pos="l"] text { fill: #a6784d !important; }   /* article */
-.node[data-pos="p"] text { fill: #7a5aa9 !important; }      /* pronoun */
-.node[data-pos="u"] text { fill: #444 !important; }       /* punctuation */
-.node[data-pos="m"] text { fill: #888 !important; }        /* numeral */
+.node[data-pos="v"] text { fill: #c65a5a; }         /* verb */
+.node[data-pos="c"] text { fill: #c77d9b; }        /* conjunction */
+.node[data-pos="d"] text { fill: #e69109; }      /* adverb */
+.node[data-pos="i"] text { fill: #b29100; }      /* interjection */
+.node[data-pos="n"] text { fill: #487a6f; }        /* noun */
+.node[data-pos="a"] text { fill: #5a78c6; }        /* adjective */
+.node[data-pos="r"] text { fill: #5a9b6b; }       /* adposition */
+.node[data-pos="l"] text { fill: #a6784d; }   /* article */
+.node[data-pos="p"] text { fill: #7a5aa9; }      /* pronoun */
+.node[data-pos="u"] text { fill: #444; }       /* punctuation */
+.node[data-pos="m"] text { fill: #888; }        /* numeral */
 .node:not([data-pos]) text,
-.node[data-pos=""] text { fill: #444 !important; }         /* unknown */
+.node[data-pos=""] text { fill: #444; }         /* unknown */
 
 .token {
   border: none;

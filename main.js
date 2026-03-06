@@ -17,6 +17,9 @@ import { tokenizer } from './app/treebanking/xml/tokenizer.js';
 import { setLanguage } from "./app/treebanking/input/language.js"; 
 import {setupSelector} from "./app/treebanking/xml/selector.js";
 import { updateTreebankSelectionBanner } from "./app/treebanking/ui/sentenceDisplay.js";
+import { getRegistryEntry } from './app/treebanking/tags/tagsetRegistry.js';
+import { loadTagsetConfig } from './app/treebanking/tags/tagsetConfig.js';
+import { setActiveTagset, getPosMeta, onTagsetChange, getActiveTagset } from './app/treebanking/tags/tagsetStore.js';
 
 window.handleFileUpload = handleFileUpload;
 window.batchSelection = new Set();
@@ -32,6 +35,8 @@ window.displaySentence = displaySentence;
 window.appMode = "";
 
 export var isTableVisible = false;
+onTagsetChange(() => logActiveTagset('onTagsetChange'));
+
 
 /* ============================================================================
     BUTTON & INTERFACE EVENTS
@@ -369,11 +374,75 @@ function setupTreeButtons() {
   });
 }
 
+function logActiveTagset(where = 'unknown') {
+  const cfg = getActiveTagset();
+
+  console.groupCollapsed(`[tagset] ${where}`);
+  if (!cfg) {
+    console.warn('[tagset] no active config');
+    console.groupEnd();
+    return;
+  }
+
+  console.log('id:', cfg.id);
+  console.log('label:', cfg.label);
+  console.log('lang:', cfg.lang);
+  console.log('tagFormat:', cfg.tagFormat);
+  console.log('hasMorph:', cfg.hasMorph);
+  console.log('_sourceDistFile:', cfg._sourceDistFile);
+
+  console.log('posCategories:', cfg.posCategories?.length ?? 0);
+  console.log('relations:', cfg.relations ? Object.keys(cfg.relations).length : 0);
+
+  // Show a quick sample of POS meta (first ~10)
+  const sample = (cfg.posCategories || []).slice(0, 10).map(p => ({
+    postag: p.postag,
+    short: p.short,
+    long: p.long,
+    color: p.color,
+  }));
+  console.table(sample);
+
+  // Sanity checks for common ALDT chars
+  console.log("meta('n'):", getPosMeta('n'));
+  console.log("meta('v'):", getPosMeta('v'));
+  console.log("meta('c'):", getPosMeta('c'));
+
+  console.groupEnd();
+}
+
+async function restoreTagsetFromStorage() {
+  console.log('[tagset] restoreTagsetFromStorage() running');
+
+  const id = localStorage.getItem('activeTagsetId');
+  console.log('[tagset] stored id =', id);
+  if (!id) return;
+
+  const entry = getRegistryEntry(id);
+  console.log('[tagset] registry entry =', entry);
+  if (!entry) return;
+
+  console.log('[tagset] distFile =', entry.distFile);
+
+  const cfg = await loadTagsetConfig(entry.distFile, entry);
+  if (!cfg) return;
+
+  // attach trace before storing
+  cfg._sourceDistFile = entry.distFile;
+
+  setActiveTagset(cfg);
+  logActiveTagset('after restoreTagsetFromStorage');
+
+  console.log('[tagset] loaded cfg =', cfg);
+  console.log('[tagset] active set to', cfg.id);
+}
+
 /* ============================================================================
     INITIALIZATION ENTRY POINT
    ============================================================================ */
 document.addEventListener('DOMContentLoaded', async () => {
   let initializedFromUserInput = false;
+  await restoreTagsetFromStorage();
   setLanguage(localStorage.getItem("textLanguage") || "grc");
   const userInput = sessionStorage.getItem("userInput");
   const rawUploadedData = localStorage.getItem("treebankData");
