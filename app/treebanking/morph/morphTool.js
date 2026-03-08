@@ -677,13 +677,13 @@ function enableMorphEntryExpansion(scopeEl) {
   const order = ORDER_BY_POS[posChar] || DEFAULT_ORDER;
 
   // Replace raw "v/n/a/…" with pretty words
-  // const pretty = { ...parsed };
-  // const mappedPosLabel = (entry.dataset.posLabel || '').trim();
-  // if (mappedPosLabel) {
-  //   pretty.pos = mappedPosLabel; // mapping wins
-  // } else if (pretty.pos) {
-  //   pretty.pos = POS_LABELS[posChar] || pretty.pos; // fallback
-  // }
+  const pretty = { ...parsed };
+  const mappedPosLabel = (entry.dataset.posLabel || '').trim();
+  if (mappedPosLabel) {
+    pretty.pos = mappedPosLabel; // mapping wins
+  } else if (pretty.pos) {
+    pretty.pos = POS_LABELS[posChar] || pretty.pos; // fallback
+  }
 
     // Remove all "-" or empty fields before building HTML
   Object.keys(pretty).forEach(k => {
