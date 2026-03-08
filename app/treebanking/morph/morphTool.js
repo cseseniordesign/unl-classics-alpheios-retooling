@@ -6,6 +6,7 @@ import { fetchMorphology } from './morpheus.js';
 import { showConfirmDialog } from '../ui/modal.js';
 import { isMorpheusSupported, getLanguage, normalizeLang } from '../input/language.js';
 import { initMorphLexicon, incrementUsage, pickTopLexiconForm, mergeFormsIntoWord, mergeIntoAllTokens, deleteLexiconForm } from './morphLexicon.js';
+import { getActiveTagset } from '../tags/tagsetStore.js';
 
 function _mostUsedFormIndex(forms = []) {
   let bestIdx = -1;
@@ -833,29 +834,36 @@ async function appendCreateAndUserForms(word, toolBody) {
 }
 
 function userFormCardHTML(form, index, isActive, isExpanded = false) {
-  // Build a concise readable summary (noun.plural.masculine.vocative)
   const parsed = parseMorphTag(form.postag || '');
+  const cfg = getActiveTagset();
+
   const VALUE_MAPS = {
     number: { s:'singular', p:'plural', d:'dual' },
     gender: { m:'masculine', f:'feminine', n:'neuter', c:'common' },
     case:   { n:'nominative', g:'genitive', d:'dative', a:'accusative', v:'vocative', b:'ablative', l:'locative' },
     tense:  { p:'present', i:'imperfect', r:'perfect', l:'pluperfect', f:'future', a:'aorist', t:'futperfect' },
-    mood:   { i:'indicative', s:'subjunctive', o:'optative', n:'infinitive', m:'imperative', p:'participle', d: 'gerund', g:'gerundive', u:'supine' },
+    mood:   { i:'indicative', s:'subjunctive', o:'optative', n:'infinitive', m:'imperative', p:'participle', d:'gerund', g:'gerundive', u:'supine' },
     voice:  { a:'active', e:'medio-passive', p:'passive', d:'deponens' },
     degree: { p:'positive', c:'comparative', s:'superlative' },
     person: { '1':'first', '2':'second', '3':'third' }
   };
 
-  // translate short codes
-  Object.entries(parsed).forEach(([k,v]) => {
-    if (VALUE_MAPS[k] && VALUE_MAPS[k][v]) parsed[k] = VALUE_MAPS[k][v];
-  });
-
-  // Make a compact readable string that includes part of speech at the start
   const posLabels = {
     v:'verb', n:'noun', a:'adjective', d:'adverb', p:'pronoun',
     c:'conjunction', r:'adposition', l:'article', m:'numeral',
-    i:'interjection', u:'punctuation', e: 'exclamation', x:'irregular'
+    i:'interjection', u:'punctuation', e:'exclamation', x:'irregular'
+  };
+
+  const KEY_ALIASES = {
+    person: 'pers',
+    number: 'num',
+    gender: 'gend',
+    case: 'case',
+    tense: 'tense',
+    mood: 'mood',
+    voice: 'voice',
+    degree: 'degree',
+    pos: 'pos'
   };
 
   if (window.morphMapDebug) {
@@ -863,17 +871,34 @@ function userFormCardHTML(form, index, isActive, isExpanded = false) {
   }
 
   const posChar = (form.postag || '')[0]?.toLowerCase() || '';
+
+  // config first, fallback to old UI map
+  const cfgPos =
+    (cfg?.posCategories || []).find(p => String(p.postag || '').toLowerCase() === posChar);
+
   const posWord =
     (form._posLabel && String(form._posLabel).trim()) ||
+    cfgPos?.long ||
     (posLabels[posChar] || posChar || '');
 
   const featureString = Object.entries(parsed)
     .filter(([k, v]) => k !== 'pos' && v && v !== '-')
-    .map(([k, v]) => v)
+    .map(([k, v]) => {
+      const cfgKey = KEY_ALIASES[k] || k;
+      const attrDef = cfg?.morphAttributes?.[cfgKey];
+      const values = attrDef?.values || {};
+
+      for (const valDef of Object.values(values)) {
+        if ((valDef?.postag || '') === v) {
+          return valDef.long || valDef.short || VALUE_MAPS[k]?.[v] || v;
+        }
+      }
+
+      return VALUE_MAPS[k]?.[v] || v;
+    })
     .join('.');
 
   const readable = [posWord, featureString].filter(Boolean).join('.');
-
 
   const col = colorForTag(form.postag || '');
 
@@ -882,8 +907,6 @@ function userFormCardHTML(form, index, isActive, isExpanded = false) {
   const cbId = `uf-check-${index}`;
   const src = normalizeSource(form.source);
 
-  // Always allow deleting the document form (index === -1),
-  // and allow deleting "you" forms (and optionally morpheus too later)
   const canDelete = (src == 'you' || src === 'document');
 
   const createBtn = `
@@ -910,7 +933,7 @@ function userFormCardHTML(form, index, isActive, isExpanded = false) {
   `;
 
   const posLabel = (form._posLabel == null ? '' : String(form._posLabel))
-  .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;');
 
   return `
     <div class="morph-entry user-form${expandedClass}" 
@@ -1366,7 +1389,6 @@ function formFromMorphResult(result, word) {
   }
 
   if (isLatin) {
-    // Latin: no dual, no common gender, no optative, no medio-passive
     if (fields.number === 'd') fields.number = '';
     if (fields.gender === 'c') fields.gender = '';
     if (fields.mood === 'o') fields.mood = '';
@@ -1376,8 +1398,6 @@ function formFromMorphResult(result, word) {
 
   const postag = composeUserPostag(posChar, fields);
 
-  // If Morpheus gave us no usable features, skip this suggestion
-  // (postag empty or just dashes like "---------")
   if (!postag || /^-+$/.test(postag)) {
     return null;
   }
@@ -1387,14 +1407,17 @@ function formFromMorphResult(result, word) {
     (word.lemma && String(word.lemma).trim()) ||
     (word.form && String(word.form).trim()) ||
     '';
-  
-  const mappedPos = (result.pos ?? '').toString().trim();
+
+  const cfg = getActiveTagset();
+  const posKey = (result.pos ?? '').toString().trim();
+  const posDef = cfg?.posValues?.[posKey];
 
   return {
     lemma,
     postag,
     source: 'bsp/morpheus',
-    _posLabel: mappedPos,
+    pos: posKey,
+    _posLabel: posDef?.long || posKey || ''
   };
 }
 
