@@ -1,4 +1,4 @@
-import { getPosColorByChar   } from "../tags/tagsetStore.js";
+import { getPosColorByChar, getActiveTagset   } from "../tags/tagsetStore.js";
 
 // ===== POS color utilities =====
 const POS_COLORS = {
@@ -17,6 +17,74 @@ const POS_COLORS = {
   '': '#444', // unknown/other
   x: '#000000ff' // irregular
 };
+
+function _norm(s) {
+  return (s ?? '')
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, ' '); // collapses spaces + newlines
+}
+
+export function applyMorphMappings(retrieverKey, rawResult) {
+
+  const cfg = getActiveTagset();
+
+  const m = cfg?.mappings?.[retrieverKey];
+
+  if (window.morphMapDebug) {
+    console.groupCollapsed(`[morph-map] retriever=${retrieverKey}`);
+    console.log('cfg:', cfg);
+    console.log('has cfg.mappings?', !!cfg?.mappings);
+    console.log('has plugins.morph.mappings?', !!cfg?.plugins?.morph?.mappings);
+    console.log('has main.plugins.morph.mappings?', !!cfg?.main?.plugins?.morph?.mappings);
+    console.log('mapping found?', !!m);
+    console.log('mapping keys:', m ? Object.keys(m) : null);
+    console.log('rawResult:', rawResult);
+    console.groupEnd();
+  }
+
+  if (!m || !rawResult || typeof rawResult !== 'object') return rawResult;
+
+  const out = { ...rawResult };
+
+  // -----------------------------
+  // 1) Attribute name mappings
+  // -----------------------------
+  const attrMap = m.attributes || {};
+  for (const [fromKey, toKey] of Object.entries(attrMap)) {
+    if (fromKey in out && !(toKey in out)) {
+      out[toKey] = out[fromKey];
+    }
+    // optional: delete out[fromKey]; // if you want to fully normalize
+  }
+
+  // -----------------------------
+  // 2) Value mappings per attribute
+  // -----------------------------
+  const valueMaps = m.values || {};
+  for (const [attrName, table] of Object.entries(valueMaps)) {
+    if (!table) continue;
+
+    const rawVal = out[attrName];
+    if (rawVal == null) continue;
+
+    const k = _norm(rawVal);
+
+    // build a normalized lookup once per call
+    let mapped = null;
+    for (const [fromVal, toVal] of Object.entries(table)) {
+      if (_norm(fromVal) === k) {
+        mapped = toVal;
+        break;
+      }
+    }
+
+    if (mapped != null) out[attrName] = mapped;
+  }
+
+  return out;
+}
 
 export function composeUserPostag(posChar, fields) {
   // Always produce 9 characters

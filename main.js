@@ -412,17 +412,17 @@ function logActiveTagset(where = 'unknown') {
 }
 
 async function restoreTagsetFromStorage() {
-  console.log('[tagset] restoreTagsetFromStorage() running');
+  // console.log('[tagset] restoreTagsetFromStorage() running');
 
   const id = localStorage.getItem('activeTagsetId');
-  console.log('[tagset] stored id =', id);
+  // console.log('[tagset] stored id =', id);
   if (!id) return;
 
   const entry = getRegistryEntry(id);
-  console.log('[tagset] registry entry =', entry);
+  // console.log('[tagset] registry entry =', entry);
   if (!entry) return;
 
-  console.log('[tagset] distFile =', entry.distFile);
+  // console.log('[tagset] distFile =', entry.distFile);
 
   const cfg = await loadTagsetConfig(entry.distFile, entry);
   if (!cfg) return;
@@ -431,7 +431,7 @@ async function restoreTagsetFromStorage() {
   cfg._sourceDistFile = entry.distFile;
 
   setActiveTagset(cfg);
-  logActiveTagset('after restoreTagsetFromStorage');
+  // logActiveTagset('after restoreTagsetFromStorage');
 
   console.log('[tagset] loaded cfg =', cfg);
   console.log('[tagset] active set to', cfg.id);

@@ -40,7 +40,8 @@ export async function loadTagsetConfig(distFile, meta = null) {
     throw new Error(`Dist JSON empty/undefined: ${distFile}`);
   }
 
-  const cfg = parseDistJson(distJson, distFile);
+  const cfg = parseDistJson(distJson, meta ?? {});
+  cfg._sourceDistFile = distFile;
 
   // Attach registry metadata (dist files usually don't include these)
   if (meta) {
@@ -89,6 +90,12 @@ function parseDistJson(raw, registryEntry) {
   const relations       = extractRelations(plugins);
   const tagFormat       = detectTagFormat(raw, registryEntry);
 
+  const mappings =
+    morph?.mappings ??
+    plugins?.morph?.mappings ??
+    raw?.mappings ??
+    {};
+
   return {
     // Identity
     id:        registryEntry.id,
@@ -103,6 +110,7 @@ function parseDistJson(raw, registryEntry) {
     morphAttributes: extractMorphAttributes(morph),
     relations:       extractRelations(rel),
     tagFormat,
+    mappings,
 
     // Raw source preserved for debugging
     _raw: raw,

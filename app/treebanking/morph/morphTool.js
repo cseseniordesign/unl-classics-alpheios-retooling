@@ -1,4 +1,4 @@
-import { colorForTag, parseMorphTag, ensureDocumentSnapshot, composeUserPostag, ensureFormsArray} from './morphHelpers.js';
+import { colorForTag, parseMorphTag, ensureDocumentSnapshot, composeUserPostag, ensureFormsArray, applyMorphMappings} from './morphHelpers.js';
 import { renderCreateEditorBelow } from './morphEditor.js';
 import { colorForPOS } from '../tree/treeUtils.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
@@ -677,10 +677,13 @@ function enableMorphEntryExpansion(scopeEl) {
   const order = ORDER_BY_POS[posChar] || DEFAULT_ORDER;
 
   // Replace raw "v/n/a/…" with pretty words
-  const pretty = { ...parsed };
-  if (pretty.pos) {
-    pretty.pos = POS_LABELS[posChar] || pretty.pos;
-  }
+  // const pretty = { ...parsed };
+  // const mappedPosLabel = (entry.dataset.posLabel || '').trim();
+  // if (mappedPosLabel) {
+  //   pretty.pos = mappedPosLabel; // mapping wins
+  // } else if (pretty.pos) {
+  //   pretty.pos = POS_LABELS[posChar] || pretty.pos; // fallback
+  // }
 
     // Remove all "-" or empty fields before building HTML
   Object.keys(pretty).forEach(k => {
@@ -850,8 +853,14 @@ function userFormCardHTML(form, index, isActive) {
     i:'interjection', u:'punctuation', e: 'exclamation', x:'irregular'
   };
 
+  if (window.morphMapDebug) {
+    console.log('[card] form._posLabel =', form?._posLabel, 'form.pos =', form?.pos, form);
+  }
+
   const posChar = (form.postag || '')[0]?.toLowerCase() || '';
-  const posWord = posLabels[posChar] || posChar || '';
+  const posWord =
+    (form._posLabel && String(form._posLabel).trim()) ||
+    (posLabels[posChar] || posChar || '');
 
   const featureString = Object.entries(parsed)
     .filter(([k, v]) => k !== 'pos' && v && v !== '-')
@@ -895,11 +904,15 @@ function userFormCardHTML(form, index, isActive) {
     </div>
   `;
 
+  const posLabel = (form._posLabel == null ? '' : String(form._posLabel))
+  .replace(/"/g, '&quot;');
+
   return `
     <div class="morph-entry user-form${expandedClass}" 
         data-index="${index}" 
         data-expanded="${expandedAttr}" 
-        aria-expanded="${expandedAttr}">
+        aria-expanded="${expandedAttr}"
+        data-pos-label="${posLabel.replaceAll('"', '&quot;')}">
       <input id="${cbId}" type="checkbox" ${isActive ? 'checked' : ''} />
       <div class="morph-content">
         <span class="morph-lemma" style="color:${col}">
@@ -1138,8 +1151,13 @@ function posCharFromMorpheusPOS(posRaw) {
   if (s.startsWith('part') || s.includes('particle')) return 'd'; // treat particles like adverbs (Arethusa-style)
   if (s.includes('indeclin')) return 'd'; // indeclinable often behaves like particle/adverb for coloring
   if (s.startsWith('conj'))         return 'c';
-  if (s.startsWith('prep') ||
-      s.includes('preposition'))    return 'r'; // adposition
+  if (
+    s.startsWith('prep') ||
+    s.includes('preposition') ||
+    s.startsWith('adp') ||
+    s.startsWith('adpos') ||
+    s.includes('adposition')
+  ) return 'r'; // adposition
   if (s.startsWith('num') ||
       s.startsWith('card'))         return 'm'; // numeral
   if (s.startsWith('excl') || s.startsWith('exclam')) return isLatin ? 'e' : 'i';
@@ -1364,11 +1382,14 @@ function formFromMorphResult(result, word) {
     (word.lemma && String(word.lemma).trim()) ||
     (word.form && String(word.form).trim()) ||
     '';
+  
+  const mappedPos = (result.pos ?? '').toString().trim();
 
   return {
     lemma,
     postag,
-    source: 'bsp/morpheus'
+    source: 'bsp/morpheus',
+    _posLabel: mappedPos,
   };
 }
 
@@ -1376,10 +1397,7 @@ function formFromMorphResult(result, word) {
 async function attachMorpheusSuggestions(word, toolBody) {
   if (!word) return;
 
-  // prevent concurrent calls (hover + preselect can fire quickly)
   if (word._morpheusLoading) return;
-
-  // If we already loaded successfully AND we have forms, no need to refetch
   if (word._morpheusLoaded && Array.isArray(word.forms) && word.forms.length > 0) return;
 
   word._morpheusLoading = true;
@@ -1392,44 +1410,108 @@ async function attachMorpheusSuggestions(word, toolBody) {
 
   const surfaceRaw = (word.form && String(word.form).trim()) || '';
   const lemmaRaw   = (word.lemma && String(word.lemma).trim()) || '';
-
-  // Try a cleaned surface too (punctuation, brackets, quotes can break queries)
   const cleanedSurface = surfaceRaw.replace(/[·.,;:!?()[\]{}"“”'’]/g, '').trim();
 
   let results = [];
   let usedQuery = '';
+
   try {
     // 1) Try surface
     if (surfaceRaw) {
-      results = await fetchMorphology(surfaceRaw, lang);
+      usedQuery = surfaceRaw;
+      const raw = await fetchMorphology(surfaceRaw, lang);
+
+      if (window.morphDebug) {
+        console.groupCollapsed(`[morpheus] surface="${surfaceRaw}" lang=${lang}`);
+        console.log('RAW:', raw);
+        if (Array.isArray(raw) && raw[0]) console.log('RAW[0]:', raw[0]);
+        console.groupEnd();
+      }
+
+      results = Array.isArray(raw)
+        ? raw.map(r => applyMorphMappings('BspMorphRetriever', r))
+        : [];
+
+      if (window.morphMapDebug && Array.isArray(raw) && raw[0] && results[0]) {
+        console.groupCollapsed(`[morph-map] ${word.form} (surface) retriever=BspMorphRetriever`);
+        console.log('LEFT (raw)[0]:', raw[0]);
+        console.log('RIGHT (mapped)[0]:', results[0]);
+        ['pos','tense','voice','mood','case','gender','num','person','pofs','comp'].forEach(k => {
+          const a = raw[0]?.[k], b = results[0]?.[k];
+          if (a !== b) console.log(`${k}:`, a, '->', b);
+        });
+        console.groupEnd();
+      }
     }
 
     // 2) Try cleaned surface
     if ((!results || results.length === 0) && cleanedSurface && cleanedSurface !== surfaceRaw) {
-      results = await fetchMorphology(cleanedSurface, lang);
+      usedQuery = cleanedSurface;
+      const raw = await fetchMorphology(cleanedSurface, lang);
+
+      if (window.morphDebug) {
+        console.groupCollapsed(`[morpheus] cleaned="${cleanedSurface}" lang=${lang}`);
+        console.log('RAW:', raw);
+        if (Array.isArray(raw) && raw[0]) console.log('RAW[0]:', raw[0]);
+        console.groupEnd();
+      }
+
+      results = Array.isArray(raw)
+        ? raw.map(r => applyMorphMappings('BspMorphRetriever', r))
+        : [];
+
+      if (window.morphMapDebug && Array.isArray(raw) && raw[0] && results[0]) {
+        console.groupCollapsed(`[morph-map] ${word.form} (cleaned) retriever=BspMorphRetriever`);
+        console.log('LEFT (raw)[0]:', raw[0]);
+        console.log('RIGHT (mapped)[0]:', results[0]);
+        ['pos','tense','voice','mood','case','gender','num','person','pofs','comp'].forEach(k => {
+          const a = raw[0]?.[k], b = results[0]?.[k];
+          if (a !== b) console.log(`${k}:`, a, '->', b);
+        });
+        console.groupEnd();
+      }
     }
 
     // 3) Try lemma fallback
     if ((!results || results.length === 0) && lemmaRaw) {
-      results = await fetchMorphology(lemmaRaw, lang);
+      usedQuery = lemmaRaw;
+      const raw = await fetchMorphology(lemmaRaw, lang);
+
+      if (window.morphDebug) {
+        console.groupCollapsed(`[morpheus] lemma="${lemmaRaw}" lang=${lang}`);
+        console.log('RAW:', raw);
+        if (Array.isArray(raw) && raw[0]) console.log('RAW[0]:', raw[0]);
+        console.groupEnd();
+      }
+
+      results = Array.isArray(raw)
+        ? raw.map(r => applyMorphMappings('BspMorphRetriever', r))
+        : [];
+
+      if (window.morphMapDebug && Array.isArray(raw) && raw[0] && results[0]) {
+        console.groupCollapsed(`[morph-map] ${word.form} (lemma) retriever=BspMorphRetriever`);
+        console.log('LEFT (raw)[0]:', raw[0]);
+        console.log('RIGHT (mapped)[0]:', results[0]);
+        ['pos','tense','voice','mood','case','gender','num','person','pofs','comp'].forEach(k => {
+          const a = raw[0]?.[k], b = results[0]?.[k];
+          if (a !== b) console.log(`${k}:`, a, '->', b);
+        });
+        console.groupEnd();
+      }
     }
-
-    
   } catch (err) {
-    // If fetchMorphology threw an error (like a 404 or connection refused)
-    // we re-throw it so the BATCH loop knows to stop.
-    throw err; 
-}
+    throw err;
+  } finally {
+    // IMPORTANT: prevents “stuck loading” if any branch throws/returns weirdly
+    word._morpheusLoading = false;
+  }
 
-  // If still nothing, allow retry later (don’t permanently lock out)
   if (!Array.isArray(results) || results.length === 0) {
     if (window.morphDebug) console.log('[Morph] no Morpheus results for', usedQuery || surfaceRaw || lemmaRaw);
-    word._morpheusLoading = false;
     word._morpheusLoaded = false;
     return;
   }
 
-  // From here: we successfully got results at least once
   word._morpheusLoaded = true;
 
   ensureFormsArray(word);
@@ -1548,4 +1630,13 @@ function shortPOS(postag = '') {
     x: 'irregular'
   };
   return map[c] || t || '';
+}
+
+function _escAttr(s) {
+  return String(s ?? '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;');
 }

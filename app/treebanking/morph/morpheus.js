@@ -112,7 +112,8 @@ export async function fetchMorphology(word, lang) {
     console.log('[Morph] flattened results for', word, results);
     console.log('[Morph] unique POS values:', uniquePOS);
   }
-
+  // console.log('[morpheus] raw response parsed:', results);
+  // console.log('[morpheus] first item:', results?.[0]);
   return results;
     
   } catch (err) {
