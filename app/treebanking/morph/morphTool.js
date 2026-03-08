@@ -234,17 +234,6 @@ export function setupMorphTool() {
 
   // Ensure global binding (if other code calls it)
   window.renderMorphInfo = renderMorphInfo;
-
-  // When any form checkbox changes, collapse all expanded morph entries
-  document.addEventListener('change', (e) => {
-    if (!e.target.matches('.morph-entry input[type="checkbox"]')) return;
-    document.querySelectorAll('.morph-entry.expanded').forEach(entry => {
-      entry.classList.remove('expanded');
-      entry.dataset.expanded = 'false';
-      entry.querySelector('.morph-details')?.remove();
-      entry.querySelector('.morph-divider')?.remove();
-    });
-  });
 }
 
 /**
@@ -376,9 +365,17 @@ export async function renderUserFormsList(word, toolBody) {
   // Render sorted by count (display order only)
   const order = _sortedFormIndicesByCount(word.forms);
 
+  const expandedIds = new Set(
+    [...list.querySelectorAll('.morph-entry.expanded')].map(el => String(el.dataset.index))
+  );
   list.innerHTML = order.map((realIdx) => {
     const f = word.forms[realIdx];
-    return userFormCardHTML(f, realIdx, Number(word.activeForm) === realIdx);
+    return userFormCardHTML(
+      f,
+      realIdx,
+      Number(word.activeForm) === realIdx,
+      expandedIds.has(String(realIdx))
+    );
   }).join('');
 
   const mc = toolBody.querySelector('.morph-container');
@@ -397,6 +394,7 @@ export async function renderUserFormsList(word, toolBody) {
       // determine which form this belongs to
       const card = e.target.closest('.user-form');
       const idx = Number(card.dataset.index);
+      const wasExpanded = card.classList.contains('expanded');
 
       // update active form and apply globally
       word.activeForm = idx;
@@ -419,10 +417,17 @@ export async function renderUserFormsList(word, toolBody) {
           // non-fatal
         }
       }
-      triggerAutoSave(); // autosave after switching active form
-      void renderUserFormsList(word, toolBody);
-      // re-render Morph panel and update XML tab
-      window.renderMorphInfo(word);
+      triggerAutoSave();
+
+      await renderUserFormsList(word, toolBody);
+
+      const rerenderedCard = toolBody.querySelector(`.morph-entry[data-index="${idx}"]`);
+      if (rerenderedCard && wasExpanded) {
+        rerenderedCard.classList.add('expanded');
+        rerenderedCard.dataset.expanded = 'true';
+        rerenderedCard.setAttribute('aria-expanded', 'true');
+      }
+
       if (typeof window.updateXMLIfActive === 'function') {
         window.updateXMLIfActive();
       }
@@ -827,7 +832,7 @@ async function appendCreateAndUserForms(word, toolBody) {
   }
 }
 
-function userFormCardHTML(form, index, isActive) {
+function userFormCardHTML(form, index, isActive, isExpanded = false) {
   // Build a concise readable summary (noun.plural.masculine.vocative)
   const parsed = parseMorphTag(form.postag || '');
   const VALUE_MAPS = {
@@ -872,8 +877,8 @@ function userFormCardHTML(form, index, isActive) {
 
   const col = colorForTag(form.postag || '');
 
-  const expandedClass = isActive ? ' expanded' : '';
-  const expandedAttr  = isActive ? 'true' : 'false';
+  const expandedClass = isExpanded ? ' expanded' : '';
+  const expandedAttr  = isExpanded ? 'true' : 'false';
   const cbId = `uf-check-${index}`;
   const src = normalizeSource(form.source);
 
