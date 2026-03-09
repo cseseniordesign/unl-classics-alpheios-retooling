@@ -387,10 +387,16 @@ export async function renderUserFormsList(word, toolBody) {
     cb.addEventListener('change', async (e) => {
       if (!e.target.checked) return; // only handle when checked
 
-      // uncheck all other boxes
+      // uncheck all other user-form boxes
       list.querySelectorAll('input[type="checkbox"]').forEach(x => {
         if (x !== e.target) x.checked = false;
       });
+
+      // also uncheck the document-form box at the top
+      const docCheckbox = toolBody.querySelector('.morph-entry[data-index="-1"] input[type="checkbox"]');
+      if (docCheckbox && docCheckbox !== e.target) {
+        docCheckbox.checked = false;
+      }
 
       // determine which form this belongs to
       const card = e.target.closest('.user-form');
