@@ -2,7 +2,7 @@ import { colorForPOS, fitTreeToView} from './treeUtils.js';
 import {handleWordClick} from '../ui/sentenceDisplay.js'
 import { setupWordHoverSync } from './hoverSync.js';
 window.selectedWordId = null; // keeps track of first clicked node
-
+let isInitialTreeLoad = true;
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: createNodeHierarchy
@@ -14,7 +14,11 @@ window.selectedWordId = null; // keeps track of first clicked node
  * @param {string|number} sentenceId - ID of the sentence to visualize.
  * @returns {void} Runs synchronously to render the dependency tree for the specified sentence.
  */
-export function createNodeHierarchy(sentenceId) {
+export function createNodeHierarchy(sentenceId, autoFit= false) {
+  const previousTransform = window.svg
+  ? d3.zoomTransform(window.svg.node())
+  : null;
+  
   if (!window.treebankData || !Array.isArray(window.treebankData)) {
     console.warn("No treebank data found.");
     return;
@@ -38,6 +42,7 @@ export function createNodeHierarchy(sentenceId) {
 
   // Generate a hierarchical layout from the flat data
   const rootHierarchy = buildHierarchy(idParentPairs);
+  
   let maxMainX = 0;
   rootHierarchy.children?.forEach(child => {
     if (!child.data.isForestRoot) {
@@ -131,8 +136,19 @@ rootHierarchy.children?.forEach(child => {
     });
   svg.call(zoom);
 
+  if (window.svg && window.zoom && previousTransform) {
+    window.svg.call(window.zoom.transform, previousTransform);
+  }
+
+  if (isInitialTreeLoad && window.svg && window.zoom) {
+    fitTreeToView(svg, gx, container, zoom, margin, true);
+    isInitialTreeLoad = false;
+  }
+
   // Adjust zoom level and centering to fit tree neatly in view
-  fitTreeToView(svg, gx, container, zoom, margin);
+  if (autoFit) {
+    fitTreeToView(svg, gx, container, zoom, margin, true);
+  }
 
   // Re-sync highlights after nodes are redrawn
   setupWordHoverSync();

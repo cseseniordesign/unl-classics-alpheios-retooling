@@ -24,6 +24,7 @@ export function colorForPOS(w) {
   // 2) fallback
   return POS_COLORS[ch] || POS_COLORS[''];
 }
+let resizeListenerInitialized = false;
 
 /**
  * --------------------------------------------------------------------------
@@ -45,7 +46,8 @@ export function colorForPOS(w) {
  * @param {Object} margin - Margins for positioning.
  * @returns {void}
  */
-export function fitTreeToView(svg, gx, container, zoom, margin) {
+export function fitTreeToView(svg, gx, container, zoom, margin, hardFit= false) {
+
   // --- SAFETY GUARDS ---
   if (!svg || !gx || !container || !zoom || !margin) return;
   if (!gx.node()) return; // prevent crash if gx cleared or detached
@@ -71,7 +73,7 @@ export function fitTreeToView(svg, gx, container, zoom, margin) {
   const innerH = newHeight - margin.top  - margin.bottom - pad * 2;
 
   // adjust scale for different sized trees
-  const FIT_PADDING = 1;
+  const FIT_PADDING = hardFit ? 1: 0.85;
 
   const rawScale = Math.min(
     innerW / Math.max(bbox.width, 1),
@@ -97,45 +99,47 @@ export function fitTreeToView(svg, gx, container, zoom, margin) {
     .call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
 
   // --- SMOOTH + EFFICIENT RESIZE HANDLER ---
-  window.removeEventListener('resize', fitTreeToView);
-  let resizeTimeout;
-  let lastWidth = container?.clientWidth || 800;
-  let lastHeight = container?.clientHeight || 600;
-
-  window.addEventListener('resize', () => {
-    const treeVisible = document.getElementById('tree-view')?.offsetParent !== null;
-    if (!treeVisible || !window.svg) return;
-
-    const currentWidth = container?.clientWidth || 800;
-    const currentHeight = container?.clientHeight || 600;
-
-    // Apply lightweight CSS scaling for instant visual response
-    const scaleX = currentWidth / lastWidth;
-    const scaleY = currentHeight / lastHeight;
-    const liveScale = Math.min(scaleX, scaleY);
-
-    window.svg
-      .style('transform-origin', 'center top')
-      .style('transition', 'transform 0.05s linear')
-      .style('transform', `scale(${liveScale})`);
-
-    // Debounce the expensive D3 recomputation
-    clearTimeout(resizeTimeout);
-    resizeTimeout = setTimeout(() => {
-      // Reset temporary CSS scale
-      window.svg.style('transform', '');
-      window.svg.style('transition', '');
-
-      if (window.svg && window.gx && window.container && window.zoom && window.margin) {
-        // Recompute and animate back into perfect position
-        fitTreeToView(window.svg, window.gx, window.container, window.zoom, window.margin);
-      }
-
-      // Update baseline size for next resize
-      lastWidth = currentWidth;
-      lastHeight = currentHeight;
-    }, 250); // wait until resizing stops
-  });
+  if (resizeListenerInitialized) {
+    let resizeTimeout;
+    let lastWidth = container?.clientWidth || 800;
+    let lastHeight = container?.clientHeight || 600;
+  
+    window.addEventListener('resize', () => {
+      const treeVisible = document.getElementById('tree-view')?.offsetParent !== null;
+      if (!treeVisible || !window.svg) return;
+  
+      const currentWidth = container?.clientWidth || 800;
+      const currentHeight = container?.clientHeight || 600;
+  
+      // Apply lightweight CSS scaling for instant visual response
+      const scaleX = currentWidth / lastWidth;
+      const scaleY = currentHeight / lastHeight;
+      const liveScale = Math.min(scaleX, scaleY);
+  
+      window.svg
+        .style('transform-origin', 'center top')
+        .style('transition', 'transform 0.05s linear')
+        .style('transform', `scale(${liveScale})`);
+  
+      // Debounce the expensive D3 recomputation
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        // Reset temporary CSS scale
+        window.svg.style('transform', '');
+        window.svg.style('transition', '');
+  
+        if (window.svg && window.gx && window.container && window.zoom && window.margin) {
+          // Recompute and animate back into perfect position
+          fitTreeToView(window.svg, window.gx, window.container, window.zoom, window.margin);
+        }
+  
+        // Update baseline size for next resize
+        lastWidth = currentWidth;
+        lastHeight = currentHeight;
+      }, 250); // wait until resizing stops
+    });
+    resizeListenerInitialized = true;
+  }
 }
 
 /**  

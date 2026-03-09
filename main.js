@@ -325,7 +325,7 @@ function setupTreeButtons() {
 
   // Center (fit to view)
   centerBtn?.addEventListener("click", () => {
-    fitTreeToView(window.svg, window.gx, window.container, window.zoom, window.margin);
+    fitTreeToView(window.svg, window.gx, window.container, window.zoom, window.margin, true);
   });
 
   // Focus Root — focuses the syntactic root node
@@ -445,7 +445,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   await restoreTagsetFromStorage();
   setLanguage(localStorage.getItem("textLanguage") || "grc");
   const userInput = sessionStorage.getItem("userInput");
-  const rawUploadedData = localStorage.getItem("treebankData");
 
   // --- Load and render ---
   if (userInput) {
