@@ -4,10 +4,13 @@ import { triggerAutoSave } from '../xml/saveXML.js';
 import { showConfirmDialog } from '../ui/modal.js';
 import { getLanguage } from '../input/language.js';
 import { initMorphLexicon, incrementUsage, upsertForm, mergeIntoAllTokens, pickTopLexiconForm } from './morphLexicon.js';
+import { getPosList, getPosValues, getApplicableMorphAttributes, getMorphAttribute } from '../tags/tagsetStore.js';
 
 // Inline editor that appears under the button and closes on save
 export function renderCreateEditorBelow(word, toolBody, opts = {}) {
     const seedForm = opts.seedForm || null;
+    console.log('[renderCreateEditorBelow] seedForm =', seedForm);
+    console.log('[renderCreateEditorBelow] opts =', opts);
     ensureFormsArray(word);
     const lang = getLanguage();
     const isLatin = String(lang).toLowerCase().startsWith('lat');
@@ -28,21 +31,7 @@ export function renderCreateEditorBelow(word, toolBody, opts = {}) {
 
         <div class="field">
         <label>Part of Speech</label>
-        <select id="nf-pos">
-            <option value="">— choose —</option>
-            <option value="n">noun</option>
-            <option value="a">adjective</option>
-            <option value="v">verb</option>
-            <option value="p">pronoun</option>
-            <option value="l">article</option>
-            <option value="d">adverb</option>
-            <option value="c">conjunction</option>
-            <option value="r">adposition</option>
-            <option value="m">numeral</option>
-            <option value="i">interjection</option>
-            <option value="u">punctuation</option>
-            <option value="x">irregular</option>
-        </select>
+        <select id="nf-pos"></select>   
         </div>
 
         <div id="nf-dynamic"></div>
@@ -61,6 +50,17 @@ export function renderCreateEditorBelow(word, toolBody, opts = {}) {
 
     const nfLemma = host.querySelector('#nf-lemma');
     const nfPos   = host.querySelector('#nf-pos');
+
+    const posList = getPosList();
+    nfPos.innerHTML = '<option value="">— choose —</option>';
+
+    posList.forEach(pos => {
+        const opt = document.createElement('option');
+        opt.value = pos.key || '';
+        opt.dataset.postag = pos.postag || '';
+        opt.textContent = pos.long || pos.short || pos.postag || '';
+        nfPos.appendChild(opt);
+    });
 
     // POS adjustments for Latin
     if (isLatin) {
@@ -99,38 +99,6 @@ export function renderCreateEditorBelow(word, toolBody, opts = {}) {
     host.querySelectorAll('.invalid').forEach(el => el.classList.remove('invalid'));
     }
 
-    // Option maps
-    const PERSON = [["",  "---"], ["1", "1st"], ["2", "2nd"], ["3", "3rd"]];
-    const TENSE = isLatin
-    ? { "": "---", p:"present", i:"imperfect", r:"perfect", l:"plusquamperfect", f:"future", t:"future perfect" }
-    : { "": "---", p:"present", i:"imperfect", r:"perfect", l:"plusquamperfect", f:"future", t:"future perfect", a:"aorist" };
-    // Greek: optative exists; Latin: no optative, add gerund/gerundive/supine
-    const MOOD = isLatin
-    ? { "": "---", i:"indicative", s:"subjunctive", n:"infinitive", m:"imperative", p:"participle", d:"gerund", g:"gerundive", u:"supine" }
-    : { "": "---", i:"indicative", s:"subjunctive", o:"optative", n:"infinitive", m:"imperative", p:"participle" };
-
-    // Greek: medio-passive (e); Latin: no medio-passive, add deponens (d)
-    const VOICE = isLatin
-    ? { "": "---", a:"active", p:"passive", d:"deponens" }
-    : { "": "---", a:"active", e:"medio-passive", p:"passive" };
-
-    // Latin: singular/plural only
-    const NUMBER = isLatin
-    ? { "": "---", s:"singular", p:"plural" }
-    : { "": "---", s:"singular", p:"plural", d:"dual" };
-
-    // Latin: no common gender
-    const GENDER = isLatin
-    ? { "": "---", m:"masculine", f:"feminine", n:"neuter" }
-    : { "": "---", m:"masculine", f:"feminine", n:"neuter", c:"common" };
-
-    // Latin: add ablative (b) + locative (l)
-    const CASES = isLatin
-    ? { "": "---", n:"nominative", g:"genitive", d:"dative", a:"accusative", b:"ablative", l:"locative", v:"vocative" }
-    : { "": "---", n:"nominative", g:"genitive", d:"dative", a:"accusative", v:"vocative" };
-
-    const DEGREE = { "": "---", p:"positive", c:"comparative", s:"superlative" };
-
     /**
      * Need to replace interjection with exclamtion while in latin (has no other fields)
      * No article pos in latin
@@ -146,238 +114,202 @@ export function renderCreateEditorBelow(word, toolBody, opts = {}) {
      * - If mood is supine, fields are: Person, Number, Tense, Mood, and Voice
      */
 
-    const buildSelect = (id, map) => {
-        const sel = document.createElement('select');
-        sel.id = id;
 
-        const entries = Array.isArray(map) ? map : Object.entries(map);
+const FIELD_META = {
+  pers:   { id: 'nf-person', label: 'Person' },
+  num:    { id: 'nf-num',    label: 'Number' },
+  tense:  { id: 'nf-tense',  label: 'Tense' },
+  mood:   { id: 'nf-mood',   label: 'Mood' },
+  voice:  { id: 'nf-voice',  label: 'Voice' },
+  gend:   { id: 'nf-g',      label: 'Gender' },
+  case:   { id: 'nf-case',   label: 'Casus' },
+  degree: { id: 'nf-deg',    label: 'Degree' }
+};
 
-        entries.forEach(([v, l]) => {
-            const o = document.createElement('option');
-            o.value = v;
-            o.textContent = l;
-            sel.appendChild(o);
+function buildSelectFromAttr(id, attrDef) {
+  const sel = document.createElement('select');
+  sel.id = id;
+  sel.className = 'cf-select';
+  sel.style.width = '100%';
+
+  const blank = document.createElement('option');
+  blank.value = '';
+  blank.textContent = '---';
+  sel.appendChild(blank);
+
+  Object.entries(attrDef?.values || {}).forEach(([key, def]) => {
+    const opt = document.createElement('option');
+    opt.value = def?.postag || '';
+    opt.textContent = def?.long || def?.short || key;
+    sel.appendChild(opt);
+  });
+
+  return sel;
+}
+
+function configKeyToPostagValue(attrName, configKey) {
+  if (!configKey) return '';
+
+  const attrDef = getMorphAttribute(attrName);
+  if (!attrDef) return '';
+
+  const valueDef = attrDef.values?.[configKey];
+  return valueDef?.postag || '';
+}
+
+function collectDynamicValuesFromUI() {
+  const values = {};
+
+  const fieldMap = [
+    ['pers', 'nf-person'],
+    ['num', 'nf-num'],
+    ['tense', 'nf-tense'],
+    ['mood', 'nf-mood'],
+    ['voice', 'nf-voice'],
+    ['gend', 'nf-g'],
+    ['case', 'nf-case'],
+    ['degree', 'nf-deg']
+  ];
+
+  fieldMap.forEach(([cfgKey, elId]) => {
+    const el = nfDyn.querySelector(`#${elId}`);
+    const attrDef = getMorphAttribute(cfgKey);
+
+    if (!el || !attrDef) {
+      values[cfgKey] = '';
+      return;
+    }
+
+    let selectedKey = '';
+
+    for (const [key, def] of Object.entries(attrDef.values || {})) {
+      if ((def?.postag || '') === el.value) {
+        selectedKey = key;
+        break;
+      }
+    }
+
+    values[cfgKey] = selectedKey;
+  });
+
+  return values;
+}
+
+function normalizePosKey(posLike) {
+  const raw = String(posLike || '').trim().toLowerCase();
+  if (!raw) return '';
+
+  const posList = getPosList();
+
+  const match = posList.find(pos =>
+    String(pos.key || '').toLowerCase() === raw ||
+    String(pos.long || '').toLowerCase() === raw ||
+    String(pos.short || '').toLowerCase() === raw ||
+    String(pos.postag || '').toLowerCase() === raw
+  );
+
+  return match?.key || '';
+}
+
+function renderDynamicForPOS(posKeyLike, preservedValues = {}) {
+  nfDyn.innerHTML = '';
+  const posKey = normalizePosKey(posKeyLike);
+  if (!posKey) return;
+
+  const state = { pos: posKey, ...preservedValues };
+  const attrs = getApplicableMorphAttributes(state);
+
+  console.log('[renderDynamicForPOS] posKey =', posKey);
+  console.log('[renderDynamicForPOS] state =', state);
+  console.log('[renderDynamicForPOS] attrs =', attrs);
+
+  const add = (label, el) => {
+    const wrap = document.createElement('div');
+    wrap.className = 'field';
+
+    const lab = document.createElement('label');
+    lab.textContent = label;
+
+    wrap.append(lab, el);
+    nfDyn.appendChild(wrap);
+    return wrap;
+  };
+
+  attrs.forEach(attr => {
+    const meta = FIELD_META[attr.name];
+    if (!meta) return;
+
+    const sel = buildSelectFromAttr(meta.id, attr);
+
+    if (preservedValues[attr.name]) {
+      const postagValue = configKeyToPostagValue(attr.name, preservedValues[attr.name]);
+      if (postagValue) {
+        sel.value = postagValue;
+      }
+    }
+
+    add(meta.label, sel);
+  });
+
+  nfDyn.querySelectorAll('select').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const nextValues = collectDynamicValuesFromUI();
+      renderDynamicForPOS(posKey, nextValues);
+    });
+  });
+}
+
+
+nfPos.addEventListener('change', e => {
+  renderDynamicForPOS(e.target.value);
+});
+
+// --- Prefill from clicked form (clone) ---
+if (seedForm?.postag) {
+  const parsed = parseMorphTag(seedForm.postag) || {};
+  let posChar = seedForm.postag[0]?.toLowerCase() || '';
+
+  if (isLatin && posChar === 'i') posChar = 'e';
+  if (!isLatin && posChar === 'e') posChar = 'i';
+
+  let seedPosKey = parsed.pos || '';
+
+    // normalize parsed.pos into the actual config key
+    if (seedPosKey) {
+        const normalizedMatch = posList.find(pos =>
+        String(pos.key || '').toLowerCase() === String(seedPosKey).toLowerCase() ||
+        String(pos.long || '').toLowerCase() === String(seedPosKey).toLowerCase() ||
+        String(pos.short || '').toLowerCase() === String(seedPosKey).toLowerCase()
+        );
+
+        seedPosKey = normalizedMatch?.key || seedPosKey;
+    }
+
+    // fallback from postag char if parsed.pos was empty or unusable
+    if (!seedPosKey && posChar) {
+        const match = posList.find(pos =>
+        String(pos.postag || '').toLowerCase() === posChar
+        );
+        seedPosKey = match?.key || '';
+    }
+
+    console.log('[seedForm] parsed =', parsed);
+    console.log('[seedForm] seedPosKey =', seedPosKey);
+
+    if (seedPosKey) {
+        nfPos.value = seedPosKey;
+
+        renderDynamicForPOS(seedPosKey, {
+        pers: parsed.person || '',
+        num: parsed.number || '',
+        tense: parsed.tense || '',
+        mood: parsed.mood || '',
+        voice: parsed.voice || '',
+        gend: parsed.gender || '',
+        case: parsed.case || '',
+        degree: parsed.degree || ''
         });
-
-        sel.className = 'cf-select';
-        sel.style.width = '100%';
-        sel.value = "";            // force default to '---' when present
-        return sel;
-    };
-
-function createLabel(text){
-    const l = document.createElement('label');
-    l.textContent = text;
-    return l;
-}
-
-function renderDynamicForPOS(pos) {
-    nfDyn.innerHTML = '';
-    if (pos === 'i' || pos === 'e' || pos === 'c' || pos === 'r' || pos === 'u' || pos === 'x') {
-        nfDyn.innerHTML = '';
-        return;
     }
-
-    const add = (label, el) => {
-        const wrap = document.createElement('div');
-        wrap.className = 'field';
-        const lab = document.createElement('label');
-        lab.textContent = label;
-        wrap.append(lab, el);
-        nfDyn.appendChild(wrap);
-        return wrap;
-    };
-
-    // ===================================================================
-    //                         VERBS (Matches Arethusa)
-    // ===================================================================
-    if (pos === 'v') {
-        const personSel = buildSelect('nf-person', PERSON);
-        const numSel    = buildSelect('nf-num', NUMBER);
-        const tenseSel  = buildSelect('nf-tense', TENSE);
-        const moodSel   = buildSelect('nf-mood', MOOD);
-        const voiceSel  = buildSelect('nf-voice', VOICE);
-
-        const genderSel = buildSelect('nf-g', GENDER);
-        const caseSel   = buildSelect('nf-case', CASES);
-        const degSel    = buildSelect('nf-deg', DEGREE);
-
-        // --- Create all wrappers ONCE
-        const pWrap = add('Person', personSel);
-        const nWrap = add('Number', numSel);
-        const tWrap = add('Tense',  tenseSel);
-        const mWrap = add('Mood',   moodSel);
-        const vWrap = add('Voice',  voiceSel);
-
-        const div = document.createElement('div');
-        div.className = 'morph-divider';
-        nfDyn.appendChild(div);
-
-        const gWrap = add('Gender', genderSel);
-        const cWrap = add('Casus',  caseSel);
-        const dWrap = add('Degree', degSel);
-
-        // Map wrapper names → elements so we can reorder / show / hide easily
-        const WRAPPERS = { pWrap, nWrap, tWrap, mWrap, vWrap, gWrap, cWrap, dWrap, div };
-
-        // Layout for each mood, in **postag order**
-        // "" = '---' initial; treat like infinitive (no person/number)
-        const VERB_LAYOUT = isLatin
-        ? {
-            "":  ["tWrap", "mWrap", "vWrap"],
-
-            // indicative/subjunctive/imperative: Person, Number, Tense, Mood, Voice
-            "i": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
-            "s": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
-            "m": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
-
-            // infinitive: Tense, Mood, Voice
-            "n": ["tWrap", "mWrap", "vWrap"],
-
-            // gerund: Person, Number, Tense, Mood, Voice, Casus
-            "d": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap", "div", "cWrap"],
-
-            // gerundive: Person, Number, Tense, Mood, Voice, Gender, Casus
-            "g": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap", "div", "gWrap", "cWrap"],
-
-            // participle: Number, Tense, Mood, Voice, Gender, Casus, Degree
-            "p": ["nWrap", "tWrap", "mWrap", "vWrap", "div", "gWrap", "cWrap", "dWrap"],
-
-            // supine: Person, Number, Tense, Mood, Voice
-            "u": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"]
-            }
-        : {
-            "":  ["tWrap", "mWrap", "vWrap"],
-            "i": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
-            "s": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
-            "o": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
-            "m": ["pWrap", "nWrap", "tWrap", "mWrap", "vWrap"],
-            "n": ["tWrap", "mWrap", "vWrap"],
-            "p": ["nWrap", "tWrap", "mWrap", "vWrap", "div", "gWrap", "cWrap", "dWrap"]
-            };
-
-        function applyVerbLayout() {
-            const mood = moodSel.value || "";
-            const order = VERB_LAYOUT[mood] || VERB_LAYOUT[""];
-
-            // 1) Hide everything
-            Object.values(WRAPPERS).forEach(el => {
-            if (!el) return;
-            el.style.display = 'none';
-            });
-
-            // 2) Show + reorder according to layout
-            order.forEach(key => {
-            const el = WRAPPERS[key];
-            if (!el) return;
-
-            // hr vs normal field
-            if (key === "div") {
-                el.style.display = 'block';
-                nfDyn.appendChild(el);
-            } else {
-                el.style.display = 'flex';
-                nfDyn.appendChild(el);
-            }
-            });
-        }
-
-        // Initial state: mood is '---' so you get Tense / Mood / Voice only
-        applyVerbLayout();
-
-        // Whenever mood changes, update the layout to match Arethusa
-        moodSel.addEventListener('change', applyVerbLayout);
-
-        return;
-    }
-
-    // ===================================================================
-    //                       PRONOUN (p)
-    // ===================================================================
-    if (pos === 'p') {
-    if (!isLatin) add('Person', buildSelect('nf-person', PERSON));
-    add('Number', buildSelect('nf-num', NUMBER));
-    add('Gender', buildSelect('nf-g',    GENDER));
-    add('Casus',  buildSelect('nf-case', CASES));
-    return;
-    }
-
-    // ===================================================================
-    //                   ADJECTIVE (a)
-    // ===================================================================
-    if (pos === 'a') {
-        add('Number', buildSelect('nf-num',   NUMBER));
-        add('Gender', buildSelect('nf-g',     GENDER));
-        add('Casus',  buildSelect('nf-case',  CASES));
-        add('Degree', buildSelect('nf-deg',   DEGREE));
-        return;
-    }
-
-    // ===================================================================
-    //     Noun / Article / Numeral (n, l, m)
-    // ===================================================================
-    if (['n', 'l', 'm'].includes(pos)) {
-        add('Number', buildSelect('nf-num', NUMBER));
-        add('Gender', buildSelect('nf-g',   GENDER));
-        add('Casus',  buildSelect('nf-case', CASES));
-        return;
-    }
-
-    // ===================================================================
-    //               Adverb (d)
-    // ===================================================================
-    if (pos === 'd') {
-        add('Degree', buildSelect('nf-deg', DEGREE));
-        return;
-    }
-
-    // Other POS have no dynamic fields
-    nfDyn.innerHTML = '';
-}
-
-
-nfPos.addEventListener('change', e => renderDynamicForPOS(e.target.value));
-
-    // --- Prefill from clicked form (clone) ---
-    const setSelectIfExists = (selector, val) => {
-    const el = nfDyn.querySelector(selector);
-    if (!el) return;
-    el.value = (val ?? '');
-    };
-
-    if (seedForm?.postag) {
-        const parsed = parseMorphTag(seedForm.postag) || {};
-        let posChar = seedForm.postag[0]?.toLowerCase() || '';
-
-        if (isLatin && posChar === 'i') posChar = 'e';  
-        if (!isLatin && posChar === 'e') posChar = 'i'; 
-
-        if (posChar) {
-            // 1) set POS
-            nfPos.value = posChar;
-
-            // 2) render correct dynamic fields
-            renderDynamicForPOS(posChar);
-
-            // 3) VERB special-case: set mood first so layout reveals correct fields
-            if (posChar === 'v') {
-                const moodSel = nfDyn.querySelector('#nf-mood');
-                if (moodSel) {
-                    moodSel.value = parsed.mood || '';
-                    moodSel.dispatchEvent(new Event('change')); // triggers layout update
-                }
-            }
-
-            // 4) fill the rest (only if the field exists for that POS/layout)
-            setSelectIfExists('#nf-person', parsed.person);
-            setSelectIfExists('#nf-num',    parsed.number);
-            setSelectIfExists('#nf-tense',  parsed.tense);
-            setSelectIfExists('#nf-mood',   parsed.mood);
-            setSelectIfExists('#nf-voice',  parsed.voice);
-            setSelectIfExists('#nf-g',      parsed.gender);
-            setSelectIfExists('#nf-case',   parsed.case);
-            setSelectIfExists('#nf-deg',    parsed.degree);
-        }
     }
 
 host.querySelector('#nf-reset').addEventListener('click', (e) => {
@@ -394,7 +326,8 @@ host.querySelector('#nf-cancel').addEventListener('click', () => {
 
 host.querySelector('#nf-save').addEventListener('click', async () => {
   const lemmaVal = (nfLemma.value || '').trim();
-  const posChar  = (nfPos.value || '').trim();
+  const posKey = (nfPos.value || '').trim();
+  const posChar = nfPos.selectedOptions?.[0]?.dataset?.postag || '';
 
   // Clear old highlights
   nfDyn.querySelectorAll('.field').forEach(f => f.classList.remove('invalid'));

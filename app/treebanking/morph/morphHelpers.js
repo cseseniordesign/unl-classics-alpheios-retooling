@@ -1,4 +1,4 @@
-import { getPosColorByChar, getActiveTagset   } from "../tags/tagsetStore.js";
+import { getPosColorByChar, getActiveTagset, getMorphAttribute, getPostagSchema, getPosValues, attributeApplies, getPosList   } from "../tags/tagsetStore.js";
 
 // ===== POS color utilities =====
 const POS_COLORS = {
@@ -24,6 +24,99 @@ function _norm(s) {
     .trim()
     .toLowerCase()
     .replace(/\s+/g, ' '); // collapses spaces + newlines
+}
+
+const UI_KEY_TO_CFG = {
+  person: 'pers',
+  number: 'num',
+  gender: 'gend',
+  case: 'case',
+  tense: 'tense',
+  mood: 'mood',
+  voice: 'voice',
+  degree: 'degree',
+  pos: 'pos'
+};
+
+const CFG_KEY_TO_UI = {
+  pers: 'person',
+  num: 'number',
+  gend: 'gender',
+  case: 'case',
+  tense: 'tense',
+  mood: 'mood',
+  voice: 'voice',
+  degree: 'degree',
+  pos: 'pos'
+};
+
+export function normalizeValueToConfigKey(attrDef, input) {
+  const s = (input ?? '').toString().trim().toLowerCase();
+  if (!s) return '';
+
+  const values = attrDef?.values || {};
+  for (const [key, def] of Object.entries(values)) {
+    if (s === String(key).toLowerCase()) return key;
+    if (s === String(def?.short || '').toLowerCase()) return key;
+    if (s === String(def?.long || '').toLowerCase()) return key;
+    if (s === String(def?.postag || '').toLowerCase()) return key;
+  }
+
+  return '';
+}
+
+function normalizePosKey(posLike) {
+  const raw = String(posLike || '').trim().toLowerCase();
+  if (!raw) return '';
+
+  const posList = getPosList();
+
+  const match = posList.find(pos =>
+    String(pos.key || '').toLowerCase() === raw ||
+    String(pos.long || '').toLowerCase() === raw ||
+    String(pos.short || '').toLowerCase() === raw ||
+    String(pos.postag || '').toLowerCase() === raw
+  );
+
+  return match?.key || '';
+}
+
+export function buildMorphStateFromUI(posChar, fields = {}, posKeyOverride = '') {
+  const posValues = getPosValues();
+
+  let posKey = normalizePosKey(posKeyOverride);
+
+  if (!posKey) {
+    for (const [key, def] of Object.entries(posValues)) {
+      if (String(def?.postag || '').toLowerCase() === String(posChar || '').toLowerCase()) {
+        posKey = key;
+        break;
+      }
+    }
+  }
+
+  console.log('[buildMorphStateFromUI]', {
+    posChar,
+    fields,
+    posKeyOverride,
+    posKey
+  });
+
+  const state = { pos: posKey };
+
+  Object.entries(UI_KEY_TO_CFG).forEach(([uiKey, cfgKey]) => {
+    if (uiKey === 'pos') return;
+
+    const attrDef = getMorphAttribute(cfgKey);
+    if (!attrDef) {
+      state[cfgKey] = '';
+      return;
+    }
+
+    state[cfgKey] = normalizeValueToConfigKey(attrDef, fields[uiKey]);
+  });
+
+  return state;
 }
 
 export function applyMorphMappings(retrieverKey, rawResult) {
@@ -86,133 +179,50 @@ export function applyMorphMappings(retrieverKey, rawResult) {
   return out;
 }
 
-export function composeUserPostag(posChar, fields) {
-  // Always produce 9 characters
-  const tag = Array(9).fill('-');
+export function composeUserPostag(posChar, fields, posKeyOverride = '') {
+  const schema = getPostagSchema();
+  const posValues = getPosValues();
 
-  // POS always goes in slot 0
-  tag[0] = posChar || '-';
+  const state = buildMorphStateFromUI(posChar, fields, posKeyOverride);
+  const tag = Array(schema.length).fill('-');
 
-  switch (posChar) {
+  schema.forEach((slotName, i) => {
 
-    // ========================
-    //        VERB  (v)
-    // ========================
-    case 'v':
-      // Slot meanings for verbs:
-      // 1 = person
-      // 2 = number
-      // 3 = tense
-      // 4 = mood
-      // 5 = voice
-      // 6 = gender (for participles)
-      // 7 = case   (for participles)
-      // 8 = degree (rare, usually '-')
-      if (fields.person) tag[1] = fields.person;
-      if (fields.number) tag[2] = fields.number;
-      if (fields.tense)  tag[3] = fields.tense;
-      if (fields.mood)   tag[4] = fields.mood;
-      if (fields.voice)  tag[5] = fields.voice;
+    if (slotName === 'pos') {
+      const posDef = posValues[state.pos];
+      tag[i] = posDef?.postag || posChar || '-';
+      return;
+    }
 
-      // participles / verbal adjectives:
-      if (fields.gender) tag[6] = fields.gender;
-      if (fields.case)   tag[7] = fields.case;
-      if (fields.degree) tag[8] = fields.degree;
+    const attrDef = getMorphAttribute(slotName);
 
-      return tag.join('');
+    if (!attrDef) {
+      return;
+    }
 
+    const applies = attributeApplies(attrDef, state);
 
-    // ========================
-    //      PRONOUN  (p)
-    // ========================
-    case 'p':
-      // pronoun uses:
-      // 1 = person (pronouns have it)
-      // 2 = number
-      // 6 = gender
-      // 7 = case
-      if (fields.person) tag[1] = fields.person;
-      if (fields.number) tag[2] = fields.number;
-      if (fields.gender) tag[6] = fields.gender;
-      if (fields.case)   tag[7] = fields.case;
-      return tag.join('');
+    if (!applies) {
+      return;
+    }
 
+    const selectedKey = state[slotName];
 
-    // ========================
-    //     NOUN/ARTICLE (n,l)
-    // ========================
-    case 'n':
-    case 'l':
-      // 2 = number
-      // 4 = mood (latin verbal noun types like supine)
-      // 6 = gender
-      // 7 = case
-      if (fields.number) tag[2] = fields.number;
-      if (fields.mood)   tag[4] = fields.mood; 
-      if (fields.gender) tag[6] = fields.gender;
-      if (fields.case)   tag[7] = fields.case;
-      return tag.join('');
+    if (!selectedKey) {
+      return;
+    }
 
-    // ========================
-    //      NUMERAL (m)
-    // ========================
-    case 'm':
-      if (fields.number) tag[2] = fields.number;
-      if (fields.mood)   tag[4] = fields.mood;   
-      if (fields.gender) tag[6] = fields.gender;
-      if (fields.case)   tag[7] = fields.case;
-      return tag.join('');
+    if (!selectedKey) return;
 
+    const valueDef = attrDef.values?.[selectedKey];
 
-    // ========================
-    //     ADJECTIVE  (a)
-    // ========================
-    case 'a':
-      // 2 = number
-      // 4 = mood
-      // 6 = gender
-      // 7 = case
-      // 8 = degree
-      if (fields.number) tag[2] = fields.number;
-      if (fields.mood)   tag[4] = fields.mood;   // optional
-      if (fields.gender) tag[6] = fields.gender;
-      if (fields.case)   tag[7] = fields.case;
-      if (fields.degree) tag[8] = fields.degree;
-      return tag.join('');
+    if (!valueDef?.postag) return;
 
+    tag[i] = valueDef.postag;
+  });
 
-    // ========================
-    //      ADVERB  (d)
-    // ========================
-    case 'd':
-      // Only degree matters
-      if (fields.degree) tag[8] = fields.degree;
-      return tag.join('');
-
-
-    // ========================
-    //  Conjunction (c),
-    //  Adposition (r),
-    //  Interjection (i),
-    //  Punctuation/Unknown (u)
-    //  Exclamation (Latin)
-    // ========================
-    case 'c':
-    case 'r':
-    case 'i':
-    case 'u':
-    case 'e':
-    case 'x':
-      // Nothing except POS
-      return tag.join('');
-
-
-    // ========================
-    //     DEFAULT / UNKNOWN
-    // ========================
-    default:
-      return tag.join('');
-  }
+  console.log('[composeUserPostag] output', tag.join(''));
+  return tag.join('');
 }
 
 /**
@@ -223,19 +233,48 @@ export function composeUserPostag(posChar, fields) {
  * into a structured object describing its grammatical features.
  */
 export function parseMorphTag(tag = '') {
-  const t = tag.split('');
-  const obj = {
-    pos: t[0] || '-',
-    person: t[1] || '-',
-    number: t[2] || '-',
-    tense:  t[3] || '-',
-    mood:   t[4] || '-',
-    voice:  t[5] || '-',
-    gender: t[6] || '-',
-    case:   t[7] || '-',
-    degree: t[8] || '-'
+  const schema = getPostagSchema();
+  const posValues = getPosValues();
+  const attrs = getActiveTagset()?.morphAttributes || {};
+  const chars = String(tag || '').split('');
+  const state = {};
+
+  schema.forEach((slotName, i) => {
+    const ch = chars[i] || '-';
+    if (ch === '-') return;
+
+    if (slotName === 'pos') {
+      for (const [key, def] of Object.entries(posValues)) {
+        if (String(def?.postag || '').toLowerCase() === ch.toLowerCase()) {
+          state.pos = key;
+          break;
+        }
+      }
+      return;
+    }
+
+    const attrDef = attrs[slotName];
+    if (!attrDef) return;
+
+    for (const [key, def] of Object.entries(attrDef.values || {})) {
+      if (String(def?.postag || '').toLowerCase() === ch.toLowerCase()) {
+        state[CFG_KEY_TO_UI[slotName] || slotName] = key;
+        break;
+      }
+    }
+  });
+
+  return {
+    pos: state.pos || '-',
+    person: state.person || '-',
+    number: state.number || '-',
+    tense: state.tense || '-',
+    mood: state.mood || '-',
+    voice: state.voice || '-',
+    gender: state.gender || '-',
+    case: state.case || '-',
+    degree: state.degree || '-'
   };
-  return obj;
 }
 
 /**

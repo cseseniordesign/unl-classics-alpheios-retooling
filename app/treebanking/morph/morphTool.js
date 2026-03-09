@@ -6,7 +6,7 @@ import { fetchMorphology } from './morpheus.js';
 import { showConfirmDialog } from '../ui/modal.js';
 import { isMorpheusSupported, getLanguage, normalizeLang } from '../input/language.js';
 import { initMorphLexicon, incrementUsage, pickTopLexiconForm, mergeFormsIntoWord, mergeIntoAllTokens, deleteLexiconForm } from './morphLexicon.js';
-import { getActiveTagset } from '../tags/tagsetStore.js';
+import { getActiveTagset, getPosList } from '../tags/tagsetStore.js';
 
 function _mostUsedFormIndex(forms = []) {
   let bestIdx = -1;
@@ -1373,14 +1373,31 @@ function formFromMorphResult(result, word) {
   const posChar = guessPosCharFromMorph(result);
   const isLatin = String(getLanguage()).toLowerCase().startsWith('lat');
 
+  const rawPerson = firstDefined(result, ['person', 'pers']);
+  const rawNumber = firstDefined(result, ['num', 'number']);
+  const rawTense  = firstDefined(result, ['tense']);
+  const rawMood   = firstDefined(result, ['mood']);
+  const rawVoice  = firstDefined(result, ['voice']);
+  const rawGender = firstDefined(result, ['gender', 'gend']);
+  const rawCase   = firstDefined(result, ['case']);
+  const rawPosKey = (result.pos ?? '').toString().trim();
+  const posList = getPosList();
+  const posKey =
+    posList.find(pos =>
+      String(pos.key || '').toLowerCase() === rawPosKey.toLowerCase() ||
+      String(pos.long || '').toLowerCase() === rawPosKey.toLowerCase() ||
+      String(pos.short || '').toLowerCase() === rawPosKey.toLowerCase() ||
+      String(pos.postag || '').toLowerCase() === rawPosKey.toLowerCase()
+    )?.key || rawPosKey;
+
   const fields = {
-    person: codeFromPerson(result.person),
-    number: codeFromNumber(result.num),
-    tense:  codeFromTense(result.tense),
-    mood:   codeFromMood(result.mood),
-    voice:  codeFromVoice(result.voice),
-    gender: codeFromGender(result.gender),
-    case:   codeFromCase(result.case),
+    person: codeFromPerson(rawPerson),
+    number: codeFromNumber(rawNumber),
+    tense:  codeFromTense(rawTense),
+    mood:   codeFromMood(rawMood),
+    voice:  codeFromVoice(rawVoice),
+    gender: codeFromGender(rawGender),
+    case:   codeFromCase(rawCase),
     degree: ''
   };
 
@@ -1396,7 +1413,10 @@ function formFromMorphResult(result, word) {
     if (fields.tense === 'a') fields.tense = '';
   }
 
-  const postag = composeUserPostag(posChar, fields);
+  console.log('[formFromMorphResult] normalized result:', result);
+  console.log('[formFromMorphResult] fields =', fields);
+
+  const postag = composeUserPostag(posChar, fields, posKey);
 
   if (!postag || /^-+$/.test(postag)) {
     return null;
@@ -1409,7 +1429,6 @@ function formFromMorphResult(result, word) {
     '';
 
   const cfg = getActiveTagset();
-  const posKey = (result.pos ?? '').toString().trim();
   const posDef = cfg?.posValues?.[posKey];
 
   return {
@@ -1667,4 +1686,12 @@ function _escAttr(s) {
     .replaceAll("'", '&#39;')
     .replaceAll('<', '&lt;')
     .replaceAll('>', '&gt;');
+}
+
+function firstDefined(obj, keys) {
+  for (const key of keys) {
+    const val = obj?.[key];
+    if (val != null && String(val).trim() !== '') return val;
+  }
+  return '';
 }

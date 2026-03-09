@@ -74,12 +74,91 @@ export function onTagsetChange(fn) {
 
 /** All POS categories for the active tagset */
 export function getPosList() {
-  return _activeConfig?.posCategories || [];
+  const posValues = getPosValues();
+
+  const fromPosValues = Object.entries(posValues).map(([key, def]) => ({
+    key,
+    long: def?.long || key,
+    short: def?.short || '',
+    postag: def?.postag || '',
+    color: def?.style?.color || ''
+  }));
+
+  if (fromPosValues.length > 0) return fromPosValues;
+
+  return (_activeConfig?.posCategories || []).map(pos => ({
+    key: pos?.key || '',
+    long: pos?.long || pos?.short || '',
+    short: pos?.short || '',
+    postag: pos?.postag || '',
+    color: pos?.color || ''
+  }));
 }
 
 /** Morph attributes for a given POS value (e.g. 'v', 'n') */
-export function getMorphAttributes(posValue) {
-  return _activeConfig?.morphAttributes?.[posValue] || [];
+export function getMorphAttributes() {
+  return _activeConfig?.morphAttributes || {};
+}
+
+export function getMorphAttribute(name) {
+  return _activeConfig?.morphAttributes?.[name] || null;
+}
+
+export function getPostagSchema() {
+  return _activeConfig?.postagSchema || ['pos', 'pers', 'num', 'tense', 'mood', 'voice', 'gend', 'case', 'degree'];
+}
+
+export function getPosValues() {
+  return (
+    _activeConfig?.posValues ||
+    _activeConfig?._raw?.plugins?.morph?.attributes?.pos?.values ||
+    {}
+  );
+}
+
+function _matchesRuleBlock(block = {}, state = {}) {
+  return Object.entries(block).every(([key, expected]) => {
+    const actual = state[key];
+
+    if (expected === '*') {
+      return actual != null && actual !== '';
+    }
+
+    if (Array.isArray(expected)) {
+      return expected.includes(actual);
+    }
+
+    return actual === expected;
+  });
+}
+
+export function attributeApplies(attrDef, state = {}) {
+  const rules = attrDef?.rules || [];
+  if (!rules.length) return true;
+
+  return rules.some(rule => {
+    const ifOk = _matchesRuleBlock(rule.if || {}, state);
+
+    const hasUnless =
+      rule.unless &&
+      typeof rule.unless === 'object' &&
+      Object.keys(rule.unless).length > 0;
+
+    const unlessOk = hasUnless
+      ? _matchesRuleBlock(rule.unless, state)
+      : false;
+
+    return ifOk && !unlessOk;
+  });
+}
+
+export function getApplicableMorphAttributes(state = {}) {
+  const attrs = getMorphAttributes();
+
+  return Object.entries(attrs)
+    .filter(([name]) => name !== 'pos')
+    .filter(([, def]) => attributeApplies(def, state))
+    .map(([name, def]) => ({ name, ...def }));
 }
 
 /** All relation labels for the active tagset */
