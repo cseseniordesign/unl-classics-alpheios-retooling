@@ -898,6 +898,24 @@ html, body{
   white-space: pre-wrap;
 }
 
+#xml-display:not(.editing),
+#xml-display:not(.editing) * {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  caret-color: transparent;
+}
+
+#xml-display.editing,
+#xml-display.editing * {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  caret-color: auto;
+}
+
 .xml-error-char {
   background-color: rgba(255, 50, 50, 0.3);
   color: #b00;
