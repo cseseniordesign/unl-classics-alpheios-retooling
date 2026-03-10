@@ -1,5 +1,6 @@
 import { getLanguage } from "../input/language.js";
 import { updateTreebankSelectionBanner} from '../ui/sentenceDisplay.js'
+import { getPosList } from "../tags/tagsetStore.js";
 
 
 // Order of the main relation bases in the menu.
@@ -700,13 +701,16 @@ export function handleForm() {
 export function updateSelection(currentValue) {
     const tokens = document.querySelectorAll(".token");
     const formsArr = currentValue.split(" ").filter(t => t !== "");
+
     window.batchSelection.clear();
     tokens.forEach(token => {
       const id = token.dataset.wordId;
       const sentences = Array.isArray(window.treebankData) ? window.treebankData : [];
       const currentSentence = sentences.find(s => s.id === String(window.currentIndex));
       const word = currentSentence?.words?.find(w => String(w.id) === String(id));
-      const form = formParser(word.postag[0]);
+      if (!word) return;
+
+      const form = getWordPOSLabel(word);
       if (formsArr.includes(form)) {
         updateFoundTokens()
         window.batchSelection.add(id); // Store the ID for the movement logic
@@ -729,56 +733,71 @@ export function updateSelection(currentValue) {
  * converts the postag to corresponding part of speach
  * --------------------------------------------------------------------------
  */
-function formParser(posChar) {
-  switch (posChar) {
-    case 'v':
-      return 'verb';
-    case 'p':
-      return 'pron';
-    case 'n':
-      return 'noun';
-    case 'l':
-      return 'art';
+// function formParser(posChar) {
+//   switch (posChar) {
+//     case 'v':
+//       return 'verb';
+//     case 'p':
+//       return 'pron';
+//     case 'n':
+//       return 'noun';
+//     case 'l':
+//       return 'art';
 
-    // ========================
-    //     ADJECTIVE  (a)
-    // ========================
-    case 'a':
-      return 'adj';
+//     // ========================
+//     //     ADJECTIVE  (a)
+//     // ========================
+//     case 'a':
+//       return 'adj';
 
-    // ========================
-    //      NUMERAL (m)
-    // ========================
-    case 'm':
-      return 'num';
+//     // ========================
+//     //      NUMERAL (m)
+//     // ========================
+//     case 'm':
+//       return 'num';
 
-    // ========================
-    //      ADVERB  (d)
-    // ========================
-    case 'd':
-      return 'adv';
+//     // ========================
+//     //      ADVERB  (d)
+//     // ========================
+//     case 'd':
+//       return 'adv';
 
-    // ========================
-    //  Conjunction (c),
-    //  Adposition (r),
-    //  Interjection (i),
-    //  Punctuation/Unknown (u)
-    // ========================
-    case 'c':
-      return 'conj';
-    case 'r':
-      return 'adp';
-    case 'i':
-      return 'int';
-    case 'u':
-      return 'pun'
+//     // ========================
+//     //  Conjunction (c),
+//     //  Adposition (r),
+//     //  Interjection (i),
+//     //  Punctuation/Unknown (u)
+//     // ========================
+//     case 'c':
+//       return 'conj';
+//     case 'r':
+//       return 'adp';
+//     case 'i':
+//       return 'int';
+//     case 'u':
+//       return 'pun'
 
-    // ========================
-    //     DEFAULT / UNKNOWN
-    // ========================
-    default:
-      return 'unknown'
-}
+//     // ========================
+//     //     DEFAULT / UNKNOWN
+//     // ========================
+//     default:
+//       return 'unknown'
+// }
+// }
+
+function getWordPOSLabel(word) {
+  const postag = String(word?._displayPostag || word?.postag || "").trim();
+  const posChar = postag[0]?.toLowerCase() || "";
+  const posList = getPosList();
+
+  const match = posList.find(pos =>
+    String(pos?.postag || "").toLowerCase() === posChar
+  );
+
+  if (!match) return "unknown";
+
+  // use the config's long label, like "verb", "noun", "adjective"
+  return String(match.long || match.key || "").trim().toLowerCase();
 }
 
 /**
