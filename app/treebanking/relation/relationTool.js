@@ -1,5 +1,6 @@
 import { triggerAutoSave } from "../xml/saveXML.js";
 import { colorForPOS } from "../tree/treeUtils.js";
+import { getRelationConfig, getRawRelationConfig } from "../tags/tagsetStore.js";
 
 // =====================================================
 // GLOBAL Relation advanced mode state
@@ -49,20 +50,37 @@ function parseRelation(relRaw) {
   }
 
   const parts = safe.split("_");
-  const head = parts[0]; // SBJ, AuxC, ExD, etc.
+  const head = parts[0];
 
-  let base = head;
+  let base = "---";
   let auxVariant = null;
 
-  // AuxC, AuxP, ...
-  if (/^aux[a-z]/i.test(head)) {
-    base = "Aux";
-    auxVariant = head;
-  }
+  const labels = getResolvedRelationLabels();
 
-  if (!MAIN_BASES.includes(base)) {
-    base = "---";
-    auxVariant = null;
+  if (labels) {
+    if (labels[head]) {
+      base = head;
+    } else {
+      for (const [parentKey, def] of Object.entries(labels)) {
+        const nested = def?.nested || {};
+        if (nested[head]) {
+          base = parentKey;
+          auxVariant = head;
+          break;
+        }
+      }
+    }
+  } else {
+    base = head;
+    if (/^aux[a-z]/i.test(head)) {
+      base = "Aux";
+      auxVariant = head;
+    }
+
+    if (!MAIN_BASES.includes(base)) {
+      base = "---";
+      auxVariant = null;
+    }
   }
 
   const hasAP = parts.includes("AP");
@@ -70,59 +88,67 @@ function parseRelation(relRaw) {
 
   let suffixKey = "";
   if (hasAP && hasCO) suffixKey = "AP_CO";
-  else if (hasAP)     suffixKey = "AP";
-  else if (hasCO)     suffixKey = "CO";
+  else if (hasAP) suffixKey = "AP";
+  else if (hasCO) suffixKey = "CO";
 
   return { base, auxVariant, suffixKey };
 }
-
 /** Label we show in the base button. */
-function labelForMain(base, auxVariant) {
-  if (base === "Aux") {
-    return auxVariant || "AuxC";
-  }
-  return base;
+function labelForMain(base, variant) {
+  return getRelationDisplayLabel(base, variant || "");
 }
 
 function labelForSuffix(key) {
-  return key || "---";
+  return getSuffixDisplayLabel(key);
 }
 
 /** Build suffix <option> tags. */
-function buildSuffixOptions(currentSuffix) {
-  return SUFFIX_KEYS.map(key => {
-    const label = key || "---";
-    const selected = key === currentSuffix ? "selected" : "";
-    return `<option value="${key}" ${selected}>${label}</option>`;
-  }).join("");
+function buildSuffixMenuItems() {
+  return getResolvedSuffixKeys().map(key => `
+    <li class="rel-item suffix-item" data-key="${key}">
+      ${getSuffixDisplayLabel(key)}
+    </li>
+  `).join("");
 }
 
 /** Build the <li> items for the main menu + Aux submenu. */
 function buildMenuItems() {
+  const bases = getResolvedMainBases();
   let html = "";
 
-  MAIN_BASES.forEach(base => {
-    if (base === "Aux") {
-      const auxItems = AUX_VARIANTS.map(v => `
+  bases.forEach(base => {
+    if (base === "---") {
+      html += `
+        <li class="rel-item" data-base="---">
+          ---
+        </li>
+      `;
+      return;
+    }
+
+    const nested = getResolvedNestedVariants(base);
+
+    if (nested.length) {
+      const subItems = nested.map(v => `
         <li class="rel-subitem"
-            data-base="Aux"
+            data-base="${base}"
             data-variant="${v}">
-          ${v}
+          ${getRelationDisplayLabel(base, v)}
         </li>
       `).join("");
 
       html += `
-        <li class="rel-item rel-has-submenu" data-base="Aux">
-          <span class="rel-label">Aux</span>
+        <li class="rel-item rel-has-submenu" data-base="${base}">
+          <span class="rel-label">${getRelationDisplayLabel(base)}</span>
           <ul class="rel-submenu">
-            ${auxItems}
+            ${subItems}
           </ul>
         </li>
       `;
     } else {
       html += `
         <li class="rel-item" data-base="${base}">
-          ${base}
+          ${getRelationDisplayLabel(base)}
         </li>
       `;
     }
@@ -158,12 +184,7 @@ function applyRelationChange(word, base, auxVariant, suffixKey) {
   const cleanBase = base || "---";
 
   if (cleanBase !== "---") {
-    let baseOut;
-    if (cleanBase === "Aux") {
-      baseOut = auxVariant || "AuxC";
-    } else {
-      baseOut = cleanBase;
-    }
+    const baseOut = auxVariant || cleanBase;
 
     const pieces = [baseOut];
     if (suffixKey === "AP") {
@@ -255,10 +276,7 @@ function renderRelationEditor(word, toolBody) {
             <span class="rel-button-arrow">▾</span>
           </button>
           <ul class="nested-dropdown suffix-menu">
-            <li class="rel-item suffix-item" data-key="">---</li>
-            <li class="rel-item suffix-item" data-key="CO">CO</li>
-            <li class="rel-item suffix-item" data-key="AP">AP</li>
-            <li class="rel-item suffix-item" data-key="AP_CO">AP_CO</li>
+            ${buildSuffixMenuItems()}
           </ul>
         </div>
       </div>
@@ -343,8 +361,8 @@ function renderRelationEditor(word, toolBody) {
   mainMenuEl.addEventListener("click", evt => {
     const sub = evt.target.closest(".rel-subitem");
     if (sub) {
-      currentBase = "Aux";
-      currentAux  = sub.dataset.variant || "AuxC";
+      currentBase = sub.dataset.base || "---";
+      currentAux  = sub.dataset.variant || null;
       updateMainLabel();
       applyRelationChange(word, currentBase, currentAux, currentSuffix);
       closeMainMenu();
@@ -358,9 +376,7 @@ function renderRelationEditor(word, toolBody) {
     if (!baseVal) return;
 
     currentBase = baseVal;
-    if (currentBase === "Aux" && !currentAux) {
-      currentAux = "AuxC";
-    } else if (currentBase !== "Aux") {
+    if (!getResolvedNestedVariants(currentBase).length) {
       currentAux = null;
     }
 
@@ -405,6 +421,76 @@ function renderRelationEditor(word, toolBody) {
   }
 }
 
+function getResolvedRelationLabels() {
+  const rel = getRelationConfig();
+
+  // Case 1: normalized config already IS the labels map
+  // e.g. { AGNT:{...}, APP:{...}, CC:{...} }
+  if (
+    rel &&
+    typeof rel === "object" &&
+    !Array.isArray(rel) &&
+    Object.keys(rel).length > 0 &&
+    !("labels" in rel)
+  ) {
+    return rel;
+  }
+
+  // Case 2: raw config shape
+  const labels = rel?.labels || {};
+  return Object.keys(labels).length ? labels : null;
+}
+
+function getResolvedRelationSuffixes() {
+  const rawRel = getRawRelationConfig();
+  const suffixes = rawRel?.suffixes || {};
+  return Object.keys(suffixes).length ? suffixes : null;
+}
+
+function getResolvedMainBases() {
+  const labels = getResolvedRelationLabels();
+  if (!labels) return MAIN_BASES;
+  return ["---", ...Object.keys(labels)];
+}
+
+function getResolvedNestedVariants(baseKey) {
+  const labels = getResolvedRelationLabels();
+  if (!labels) {
+    return baseKey === "Aux" ? AUX_VARIANTS : [];
+  }
+  return Object.keys(labels?.[baseKey]?.nested || {});
+}
+
+function getResolvedSuffixKeys() {
+  const suffixes = getResolvedRelationSuffixes();
+  if (!suffixes) return SUFFIX_KEYS;
+  return ["", ...Object.keys(suffixes)];
+}
+
+function getRelationDisplayLabel(baseKey, variantKey = "") {
+  if (baseKey === "---") return "---";
+
+  const labels = getResolvedRelationLabels();
+  if (!labels) {
+    return variantKey || baseKey;
+  }
+
+  if (variantKey) {
+    return labels?.[baseKey]?.nested?.[variantKey]?.short || variantKey;
+  }
+
+  return labels?.[baseKey]?.short || baseKey;
+}
+
+function getSuffixDisplayLabel(key) {
+  if (!key) return "---";
+
+  const suffixes = getResolvedRelationSuffixes();
+  if (!suffixes) return key;
+
+  return suffixes?.[key]?.short || key;
+}
+
 function renderChangeAllRow(containerEl, wordsToApply) {
   if (!containerEl) return;
 
@@ -433,10 +519,7 @@ function renderChangeAllRow(containerEl, wordsToApply) {
               <span class="rel-button-arrow">▾</span>
             </button>
             <ul class="nested-dropdown suffix-menu">
-              <li class="rel-item suffix-item" data-key="">---</li>
-              <li class="rel-item suffix-item" data-key="CO">CO</li>
-              <li class="rel-item suffix-item" data-key="AP">AP</li>
-              <li class="rel-item suffix-item" data-key="AP_CO">AP_CO</li>
+              ${buildSuffixMenuItems()}
             </ul>
           </div>
 
@@ -518,8 +601,8 @@ function renderChangeAllRow(containerEl, wordsToApply) {
   mainMenu.addEventListener("click", (evt) => {
     const sub = evt.target.closest(".rel-subitem");
     if (sub) {
-      currentBase = "Aux";
-      currentAux  = sub.dataset.variant || "AuxC";
+      currentBase = sub.dataset.base || "---";
+      currentAux  = sub.dataset.variant || null;
       updateMainLabel();
       closeMain();
       return;
@@ -532,8 +615,9 @@ function renderChangeAllRow(containerEl, wordsToApply) {
     if (!baseVal) return;
 
     currentBase = baseVal;
-    if (currentBase === "Aux" && !currentAux) currentAux = "AuxC";
-    if (currentBase !== "Aux") currentAux = null;
+    if (!getResolvedNestedVariants(currentBase).length) {
+      currentAux = null;
+    }
 
     updateMainLabel();
     closeMain();

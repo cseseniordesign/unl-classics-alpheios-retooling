@@ -219,3 +219,15 @@ export function getPosColorByChar(postagChar) {
   const cfg = getPosMeta(k)?.color;
   return cfg || FALLBACK_POS_COLORS[k] || FALLBACK_POS_COLORS[''];
 }
+
+export function getRelationConfig() {
+  return (
+    _activeConfig?.relations ||
+    _activeConfig?._raw?.plugins?.relation?.relations ||
+    null
+  );
+}
+
+export function getRawRelationConfig() {
+  return _activeConfig?._raw?.plugins?.relation?.relations || null;
+}
