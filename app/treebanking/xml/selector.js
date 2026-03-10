@@ -683,7 +683,7 @@ function handleTokens() {
  * --------------------------------------------------------------------------
  */
 
-function handleForm() {
+export function handleForm() {
   const formInput = document.querySelector(".form-input");
   const tokens = document.querySelectorAll(".token");
   if (window.formInputValue) {
@@ -695,8 +695,10 @@ function handleForm() {
     window.formInputValue = formInput.value;
     updateSelection(formInput.value.toLowerCase());
   });
+}
 
-  function updateSelection(currentValue) {
+export function updateSelection(currentValue) {
+    const tokens = document.querySelectorAll(".token");
     const formsArr = currentValue.split(" ").filter(t => t !== "");
     window.batchSelection.clear();
     tokens.forEach(token => {
@@ -719,7 +721,6 @@ function handleForm() {
       }
     });
   }
-} 
 
 /**
  * --------------------------------------------------------------------------
