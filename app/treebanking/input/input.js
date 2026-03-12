@@ -176,8 +176,8 @@ async function validateTokenizer(url) {
  * Saves default and/or user tokenization parameters 
  */
  function saveTokenizerParams() {
-  const split = document.getElementById("split-enclytics").checked;
-  const shift = document.getElementById("shift-enclytics").checked;
+  const split = document.getElementById("split-enclitics").checked;
+  const shift = document.getElementById("shift-enclitics").checked;
 
   const params = {
     splitting: split,
