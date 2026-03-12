@@ -54,8 +54,8 @@ export function isValidLLTResponse(xmlString) {
  * FUNCTION: tokenizer
  * --------------------------------------------------------------------------
  * Connects to default Perseids LLT services (outputs segmented and tokenized 
- * XML) or custom tokenizer, parses user input into a normalized XML and 
- * returns an array object of parsed sentences
+ * XML) or custom tokenizer with user parameters, parses user input into a 
+ * normalized XML and returns an array object of parsed sentences
  * 
  * @param {string} input - user input sentence
  * @returns {Array<Object>} - parsed sentences
@@ -63,13 +63,25 @@ export function isValidLLTResponse(xmlString) {
 export async function tokenizer(input) {
   const encoded = encodeURIComponent(input);
 
+  // get default and/or user tokenization parameters
+  let params = {
+    splitting: "false",
+    shifting: "false",
+  };
+
+  const stored = sessionStorage.getItem("tokenizerParams");
+  if (stored) {
+    params = JSON.parse(stored);
+  }
+
+  // fetch default or custom tokenizer
   const response = await fetch(getTokenizer(),
     {
       method: "POST",
       headers: {
         "Content-Type" : "application/x-www-form-urlencoded",
       },
-      body: "text=" + encoded,
+      body: "text=" + encoded + "&splitting=" + params.splitting + "&shifting=" + params.shifting,
     }
   );
 
@@ -80,13 +92,14 @@ export async function tokenizer(input) {
   const xmlText = await response.text(); // outputs XML (different structure than internal model)
 
   if (!isValidLLTResponse) {
-    throw new error ("Invalid LLT-compatible XML.");
+    throw new Error("Invalid LLT-compatible XML.");
   }
 
   // normalize XML and parse into array object
   const newXML = normalizeXML(xmlText);
   const parsedSentences = parseTreeBankXML(newXML);
 
+  // set head and relation of punctuation tokens
   parsedSentences.forEach(sentence => {
     sentence.words.forEach(word => {
       const punctuationMarks = [",", ".", "·", ";", ":", "?", "!", "...", "-", "(", ")", "`", "'", '"', "«", "»"];

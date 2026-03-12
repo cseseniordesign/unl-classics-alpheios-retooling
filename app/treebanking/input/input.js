@@ -78,6 +78,9 @@ function sendSentence() {
   // Persist the tagset id so treebanking.html can reload it if needed
   localStorage.setItem("activeTagsetId", tagset.id);
 
+  // Save default and/or user tokenization parameters
+  saveTokenizerParams();
+
   // Store user input
   window.sessionStorage.setItem("userInput", input);
 
@@ -101,7 +104,7 @@ function sendSentence() {
     }
   });
   
-  /**
+/**
  * --------------------------------------------------------------------------
  * FUNCTION: handleSave
  * --------------------------------------------------------------------------
@@ -141,6 +144,8 @@ function handleReset() {
  * FUNCTION: validateTokenizer
  * --------------------------------------------------------------------------
  * Validates tokenizer service
+ * 
+ * @returns {boolean} - True if valid tokenizer
  */
 async function validateTokenizer(url) {
   const testResponse = await fetch(url, {
@@ -162,4 +167,22 @@ async function validateTokenizer(url) {
   }
 
   return true;
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: saveTokenizerParams
+ * --------------------------------------------------------------------------
+ * Saves default and/or user tokenization parameters 
+ */
+ function saveTokenizerParams() {
+  const split = document.getElementById("split-enclytics").checked;
+  const shift = document.getElementById("shift-enclytics").checked;
+
+  const params = {
+    splitting: split,
+    shifting: shift,
+  };
+
+  sessionStorage.setItem("tokenizerParams", JSON.stringify((params)));
 }

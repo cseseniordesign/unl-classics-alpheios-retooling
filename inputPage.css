@@ -355,7 +355,7 @@ a {
   padding: 5px;
   max-height: 0;
   overflow: hidden;
-  transition: opacity 1s ease;
+  transition: opacity 1.5s ease;
   opacity: 0;
 }
 
@@ -384,4 +384,13 @@ a {
   opacity: 1;
   transform: translateY(0);
   transition-duration: .35s;
+}
+
+.params-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 220px;
+  font-weight: lighter;
+  font-family: "Arial", sans-serif;
 }
