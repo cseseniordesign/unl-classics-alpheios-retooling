@@ -1,7 +1,6 @@
 import { clearStacks } from "../xml/undo.js";
 import { displaySentence, safeDisplaySentence } from '../ui/sentenceDisplay.js';
 import { setupEHotkey, setupEscapeHotkey, setupWHotkey } from '../ui/hotKeys.js';
-import { handleForm, updateSelection, updateFoundTokens} from "../xml/selector.js";
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: updateNavigationButtons
@@ -15,7 +14,13 @@ export function updateNavigationButtons(index) {
   if (window.inSelection){
     const foundTokenList = document.querySelector(".found-tokens");
     //reset the found tokens
+    const formInput = document.querySelector(".form-input");
+    const tokenInput = document.querySelector(".token-input");
+    tokenInput.value = "";
+    formInput.value = "";
     foundTokenList.replaceChildren();
+    //handleTokens();
+    //handleForm();
   }
   document.getElementById('first').disabled = (index <= 1);
   document.getElementById('back').disabled  = (index <= 1);

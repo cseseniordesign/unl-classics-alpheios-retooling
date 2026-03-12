@@ -68,6 +68,7 @@ function handleSelectClick() {
   const toolBody = document.getElementById("tool-body");
   // public closer 
   window.closeSelector = function () {
+    window.inSelection = false;
     selectBtn.classList.remove("active");
     selectBtn.style.backgroundColor = '#4e6476';
     // Back to treebanking mode UI
@@ -640,41 +641,44 @@ function chooseKeyboard() {
  * --------------------------------------------------------------------------
  */
 
-function handleTokens() {
+export function handleTokens() {
   const tokenInput = document.querySelector(".token-input");
-  const tokens = document.querySelectorAll(".token");
+
   if (window.selectorInputValue) {
     tokenInput.value += window.selectorInputValue;
-    updateSelection(tokenInput.value.toLowerCase());
+    updateTokenSelection(tokenInput.value.toLowerCase());
   }
   tokenInput.addEventListener("input", () => {
     // Save the raw string to persistence
     window.selectorInputValue = tokenInput.value;
-    updateSelection(tokenInput.value.toLowerCase());
+    updateTokenSelection(tokenInput.value.toLowerCase());
   });
-
-  function updateSelection(currentValue) {
-    const tokensArr = currentValue.split(" ").filter(t => t !== "");
-    window.batchSelection.clear();
-
-    tokens.forEach(token => {
-      const id = token.dataset.wordId;
-      const text = token.textContent.trim().toLowerCase();
-
-      if (tokensArr.includes(text)) {
-        window.batchSelection.add(id); // Store the ID for the movement logic
-        token.classList.add("selected");
-        const node = document.querySelector(`.node[id="${id}"]`);
-        updateFoundTokens();
-        if (node) d3.select(node).classed("selected", true);
-      } else {
-        token.classList.remove("selected");
-        const node = document.querySelector(`.node[id="${id}"]`);
-        if (node) d3.select(node).classed("selected", false);
-      }
-    });
-  }
 }
+
+function updateTokenSelection(currentValue) {
+  const tokensArr = currentValue.split(" ").filter(t => t !== "");
+  const tokens = document.querySelectorAll(".token");
+  window.batchSelection.clear();
+  const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
+  
+  tokens.forEach(token => {
+    const id = token.dataset.wordId;
+    const text = token.textContent.trim().toLowerCase();
+
+    if (tokensArr.includes(text)) {
+      window.batchSelection.add(id); // Store the ID for the movement logic
+      token.classList.add("selected");
+      const node = document.querySelector(`.node[id="${id}"]`);
+      updateFoundTokens();
+      if (node) d3.select(node).classed("selected", true);
+    } else {
+      token.classList.remove("selected");
+      const node = document.querySelector(`.node[id="${id}"]`);
+      if (node) d3.select(node).classed("selected", false);
+    }
+  });
+}
+
 
 /**
  * --------------------------------------------------------------------------
@@ -689,16 +693,16 @@ export function handleForm() {
   const tokens = document.querySelectorAll(".token");
   if (window.formInputValue) {
     formInput.value += window.formInputValue;
-    updateSelection(formInput.value.toLowerCase());
+    updateFormSelection(formInput.value.toLowerCase());
   }
   formInput.addEventListener("input", () => {
     // Save the raw string to persistence
     window.formInputValue = formInput.value;
-    updateSelection(formInput.value.toLowerCase());
+    updateFormSelection(formInput.value.toLowerCase());
   });
 }
 
-export function updateSelection(currentValue) {
+export function updateFormSelection(currentValue) {
     const tokens = document.querySelectorAll(".token");
     const formsArr = currentValue.split(" ").filter(t => t !== "");
 
