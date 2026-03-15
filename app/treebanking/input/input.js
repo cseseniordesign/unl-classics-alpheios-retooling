@@ -1,4 +1,4 @@
-import { showToast } from '/main.js'
+import { showToast } from '../../../main.js'
 import { getActiveTagset, setActiveTagset } from '/app/treebanking/tags/tagsetStore.js';
 import { initTagsetSelector } from '/app/treebanking/tags/tagsetSelector.js';
 import { isValidLLTResponse } from '../xml/tokenizer.js';
