@@ -200,10 +200,29 @@ export async function displaySentence(index) {
  * if morph tab is active
  */
 export function handleWordClick(event,wordId, word) {
+
   const value = document.querySelector(".value");
   const morphBtn = document.getElementById("morph").classList.contains("active");
   const selectBtn = document.getElementById("selector").classList.contains("active");
   const relationBtn = document.getElementById("relation").classList.contains("active");
+  const atBtn       = document.getElementById("aT").classList.contains("active"); // ← add this
+
+  // Artificial Token mode
+  if (atBtn && window.atSelectingAnchor) {
+    window.atSelectingAnchor = false;
+    window.atSelectedWordId = String(wordId);
+
+    const selectWordBtn = document.querySelector("#select-word");
+    if (selectWordBtn) selectWordBtn.style.backgroundColor = '#4e6476';
+
+    const insertionDisplay = document.querySelector("#at-insertion-display");
+    if (insertionDisplay) {
+      const position = window.atInsertionBefore ? 'in front of' : 'behind';
+      insertionDisplay.textContent = `${position} [${word}]`;
+    }
+    return;
+  }
+
   //if none of the toolbar options are selected update the banner
   updateTreebankSelectionBanner();
   const lang = getLanguage();

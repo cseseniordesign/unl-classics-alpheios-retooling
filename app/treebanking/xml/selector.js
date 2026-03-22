@@ -382,7 +382,7 @@ function handleSelectClick() {
  * --------------------------------------------------------------------------
  */
 
-function initializeKeyboard() {
+export function initializeKeyboard() {
   const tokenInput = document.querySelector(".token-input");
   const keyboardDiv = document.querySelector('.simple-keyboard');
   
@@ -481,7 +481,7 @@ function initializeKeyboard() {
   }
 }
 
-function chooseKeyboard() {
+export function chooseKeyboard() {
  const language = getLanguage();
  if (language == 'grc') {
     // GREEK with comprehensive diacritics

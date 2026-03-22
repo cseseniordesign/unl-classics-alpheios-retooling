@@ -20,6 +20,7 @@ import { updateTreebankSelectionBanner } from "./app/treebanking/ui/sentenceDisp
 import { getRegistryEntry } from './app/treebanking/tags/tagsetRegistry.js';
 import { loadTagsetConfig } from './app/treebanking/tags/tagsetConfig.js';
 import { setActiveTagset, getPosMeta, onTagsetChange, getActiveTagset } from './app/treebanking/tags/tagsetStore.js';
+import { setupaT } from './app/treebanking/aT/aT.js';
 
 window.handleFileUpload = handleFileUpload;
 window.batchSelection = new Set();
@@ -65,6 +66,7 @@ function setupRedoButton() {
 }
 function handleExit() {
   const exit = document.querySelector("#exit");
+  if(!exit) return;
   exit.addEventListener("click", ()=> {
     if(confirm("Are you sure you want to exit?") == true){
       localStorage.removeItem("xmlContent");
@@ -114,14 +116,14 @@ function setupLanguageButton() {
     }
 }
 
-function setupaTButton() {
-    const button = document.getElementById("aT");
-    if (button) {
-        button.addEventListener("click", function() {
-            alert("Sorry, this feature is not yet implemented. Please look forward to using it in future updates!");
-        });
-    }
-}
+// function setupaTButton() {
+//     const button = document.getElementById("aT");
+//     if (button) {
+//         button.addEventListener("click", function() {
+//             setupaT();
+//         });
+//     }
+// }
 
 function setupNoneButton() {
   const button = document.getElementById("none");
@@ -499,8 +501,8 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupCommentButton();
   setupSettingsButton();
   setupLanguageButton();
-  setupaTButton();
   setupNoneButton();
   setupUnusedButton();
   setupHighlightButton();
+  setupaT();
 });
