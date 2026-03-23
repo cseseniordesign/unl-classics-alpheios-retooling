@@ -166,14 +166,20 @@ function handleWordStep(direction, e) {
   const words = sentence.words;
 
   // Figure out what is currently selected
-  let currentId = window.currentSelectedWordId;
+  let currentId =
+    window.currentSelectedWordId ??
+    window.selectedWordId ??
+    null;
 
   if (!currentId) {
-    const selToken = document.querySelector('.token.selected');
+    const selToken = document.querySelector(
+      '.token.selected, .token.highlight, button.selected, button.highlight, button[data-word-id].selected, button[data-word-id].highlight'
+    );
+
     if (selToken) {
       currentId = selToken.dataset.wordId;
     } else {
-      const selNode = document.querySelector('.node.selected');
+      const selNode = document.querySelector('.node.selected, .node.highlight');
       if (selNode) currentId = selNode.getAttribute('id');
     }
   }
@@ -188,40 +194,30 @@ function handleWordStep(direction, e) {
   let newIdx = idx;
 
   if (direction > 0) {
-    // W: forward
+    // W: forward, wrap at end
     if (idx === -1) {
-      newIdx = 0;                       // no selection → first word
-    } else if (idx < words.length - 1) {
-      newIdx = idx + 1;                 // otherwise → next
+      newIdx = 0;
     } else {
-      // move forward and WRAP at the end
-      newIdx = (idx + 1) % words.length;                
+      newIdx = (idx + 1) % words.length;
     }
   } else {
-    // E: backward
+    // E: backward, wrap at beginning
     if (idx === -1) {
-        newIdx = words.length - 1;        // no selection → last word
-    } else if (idx > 0) {
-        newIdx = idx - 1;                 // otherwise → previous
+      newIdx = words.length - 1;
     } else {
-        // move backward and WRAP at the beginning
-        newIdx = (idx - 1 + words.length) % words.length;
+      newIdx = (idx - 1 + words.length) % words.length;
     }
   }
 
   const targetWord = words[newIdx];
   if (!targetWord) return;
 
-  // Clear old selection so this behaves like a fresh click on that word
   if (typeof window.resetSelection === 'function') {
     window.resetSelection();
   }
 
   try {
-    // Call the same handler as a normal click.
-    // Your current code calls handleWordClick(word.id, word.form),
-    // so we mirror that to avoid changing existing behavior.
-    handleWordClick(targetWord.id, targetWord.form);
+    handleWordClick(e, targetWord.id, targetWord.form);
   } catch (err) {
     console.error('Keyboard word navigation failed:', err);
   }
