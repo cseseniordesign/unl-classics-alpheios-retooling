@@ -192,6 +192,17 @@ export async function displaySentence(index) {
   }
 } 
 
+// Helper function to clean and validate head IDs before assignment
+function normalizeHeadId(value) {
+  const s = String(value ?? "").trim();
+
+  if (s === "root") return "0";
+  if (/^\d+$/.test(s)) return s;
+
+  console.warn("Rejected invalid head value:", value);
+  return null;
+}
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: handleWordClick
@@ -240,7 +251,11 @@ export function handleWordClick(event,wordId, word) {
  
   const isMultiSelect = event.ctrlKey || event.metaKey;
   const currentSentence = window.treebankData.find(s => s.id === `${window.currentIndex}`);
-  const newHeadId = String(wordId);
+  const newHeadId = normalizeHeadId(wordId);
+  if (newHeadId === null) {
+    resetSelection();
+    return;
+  }
   updateSidePanelsForSelection(currentSentence, wordId);
   //check if ctrl is down 
   if (isMultiSelect) {
@@ -295,7 +310,7 @@ export function handleWordClick(event,wordId, word) {
         else {
           const isRoot = newHeadId === "root";
           const independent = isRoot ? { id: "root" } : currentSentence.words.find(word => word.id === newHeadId);
-          independent.head = dependent.head; 
+          independent.head = normalizeHeadId(dependent.head) ?? "0";
           dependent.head = newHeadId;
           changesMade = true;
         }

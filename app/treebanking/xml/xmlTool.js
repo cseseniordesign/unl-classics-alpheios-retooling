@@ -1108,7 +1108,7 @@ function normalizeSentenceWordIds(xmlDoc) {
       .join('; ');
     // Throw so the main confirm handler treats this like a validation error.
     throw new Error(
-      `Invalid head value(s) in XML: ${details}. Heads must be numeric ids or "0"/"root".`
+      `Invalid head value(s) in XML: ${details}. Heads must be numeric ids.`
     );
   }
 
