@@ -48,7 +48,7 @@ async function validateLanguage(xmlDoc) {
  */
 async function isRealISOLanguage(code) {
     try {
-        const response = await fetch("../../../assets/languages.json")
+        const response = await fetch("./assets/languages.json")
         const languageCodes = await response.json();
         return languageCodes.some(langObj => langObj.Id.toLowerCase() === code.toLowerCase());
     } catch (error) {
