@@ -5,53 +5,138 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="gs.css">
-  <title>Arethusa Input Page</title>
+  <title>Arethusa – Compare Trees</title>
 </head>
 
 <body>
-    <div id="header">
-        <img src="../../assets/arethusa-small.png" alt="Arethusa Logo">
-        <button>✕ Exit</button>
+  <div id="header">
+    <img src="../../assets/arethusa-small.png" alt="Arethusa Logo">
+
+    <!-- ── Shared navigation (sits in the header like treebanking.html) ── -->
+    <div id="nav-a" class="nav-block">
+      <span class="nav-label" id="label-a">Tree A</span>
+      <div class="nav-group">
+        <button class="nav-btn" data-tree="a" data-nav="first" title="First Sentence" disabled>
+          <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M9 4 L3 16 L9 28 V4 M17 4 L11 16 L17 28 V4"/></svg>
+        </button>
+        <button class="nav-btn" data-tree="a" data-nav="back" title="Previous Sentence" disabled>
+          <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M15 4 L7 16 L15 28 Z"/></svg>
+        </button>
+      </div>
+      <select class="sentence-select select" id="select-a"></select>
+      <div class="nav-group">
+        <button class="nav-btn" data-tree="a" data-nav="next" title="Next Sentence" disabled>
+          <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M5 4 L13 16 L5 28 Z"/></svg>
+        </button>
+        <button class="nav-btn" data-tree="a" data-nav="last" title="Last Sentence" disabled>
+          <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M3 4 L9 16 L3 28 V4 M11 4 L17 16 L11 28 V4"/></svg>
+        </button>
+      </div>
     </div>
-    <div id="body">
-        <div id="stats">
-          <table>
-            <tbody>
-              <tr><td>TREE COMPARE DATA</td><td>Data</td><td>Data</td></tr>
-              <tr><td>TREE COMPARE DATA</td><td>Data</td><td>Data</td></tr>
-              <tr><td>TREE COMPARE DATA</td><td>Data</td><td>Data</td></tr>
-              <tr><td>TREE COMPARE DATA</td><td>Data</td><td>Data</td></tr>
-              <tr><td>TREE COMPARE DATA</td><td>Data</td><td>Data</td></tr>
-              <tr><td>TREE COMPARE DATA</td><td>Data</td><td>Data</td></tr>
-              <tr><td>TREE COMPARE DATA</td><td>Data</td><td>Data</td></tr>
-              <tr><td>TREE COMPARE DATA</td><td>Data</td><td>Data</td></tr>
-              <tr><td>TREE COMPARE DATA</td><td>Data</td><td>Data</td></tr>
-              <tr><td>TREE COMPARE DATA</td><td>Data</td><td>Data</td></tr>
-            </tbody>
-          </table>
-        </div>
-        <div id="trees">
-            <div id="student_tree">
-                <div class="tree-controls">
-                    <button>tree</button>
-                    <button>ctrl</button>
-                    <button>btns</button>
-                    <button>4</button>
-                    <button>5</button>
-                </div>
-                <p>STUDENT TREE</p>
-            </div>
-            <div id="teacher_tree">
-                <div class="tree-controls">
-                    <button>tree</button>
-                    <button>ctrl</button>
-                    <button>btns</button>
-                    <button>4</button>
-                    <button>5</button>
-                </div>
-                <p>TEACHER TREE</p>
-            </div>
-        </div>
+
+    <div id="nav-b" class="nav-block">
+      <span class="nav-label" id="label-b">Tree B</span>
+      <div class="nav-group">
+        <button class="nav-btn" data-tree="b" data-nav="first" title="First Sentence" disabled>
+          <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M9 4 L3 16 L9 28 V4 M17 4 L11 16 L17 28 V4"/></svg>
+        </button>
+        <button class="nav-btn" data-tree="b" data-nav="back" title="Previous Sentence" disabled>
+          <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M15 4 L7 16 L15 28 Z"/></svg>
+        </button>
+      </div>
+      <select class="sentence-select select" id="select-b"></select>
+      <div class="nav-group">
+        <button class="nav-btn" data-tree="b" data-nav="next" title="Next Sentence" disabled>
+          <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M5 4 L13 16 L5 28 Z"/></svg>
+        </button>
+        <button class="nav-btn" data-tree="b" data-nav="last" title="Last Sentence" disabled>
+          <svg viewBox="0 0 20 32" xmlns="http://www.w3.org/2000/svg"><path d="M3 4 L9 16 L3 28 V4 M11 4 L17 16 L11 28 V4"/></svg>
+        </button>
+      </div>
     </div>
+
+    <div id="header-buttons">
+      <button id="exit-btn" title="Exit" type="button">
+        <svg viewBox="0 0 24 24">
+          <path d="M4,12a1,1,0,0,0,1,1h7.59l-2.3,2.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0l4-4a1,1,0,0,0,.21-.33,1,1,0,0,0,0-.76,1,1,0,0,0-.21-.33l-4-4a1,1,0,1,0-1.42,1.42L12.59,11H5A1,1,0,0,0,4,12ZM17,2H7A3,3,0,0,0,4,5V8A1,1,0,0,0,6,8V5A1,1,0,0,1,7,4H17a1,1,0,0,1,1,1V19a1,1,0,0,1-1,1H7a1,1,0,0,1-1-1V16a1,1,0,0,0-2,0v3a3,3,0,0,0,3,3H17a3,3,0,0,0,3-3V5A3,3,0,0,0,17,2Z"/>                
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <div id="body">
+    <div id="trees">
+
+      <!-- ── Tree A ─────────────────────────────────────────────────── -->
+      <div class="tree-panel" id="panel-a">
+        <div id="tree-bank-a">
+          <div class="tree-bar">
+            <div class="tree-options">
+              <button class="ctrl-btn" data-tree="a" data-action="compact" title="Condense view">
+                <svg viewBox="0 0 24 24">
+                    <path d="M10.38,13.08A1,1,0,0,0,10,13H6a1,1,0,0,0,0,2H7.59l-5.3,5.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0L9,16.41V18a1,1,0,0,0,2,0V14a1,1,0,0,0-.08-.38A1,1,0,0,0,10.38,13.08ZM10,5A1,1,0,0,0,9,6V7.59L3.71,2.29A1,1,0,0,0,2.29,3.71L7.59,9H6a1,1,0,0,0,0,2h4a1,1,0,0,0,.38-.08,1,1,0,0,0,.54-.54A1,1,0,0,0,11,10V6A1,1,0,0,0,10,5Zm3.62,5.92A1,1,0,0,0,14,11h4a1,1,0,0,0,0-2H16.41l5.3-5.29a1,1,0,1,0-1.42-1.42L15,7.59V6a1,1,0,0,0-2,0v4a1,1,0,0,0,.08.38A1,1,0,0,0,13.62,10.92ZM16.41,15H18a1,1,0,0,0,0-2H14a1,1,0,0,0-.38.08,1,1,0,0,0-.54.54A1,1,0,0,0,13,14v4a1,1,0,0,0,2,0V16.41l5.29,5.3a1,1,0,0,0,1.42,0,1,1,0,0,0,0-1.42Z"/>
+                </svg>
+              </button>
+              <button class="ctrl-btn" data-tree="a" data-action="expand" title="Expand view">
+                <svg viewBox="0 0 24 24">
+                  <path d="M9.29,13.29,4,18.59V17a1,1,0,0,0-2,0v4a1,1,0,0,0,.08.38,1,1,0,0,0,.54.54A1,1,0,0,0,3,22H7a1,1,0,0,0,0-2H5.41l5.3-5.29a1,1,0,0,0-1.42-1.42ZM5.41,4H7A1,1,0,0,0,7,2H3a1,1,0,0,0-.38.08,1,1,0,0,0-.54.54A1,1,0,0,0,2,3V7A1,1,0,0,0,4,7V5.41l5.29,5.3a1,1,0,0,0,1.42,0,1,1,0,0,0,0-1.42ZM21,16a1,1,0,0,0-1,1v1.59l-5.29-5.3a1,1,0,0,0-1.42,1.42L18.59,20H17a1,1,0,0,0,0,2h4a1,1,0,0,0,.38-.08,1,1,0,0,0,.54-.54A1,1,0,0,0,22,21V17A1,1,0,0,0,21,16Zm.92-13.38a1,1,0,0,0-.54-.54A1,1,0,0,0,21,2H17a1,1,0,0,0,0,2h1.59l-5.3,5.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0L20,5.41V7a1,1,0,0,0,2,0V3A1,1,0,0,0,21.92,2.62Z"/>                            
+                </svg>
+              </button>
+              <button class="ctrl-btn" data-tree="a" data-action="focus-root" title="Focus view on root">
+                <svg viewBox="0 0 24 24">
+                  <path d="M8,2H3A1,1,0,0,0,2,3V8A1,1,0,0,0,4,8V4H8A1,1,0,0,0,8,2ZM8,20H4V16a1,1,0,0,0-2,0v5a1,1,0,0,0,1,1H8a1,1,0,0,0,0-2ZM21,2H16a1,1,0,0,0,0,2h4V8a1,1,0,0,0,2,0V3A1,1,0,0,0,21,2Zm0,13a1,1,0,0,0-1,1v4H16a1,1,0,0,0,0,2h5a1,1,0,0,0,1-1V16A1,1,0,0,0,21,15Z"/>
+                </svg>              
+              </button>
+              <button class="ctrl-btn" data-tree="a" data-action="center" title="Center view">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12,5a7,7,0,1,0,7,7A7,7,0,0,0,12,5Zm0,12a5,5,0,1,1,5-5A5,5,0,0,1,12,17Zm0-8a3,3,0,1,0,3,3A3,3,0,0,0,12,9Zm0,4a1,1,0,1,1,1-1A1,1,0,0,1,12,13ZM12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,20a9,9,0,1,1,9-9A9,9,0,0,1,12,21Z"/>
+                </svg>              
+              </button>
+            </div>
+          </div>
+          <div class="sandbox" id="sandbox-a">
+            <svg></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Tree B ─────────────────────────────────────────────────── -->
+      <div class="tree-panel" id="panel-b">
+        <div id="tree-bank-b">
+          <div class="tree-bar">
+            <div class="tree-options">
+              <button class="ctrl-btn" data-tree="a" data-action="compact" title="Condense view">
+                <svg viewBox="0 0 24 24">
+                    <path d="M10.38,13.08A1,1,0,0,0,10,13H6a1,1,0,0,0,0,2H7.59l-5.3,5.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0L9,16.41V18a1,1,0,0,0,2,0V14a1,1,0,0,0-.08-.38A1,1,0,0,0,10.38,13.08ZM10,5A1,1,0,0,0,9,6V7.59L3.71,2.29A1,1,0,0,0,2.29,3.71L7.59,9H6a1,1,0,0,0,0,2h4a1,1,0,0,0,.38-.08,1,1,0,0,0,.54-.54A1,1,0,0,0,11,10V6A1,1,0,0,0,10,5Zm3.62,5.92A1,1,0,0,0,14,11h4a1,1,0,0,0,0-2H16.41l5.3-5.29a1,1,0,1,0-1.42-1.42L15,7.59V6a1,1,0,0,0-2,0v4a1,1,0,0,0,.08.38A1,1,0,0,0,13.62,10.92ZM16.41,15H18a1,1,0,0,0,0-2H14a1,1,0,0,0-.38.08,1,1,0,0,0-.54.54A1,1,0,0,0,13,14v4a1,1,0,0,0,2,0V16.41l5.29,5.3a1,1,0,0,0,1.42,0,1,1,0,0,0,0-1.42Z"/>
+                </svg>
+              </button>
+              <button class="ctrl-btn" data-tree="a" data-action="expand" title="Expand view">
+                <svg viewBox="0 0 24 24">
+                  <path d="M9.29,13.29,4,18.59V17a1,1,0,0,0-2,0v4a1,1,0,0,0,.08.38,1,1,0,0,0,.54.54A1,1,0,0,0,3,22H7a1,1,0,0,0,0-2H5.41l5.3-5.29a1,1,0,0,0-1.42-1.42ZM5.41,4H7A1,1,0,0,0,7,2H3a1,1,0,0,0-.38.08,1,1,0,0,0-.54.54A1,1,0,0,0,2,3V7A1,1,0,0,0,4,7V5.41l5.29,5.3a1,1,0,0,0,1.42,0,1,1,0,0,0,0-1.42ZM21,16a1,1,0,0,0-1,1v1.59l-5.29-5.3a1,1,0,0,0-1.42,1.42L18.59,20H17a1,1,0,0,0,0,2h4a1,1,0,0,0,.38-.08,1,1,0,0,0,.54-.54A1,1,0,0,0,22,21V17A1,1,0,0,0,21,16Zm.92-13.38a1,1,0,0,0-.54-.54A1,1,0,0,0,21,2H17a1,1,0,0,0,0,2h1.59l-5.3,5.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0L20,5.41V7a1,1,0,0,0,2,0V3A1,1,0,0,0,21.92,2.62Z"/>                            
+                </svg>
+              </button>
+              <button class="ctrl-btn" data-tree="a" data-action="focus-root" title="Focus view on root">
+                <svg viewBox="0 0 24 24">
+                  <path d="M8,2H3A1,1,0,0,0,2,3V8A1,1,0,0,0,4,8V4H8A1,1,0,0,0,8,2ZM8,20H4V16a1,1,0,0,0-2,0v5a1,1,0,0,0,1,1H8a1,1,0,0,0,0-2ZM21,2H16a1,1,0,0,0,0,2h4V8a1,1,0,0,0,2,0V3A1,1,0,0,0,21,2Zm0,13a1,1,0,0,0-1,1v4H16a1,1,0,0,0,0,2h5a1,1,0,0,0,1-1V16A1,1,0,0,0,21,15Z"/>
+                </svg>              
+              </button>
+              <button class="ctrl-btn" data-tree="a" data-action="center" title="Center view">
+                <svg viewBox="0 0 24 24">
+                  <path d="M12,5a7,7,0,1,0,7,7A7,7,0,0,0,12,5Zm0,12a5,5,0,1,1,5-5A5,5,0,0,1,12,17Zm0-8a3,3,0,1,0,3,3A3,3,0,0,0,12,9Zm0,4a1,1,0,1,1,1-1A1,1,0,0,1,12,13ZM12,1A11,11,0,1,0,23,12,11,11,0,0,0,12,1Zm0,20a9,9,0,1,1,9-9A9,9,0,0,1,12,21Z"/>
+                </svg>              
+              </button>
+            </div>
+          </div>
+          <div class="sandbox" id="sandbox-b">
+            <svg></svg>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- #trees -->
+  </div><!-- #body -->
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script type="module" src="./app/treebanking/gs/gs.js"></script>
 </body>
 </html>

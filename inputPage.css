@@ -394,3 +394,58 @@ a {
   font-weight: lighter;
   font-family: "Arial", sans-serif;
 }
+/* ── Compare section ────────────────────────────────────────────────────────── */
+
+#compare-section {
+  margin-top: 10px;
+}
+
+.compare-divider {
+  border: none;
+  border-top: 1px solid #ddd;
+  margin: 12px 0 10px;
+}
+
+.compare-upload {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  background: #fafafa;
+}
+
+.compare-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+  min-width: 42px;
+}
+
+.compare-btn {
+  margin-top: 8px;
+  padding: 6px 20px;
+  font-size: 13px;
+  border: 2px solid #5a78c6;
+  border-radius: 8px;
+  background: #5a78c6;
+  color: white;
+  cursor: pointer;
+  outline: none;
+  height: 34px;
+  box-sizing: border-box;
+}
+
+.compare-btn:hover {
+  background-color: #3f5aaa;
+  border-color: #3f5aaa;
+  transition-duration: .25s;
+}
+
+.compare-btn:disabled {
+  background-color: #aaa;
+  border-color: #aaa;
+  cursor: default;
+}

@@ -1,89 +1,311 @@
-div {
-    outline: 1px solid red;
+html, body {
+  width: 100%;
+  height: 100%;
+  margin: 0;
 }
+
+:root {
+  --hover-teal: #30bfbf;
+  --hover-teal-bg: rgba(48,191,191,.28);
+  --node-hover-opacity: .28;
+  --select-yellow: #ffeb3b;
+  --select-yellow-bg: rgba(255,235,59,.45);
+  --node-selected-opacity: .38;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+
+#header {
+  width: 100%;
+  height: 5%;
+  background-color: #4e6476;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+#header img {
+  height: 70%;
+  object-fit: contain;
+  margin-left: 1%;
+  flex-shrink: 0;
+}
+
+/* ── Per-tree nav block ──────────────────────────────────────────────────── */
+
+.nav-block {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex: 1;
+  justify-content: center;
+}
+
+.nav-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #a8d0dc;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 4px;
+}
+
+.nav-group {
+  display: flex;
+  align-items: center;
+}
+
+.nav-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+  transition: opacity 0.2s ease, transform 0.1s ease;
+  height: 30px;
+}
+
+.nav-btn:hover:not(:disabled) {
+  opacity: 1;
+  transform: scale(1.08);
+}
+
+.nav-btn svg {
+  width: 22px;
+  height: 28px;
+  fill: #a8d0dc;
+  filter: drop-shadow(0 0 1px rgba(255,255,255,0.4));
+}
+
+.nav-btn:disabled {
+  opacity: 0.35;
+  filter: none;
+  cursor: default;
+  transform: none;
+}
+
+.select {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 2px 3px;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  color: #000;
+  text-align: center;
+  width: 35px;
+  height: 30px;
+  line-height: 1;
+  outline-color: #2a7ae2;
+}
+
+/* ── Header exit button ──────────────────────────────────────────────────── */
+
+#header-buttons {
+  display: flex;
+  margin-left: auto;
+  margin-right: 1%;
+  height: 70%;
+  flex-shrink: 0;
+}
+
+#exit-btn {
+  fill: white;
+  width: 35px;
+  height: 100%;
+  appearance: none;
+  background-color: #52bb7e;
+  border-radius: 8px;
+  border-style: none;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  overflow: hidden;
+  padding: 5px;
+  transition: all .3s;
+}
+
+#exit-btn svg {
+  width: 100%;
+  height: 100%;
+  fill: white;
+}
+
+#exit-btn:hover {
+  background-color: #82878b;
+  transition-duration: .35s;
+}
+
+#exit-btn:active {
+  transform: translateY(2px);
+}
+
+/* ── Body / layout ───────────────────────────────────────────────────────── */
 
 #body {
-    height: max-content;
-    padding: 10px;
-}
-
-#stats {
-    width: 100%;
-    margin-bottom: 16px;
-}
-
-#stats table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-#stats table td {
-    border: 1px solid #ccc;
-    padding: 8px 12px;
-    height: 28px;
+  width: 98%;
+  height: 93%;
+  display: flex;
+  margin: auto;
+  margin-top: 1%;
+  background-color: lightgrey;
+  border-radius: 1%;
+  box-sizing: border-box;
 }
 
 #trees {
-    width: 100%;
-    display: flex;
-    justify-content: space-around;
-    gap: 2%;
+  width: 100%;
+  display: flex;
+  gap: 1%;
+  padding: 0.5%;
+  box-sizing: border-box;
 }
 
-#student_tree, #teacher_tree {
-    width: 48%;
-    min-height: 65vw;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: flex-start;
-    box-sizing: border-box;
-    padding: 8px;
+.tree-panel {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
 }
 
-.tree-controls {
-    display: flex;
-    justify-content: flex-end;
-    width: 100%;
-    gap: 6px;
-    padding: 0;
+/* Mirrors treebanking.html's #tree-bank */
+#tree-bank-a,
+#tree-bank-b {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #4e6476;
+  border-radius: 4px;
+  background: #fff;
+  height: 100%;
+  margin-bottom: 1%;
+  box-sizing: border-box;
 }
 
-.tree-controls button {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid #999;
-    border-radius: 4px;
-    background: none;
-    cursor: pointer;
-    font-size: 13px;
-    color: #555;
+/* ── Tree toolbar strip ──────────────────────────────────────────────────── */
+
+.tree-bar {
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  padding: 4px 6px;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
-.tree-controls button:hover {
-    background-color: #f0f0f0;
+.tree-options {
+  display: flex;
+  gap: 2px;
 }
 
-#header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 16px;
+/* Amber buttons matching treebanking.css #tree-options button */
+.ctrl-btn {
+  fill: white;
+  width: 35px;
+  height: 30px;
+  appearance: none;
+  background-color: #bb8a21;
+  border-radius: 8px;
+  border-style: none;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  overflow: hidden;
+  padding: 5px;
+  margin-right: 1%;
+  transition: all .3s;
 }
 
-#header button {
-    background: none;
-    border: 1px solid #999;
-    border-radius: 4px;
-    padding: 6px 14px;
-    cursor: pointer;
-    font-size: 14px;
-    color: #555;
+.ctrl-btn svg {
+  width: 100%;
+  height: 100%;
+  fill: white;
 }
 
-#header button:hover {
-    background-color: #f0f0f0;
+.ctrl-btn:hover {
+  background-color: #82878b;
+  transition-duration: .35s;
 }
+
+.ctrl-btn:active {
+  transform: translateY(2px);
+  transition-duration: .35s;
+}
+
+/* ── D3 sandbox ──────────────────────────────────────────────────────────── */
+
+.sandbox {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.sandbox svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* ── Node / link styles (mirrors treebanking.css) ────────────────────────── */
+
+.link {
+  fill: none;
+  stroke: #aaa;
+  stroke-width: 2px;
+}
+
+.node text {
+  font-size: 14px;
+  font-weight: 500;
+  fill: #222;
+  cursor: default;
+}
+
+.link-label {
+  font-family: "Arial", sans-serif;
+  font-size: 10px;
+  fill: #666;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.node .text-bg {
+  fill: #30bfbf;
+  fill-opacity: 0;
+  transition: fill-opacity .15s ease;
+}
+
+.node.highlight .text-bg {
+  fill: var(--hover-teal);
+  fill-opacity: var(--node-hover-opacity) !important;
+}
+
+.node[data-pos="v"] text { fill: #c65a5a; }
+.node[data-pos="c"] text { fill: #c77d9b; }
+.node[data-pos="d"] text { fill: #e69109; }
+.node[data-pos="i"] text { fill: #b29100; }
+.node[data-pos="n"] text { fill: #487a6f; }
+.node[data-pos="a"] text { fill: #5a78c6; }
+.node[data-pos="r"] text { fill: #5a9b6b; }
+.node[data-pos="l"] text { fill: #a6784d; }
+.node[data-pos="p"] text { fill: #7a5aa9; }
+.node[data-pos="u"] text { fill: #444; }
+.node[data-pos="m"] text { fill: #888; }
+.node:not([data-pos]) text,
+.node[data-pos=""] text { fill: #444; }
