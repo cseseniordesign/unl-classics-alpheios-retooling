@@ -208,28 +208,31 @@ function handleControl(key, action) {
   const p = panels[key];
   if (!p.svgSel || !p.zoom) return;
 
-  if (action === 'fit') {
+  if (action === 'center') {
     fitTreeToView(p.svgSel, p.gx, p.container, p.zoom, p.margin, true);
 
-  } else if (action === 'center') {
-    p.svgSel.transition().duration(400).call(
-      p.zoom.transform,
-      d3.zoomIdentity.translate(p.margin.left, p.margin.top)
-    );
-
   } else if (action === 'compact') {
+
     const t = d3.zoomTransform(p.svgNode);
-    p.svgSel.transition().duration(300).call(p.zoom.transform, t.scale(t.k * 0.75));
+    p.svgSel
+      .transition()
+      .duration(300)
+      .call(p.zoom.transform, t.scale(0.75));
 
   } else if (action === 'expand') {
+
     const t = d3.zoomTransform(p.svgNode);
-    p.svgSel.transition().duration(300).call(p.zoom.transform, t.scale(t.k * 1.33));
+    p.svgSel
+      .transition()
+      .duration(300)
+      .call(p.zoom.transform, t.scale(1.33));
 
   } else if (action === 'focus-root') {
+
     const firstChild = p.root?.children?.[0];
     if (firstChild) {
-      const cW = p.container?.clientWidth  || 800;
-      const cH = p.container?.clientHeight || 600;
+      const cW = p.container?.clientWidth / 2  || 800;
+      const cH = p.container?.clientHeight / 3 || 600;
       p.svgSel.transition().duration(400).call(
         p.zoom.transform,
         d3.zoomIdentity.translate(cW / 2 - firstChild.x, cH / 2 - firstChild.y)
