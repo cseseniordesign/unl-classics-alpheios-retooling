@@ -1,4 +1,4 @@
-import { showToast } from '/main.js';
+import { showToast } from '../../../main.js';
 import parseTreeBankXML from '../xml/parser.js';
 import { validateXML } from '../libs/xmllint/index-browser.mjs';
 
