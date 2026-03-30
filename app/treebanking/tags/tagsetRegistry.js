@@ -15,7 +15,7 @@ export const TAGSET_REGISTRY = [
   {
     id: 'aldt-lat',
     label: 'Ancient Language Dependency Treebank (Latin)',
-    distFile: '/app/treebanking/dist/aldt-misc.json',
+    distFile: '../dist/aldt-misc.json',
     format: 'aldt',
     lang: 'lat',
     hasMorph: true,
@@ -23,7 +23,7 @@ export const TAGSET_REGISTRY = [
   {
     id: 'aldt-grc',
     label: 'Ancient Language Dependency Treebank (Greek)',
-    distFile: '/app/treebanking/dist/aldt-misc-grc.json',
+    distFile: '../dist/aldt-misc-grc.json',
     format: 'aldt',
     lang: 'grc',
     hasMorph: true,
@@ -31,7 +31,7 @@ export const TAGSET_REGISTRY = [
   {
     id: 'smyth',
     label: 'Smyth Grammar Tag Set',
-    distFile: '/app/treebanking/dist/smyth3.json',
+    distFile: '../dist/smyth3.json',
     format: 'smyth',
     lang: 'grc',
     hasMorph: true,
@@ -39,7 +39,7 @@ export const TAGSET_REGISTRY = [
   // {
   //   id: 'jmh_lat',
   //   label: 'JMH Latin Tagset',
-  //   distFile: '/app/treebanking/dist/jmh_lat.json',
+  //   distFile: '../dist/jmh_lat.json',
   //   format: 'jmh_lat',
   //   lang: 'lat',
   //   hasMorph: true,
@@ -47,7 +47,7 @@ export const TAGSET_REGISTRY = [
   {
     id: 'jmh_grc',
     label: 'JMH Greek Tagset',
-    distFile: '/app/treebanking/dist/jmhgreek.json',
+    distFile: '../dist/jmhgreek.json',
     format: 'jmh_grc',
     lang: 'grc',
     hasMorph: true,
@@ -55,7 +55,7 @@ export const TAGSET_REGISTRY = [
   // {
   //   id: 'aldt_lat_no_morph',
   //   label: 'ALDT Latin (Without Morphology)',
-  //   distFile: '/app/treebanking/dist/aldt_lat_no_morph.json',
+  //   distFile: '../dist/aldt_lat_no_morph.json',
   //   format: 'aldt',
   //   lang: 'lat',
   //   hasMorph: false,
