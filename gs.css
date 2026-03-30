@@ -296,6 +296,7 @@ html, body {
   fill-opacity: var(--node-hover-opacity) !important;
 }
 
+/* Colors hard-coded not dependant on configs */
 .node[data-pos="v"] text { fill: #c65a5a; }
 .node[data-pos="c"] text { fill: #c77d9b; }
 .node[data-pos="d"] text { fill: #e69109; }
