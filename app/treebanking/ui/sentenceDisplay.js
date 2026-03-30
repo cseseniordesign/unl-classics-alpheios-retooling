@@ -308,8 +308,8 @@ export function handleWordClick(event,wordId, word) {
           changesMade = true;
         }
         else {
-          const isRoot = newHeadId === "root";
-          const independent = isRoot ? { id: "root" } : currentSentence.words.find(word => word.id === newHeadId);
+          const isRoot = newHeadId === "0";
+          const independent = isRoot ? { id: "0" } : currentSentence.words.find(word => word.id === newHeadId);
           independent.head = normalizeHeadId(dependent.head) ?? "0";
           dependent.head = newHeadId;
           changesMade = true;
@@ -387,8 +387,8 @@ export function handleWordClick(event,wordId, word) {
   }
   const dependent = currentSentence.words.find(word => word.id === selectedWordId);
   //gets indepenent node (second selected node)
-  const isRoot = newHeadId === "root";
-  const independent = isRoot ? { id: "root" } : currentSentence.words.find(word => word.id === newHeadId);
+  const isRoot = newHeadId === "0";
+  const independent = isRoot ? { id: "0" } : currentSentence.words.find(word => word.id === newHeadId);
   //remove highlight when second word is selected
   const btnNewHead = document.querySelector(`button[data-word-id="${newHeadId}"]`);
   if (btnNewHead) btnNewHead.classList.remove("highlight");
