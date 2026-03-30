@@ -1,0 +1,29 @@
+The following files need to be updated each time a new branch is created for
+the website to actually load on Git Pages. When you find a file path that needs to
+be updated, please use the same style and report it.
+
+treebanking.html
+Line 18: /unl-classics-alpheios-retooling/assets/arethusa-small.png
+
+main.js
+Line 77: ./index.html
+
+index.html
+Line 13: /unl-classics-alpheios-retooling/assets/arethusa-small.png
+Line 126: /unl-classics-alpheios-retooling/app/treebanking/input/input.js
+Line 127: /unl-classics-alpheios-retooling/app/treebanking/input/compare.js
+
+app/treebanking/input/input.js
+Line 1: ../../../main.js
+Line 2: ../tags/tagsetStore.js
+Line 3: ../tags/tagsetSelector.js
+
+app/treebanking/input/compare.js
+Line 1: ../../../main.js
+Line 8: ./app/treebanking/schemas/treebank-1.7.xsd
+Line 13: ./assets/languages.json
+
+app/treebanking/xml/xmlLoader.js
+Line 51: ./assets/languages.json
+Line 66: ./app/treebanking/schemas/treebank-1.7.xsd
+Line 147: ../../../assets/treebank.xml
