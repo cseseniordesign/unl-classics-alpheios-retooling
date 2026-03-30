@@ -61,45 +61,163 @@ export function isValidLLTResponse(xmlString) {
  * @returns {Array<Object>} - parsed sentences
  */
 export async function tokenizer(input) {
-  const encoded = encodeURIComponent(input);
-
   // get default and/or user tokenization parameters
   let params = {
-    splitting: "false",
-    shifting: "false",
+    splitting: false,
+    shifting: false,
   };
 
   const stored = sessionStorage.getItem("tokenizerParams");
   if (stored) {
-    params = JSON.parse(stored);
+    try { params = JSON.parse(stored); } catch(_) {}
   }
 
-  // fetch default or custom tokenizer
-  const response = await fetch(getTokenizer(),
-    {
-      method: "POST",
-      headers: {
-        "Content-Type" : "application/x-www-form-urlencoded",
-      },
-      body: "text=" + encoded + "&splitting=" + params.splitting + "&shifting=" + params.shifting,
-    }
-  );
+  // If the user has configured a custom tokenizer URL, use it (remote path).
+  // Otherwise use the built-in client-side tokenizer so there is no external
+  // dependency and no CORS failure when running locally.
+  const customURL = localStorage.getItem("tokenizer-URL");
+  if (customURL) {
+    return remoteTokenizer(input, customURL, params);
+  }
+  return clientTokenizer(input, params);
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: clientTokenizer
+ * --------------------------------------------------------------------------
+ * Fully client-side tokenizer — no network request required.
+ * Splits input text into sentences then into word/punctuation tokens,
+ * replicating the output structure of the LLT remote service.
+ *
+ * Sentence splitting: splits after sentence-ending punctuation marks
+ *   (. ? ! · for Greek; treats ; as sentence boundary too).
+ * Token splitting: splits on whitespace, then separates leading/trailing
+ *   punctuation from word tokens so each punctuation mark is its own token.
+ * Enclitic splitting (splitting=true): splits Greek enclitics on -τε, -τι,
+ *   -νε, -θε at word boundaries (basic heuristic).
+ *
+ * @param {string} input - raw user text
+ * @param {Object} params - { splitting: bool, shifting: bool }
+ * @returns {Array<Object>} - parsed sentence objects matching parseTreeBankXML output
+ */
+function clientTokenizer(input, params) {
+  const lang      = getLanguage();
+  const direction = localStorage.getItem("textDirection") || "";
+  const PUNCT     = [",", ".", "·", ";", ":", "?", "!", "...", "-", "(", ")", "`", "'", '"', "«", "»"];
+
+  // ── 1. Split into sentences ─────────────────────────────────────────────
+  // Sentence boundaries: . ? ! and Greek · (middle dot) and ; (Greek semicolon U+037E)
+  // Keep the punctuation as its own token rather than discarding it.
+  const sentenceEndRe = /([.?!·;])\s*/g;
+
+  // Annotate end positions
+  const rawSentences = [];
+  let last = 0;
+  let m;
+  const workText = input.trim();
+
+  // Split at sentence-ending punct, keeping the punct char
+  const parts = workText.split(/(?<=[.?!·;])\s+/);
+
+  // ── 2. Tokenize each sentence ───────────────────────────────────────────
+  function tokenizeSentence(text) {
+    // Split on whitespace first
+    const roughTokens = text.trim().split(/\s+/).filter(Boolean);
+    const tokens = [];
+
+    roughTokens.forEach(raw => {
+      // Peel leading punctuation
+      let cur = raw;
+      while (cur.length > 0 && PUNCT.includes(cur[0])) {
+        tokens.push(cur[0]);
+        cur = cur.slice(1);
+      }
+      // Peel trailing punctuation (accumulate, then push reversed)
+      const trailingPunct = [];
+      while (cur.length > 0 && PUNCT.includes(cur[cur.length - 1])) {
+        trailingPunct.unshift(cur[cur.length - 1]);
+        cur = cur.slice(0, -1);
+      }
+      if (cur.length > 0) {
+        // Basic enclitic splitting for Greek if requested
+        if (params.splitting && lang === "grc") {
+          const encliticRe = /(τε|τι|νε|θε)$/;
+          const match = cur.match(encliticRe);
+          if (match && cur.length > match[0].length) {
+            tokens.push(cur.slice(0, -match[0].length));
+            tokens.push(match[0]);
+          } else {
+            tokens.push(cur);
+          }
+        } else {
+          tokens.push(cur);
+        }
+      }
+      trailingPunct.forEach(p => tokens.push(p));
+    });
+
+    return tokens;
+  }
+
+  // ── 3. Build the parsed sentences array ─────────────────────────────────
+  // Match the shape that parseTreeBankXML would return.
+  const parsedSentences = parts
+    .map(part => part.trim())
+    .filter(Boolean)
+    .map((sentText, sIdx) => {
+      const tokens = tokenizeSentence(sentText);
+      const words = tokens.map((form, tIdx) => {
+        const isPunct = PUNCT.includes(form);
+        return {
+          id:       String(tIdx + 1),
+          form,
+          word:     form,
+          lemma:    "",
+          postag:   "",
+          relation: isPunct ? "AuxX" : "",
+          head:     isPunct ? 0 : "",
+        };
+      });
+      return { id: String(sIdx + 1), words };
+    });
+
+  return parsedSentences;
+}
+
+/**
+ * --------------------------------------------------------------------------
+ * FUNCTION: remoteTokenizer
+ * --------------------------------------------------------------------------
+ * Calls a user-configured remote tokenizer service (LLT-compatible).
+ * Only used when the user has set a custom tokenizer URL in Advanced Options.
+ *
+ * @param {string} input  - raw user text
+ * @param {string} url    - tokenizer service URL
+ * @param {Object} params - { splitting: bool, shifting: bool }
+ * @returns {Array<Object>} - parsed sentence objects
+ */
+async function remoteTokenizer(input, url, params) {
+  const encoded  = encodeURIComponent(input);
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: "text=" + encoded + "&splitting=" + params.splitting + "&shifting=" + params.shifting,
+  });
 
   if (!response.ok) {
     throw new Error("Tokenizer Service Failed: " + response.status);
   }
 
-  const xmlText = await response.text(); // outputs XML (different structure than internal model)
+  const xmlText = await response.text();
 
-  if (!isValidLLTResponse) {
-    throw new Error("Invalid LLT-compatible XML.");
+  if (!isValidLLTResponse(xmlText)) {
+    throw new Error("Invalid LLT-compatible XML response from tokenizer.");
   }
 
-  // normalize XML and parse into array object
   const newXML = normalizeXML(xmlText);
   const parsedSentences = parseTreeBankXML(newXML);
 
-  // set head and relation of punctuation tokens
   parsedSentences.forEach(sentence => {
     sentence.words.forEach(word => {
       const punctuationMarks = [",", ".", "·", ";", ":", "?", "!", "...", "-", "(", ")", "`", "'", '"', "«", "»"];

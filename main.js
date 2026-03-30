@@ -450,13 +450,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Load and render ---
   if (userInput) {
-    // Parse user input 
+    // Parse user input
     const parsedSentences = await tokenizer(userInput);
     window.treebankData = parsedSentences;
     window.appMode = "userInput";
-
     initializedFromUserInput = true;
-
     // Clear any previous XML upload to avoid mixing pipelines
     localStorage.removeItem("xmlContent");
   }
