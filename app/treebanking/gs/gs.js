@@ -279,7 +279,7 @@ function init() {
   );
 
   document.getElementById('exit-btn')?.addEventListener('click', () => {
-    ['compareXmlA','compareXmlB','compareDataA','compareDataB',
+    ['compareXmlA','compareXmlB','compareDataA','compareDataB', 'compareReport','compareDetails',
      'compareLabelA','compareLabelB'].forEach(k => localStorage.removeItem(k));
     window.location.href = './index.html';
   });

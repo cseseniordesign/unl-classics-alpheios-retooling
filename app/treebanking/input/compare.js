@@ -1,6 +1,7 @@
 import { showToast } from '/main.js';
 import parseTreeBankXML from '../xml/parser.js';
 import { validateXML } from '../libs/xmllint/index-browser.mjs';
+import { compareTreebanks } from '../gs/compareEngine.js';  
 
 // ─── Schema / language helpers (mirrors xmlLoader.js) ───────────────────────
 
@@ -114,6 +115,27 @@ async function handleCompare() {
     // Parse and store both treebanks
     const dataA = parseTreeBankXML(xmlA);
     const dataB = parseTreeBankXML(xmlB);
+    const comparison = compareTreebanks(dataA, dataB);
+
+    console.log('=== GOLD STANDARD COMPARISON ===');
+    console.log('Full comparison object:', comparison);
+    console.log('Report:', comparison.report);
+    console.log('Details:', comparison.details);
+    console.table({
+      sentences: comparison.report.sentences,
+      words: comparison.report.words,
+      heads: comparison.report.heads,
+      relations: comparison.report.relations,
+      lemmata: comparison.report.lemmata,
+      postags: {
+        total: comparison.report.postags.total,
+        right: comparison.report.postags.right,
+        wrong: comparison.report.postags.wrong,
+        almost: comparison.report.postags.almost,
+        unique: comparison.report.postags.unique
+      }
+    });
+    console.log('Postag datapoints:', comparison.report.postags.datapoints);
 
     // Clear any previous single-tree session data to avoid pollution
     localStorage.removeItem('xmlContent');
@@ -124,6 +146,8 @@ async function handleCompare() {
     localStorage.setItem('compareXmlB', xmlB);
     localStorage.setItem('compareDataA', JSON.stringify(dataA));
     localStorage.setItem('compareDataB', JSON.stringify(dataB));
+    localStorage.setItem('compareReport', JSON.stringify(comparison.report));
+    localStorage.setItem('compareDetails', JSON.stringify(comparison.details));
     localStorage.setItem('compareLabelA', fileA.name);
     localStorage.setItem('compareLabelB', fileB.name);
 
