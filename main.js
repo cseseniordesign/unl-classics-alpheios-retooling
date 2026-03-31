@@ -424,7 +424,7 @@ async function restoreTagsetFromStorage() {
   // console.log('[tagset] registry entry =', entry);
   if (!entry) return;
 
-  // console.log('[tagset] distFile =', entry.distFile);
+  console.log('[tagset] distFile =', entry.distFile);
 
   const cfg = await loadTagsetConfig(entry.distFile, entry);
   if (!cfg) return;
