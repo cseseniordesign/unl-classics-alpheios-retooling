@@ -496,8 +496,8 @@ if (typeof window.fastRefreshTree === 'function') window.fastRefreshTree();
 triggerAutoSave();
 
 const docEntry = toolBody.querySelector('.morph-entry[data-index="-1"]');
-const topCheckbox = docEntry?.querySelector('input[type="checkbox"]');
-if (topCheckbox) topCheckbox.checked = false;
+const topRadio = docEntry?.querySelector('input[type="radio"]');
+if (topRadio) topRadio.checked = false;
 
 if (typeof window.renderMorphInfo === 'function') window.renderMorphInfo(word);
 if (typeof window.updateXMLIfActive === 'function') window.updateXMLIfActive();

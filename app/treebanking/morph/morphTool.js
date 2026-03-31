@@ -372,6 +372,7 @@ export async function renderUserFormsList(word, toolBody) {
   list.innerHTML = order.map((realIdx) => {
     const f = word.forms[realIdx];
     return userFormCardHTML(
+      word,
       f,
       realIdx,
       Number(word.activeForm) === realIdx,
@@ -383,20 +384,9 @@ export async function renderUserFormsList(word, toolBody) {
   if (mc) enableMorphEntryExpansion(mc);
 
   // When a checkbox is toggled, make that form active
-  list.querySelectorAll('.morph-entry input[type="checkbox"]').forEach(cb => {
+  list.querySelectorAll('.morph-entry input[type="radio"]').forEach(cb => {
     cb.addEventListener('change', async (e) => {
       if (!e.target.checked) return; // only handle when checked
-
-      // uncheck all other user-form boxes
-      list.querySelectorAll('input[type="checkbox"]').forEach(x => {
-        if (x !== e.target) x.checked = false;
-      });
-
-      // also uncheck the document-form box at the top
-      const docCheckbox = toolBody.querySelector('.morph-entry[data-index="-1"] input[type="checkbox"]');
-      if (docCheckbox && docCheckbox !== e.target) {
-        docCheckbox.checked = false;
-      }
 
       // determine which form this belongs to
       const card = e.target.closest('.user-form');
@@ -629,8 +619,8 @@ function enableMorphEntryExpansion(scopeEl) {
     const entry = e.target.closest('.morph-entry');
     if (!entry || !scopeEl.contains(entry)) return;
 
-    // Ignore clicks that originate on the checkbox itself
-    if (e.target.matches('input[type="checkbox"]')) return;
+    // Ignore clicks that originate on the radio button itself
+    if (e.target.matches('input[type="radio"]')) return;
 
     // Toggle
     const isExpanded = entry.classList.contains('expanded');
@@ -763,11 +753,11 @@ async function appendCreateAndUserForms(word, toolBody) {
   if (docEntry && !docEntry._docButtonsBound) {
     docEntry._docButtonsBound = true;
 
-    const topCheckbox = docEntry.querySelector('input[type="checkbox"]');
-    if (topCheckbox) {
-      topCheckbox.checked = (Number(word.activeForm) === -1);
+    const topRadio = docEntry.querySelector('input[type="radio"]');
+    if (topRadio) {
+      topRadio.checked = (Number(word.activeForm) === -1);
 
-      topCheckbox.addEventListener('change', (e) => {
+      topRadio.addEventListener('change', (e) => {
         if (e.target.checked) {
           word.activeForm = -1;
           applyActiveSelectionToWord(word);
@@ -839,7 +829,7 @@ async function appendCreateAndUserForms(word, toolBody) {
   }
 }
 
-function userFormCardHTML(form, index, isActive, isExpanded = false) {
+function userFormCardHTML(word, form, index, isActive, isExpanded = false) {
   const parsed = parseMorphTag(form.postag || '');
   const cfg = getActiveTagset();
 
@@ -907,7 +897,7 @@ function userFormCardHTML(form, index, isActive, isExpanded = false) {
   const readable = [posWord, featureString].filter(Boolean).join('.');
 
   const col = colorForTag(form.postag || '');
-
+  const inputName = `morph-form-${word.id}`;
   const expandedClass = isExpanded ? ' expanded' : '';
   const expandedAttr  = isExpanded ? 'true' : 'false';
   const cbId = `uf-check-${index}`;
@@ -947,7 +937,7 @@ function userFormCardHTML(form, index, isActive, isExpanded = false) {
         data-expanded="${expandedAttr}" 
         aria-expanded="${expandedAttr}"
         data-pos-label="${posLabel.replaceAll('"', '&quot;')}">
-      <input id="${cbId}" type="checkbox" ${isActive ? 'checked' : ''} />
+      <input id="${cbId}" type="radio" name="${inputName}" ${isActive ? 'checked' : ''} />
       <div class="morph-content">
         <span class="morph-lemma" style="color:${col}">
           ${form.lemma || ''}
@@ -1117,7 +1107,7 @@ function renderMorphInfo(wordOrWords, opts = {}) {
           ${word.form}
           <span class="morph-id" style="color:#9aa3ad">${window.currentIndex}-${word.id}</span>
         </p>
-        ${hasDocMorph ? userFormCardHTML(documentForm, -1, word.activeForm === -1) : ''}
+        ${hasDocMorph ? userFormCardHTML(word, documentForm, -1, word.activeForm === -1) : ''}
       </div>
     `;
 

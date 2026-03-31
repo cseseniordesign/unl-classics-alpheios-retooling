@@ -157,26 +157,64 @@ let autoSaveTimer = null;
 
 function getTreebankMetaForSave() {
   let meta = window.treebankMeta || {};
+
   const stored = localStorage.getItem("treebankMeta");
   if (stored) {
-    try { meta = { ...meta, ...JSON.parse(stored) }; } catch (_) {}
+    try {
+      meta = { ...meta, ...JSON.parse(stored) };
+    } catch (_) {}
   }
 
-  const direction = meta.direction || localStorage.getItem("textDirection") || "ltr";
-  const xmlLang = getLanguage();
-  const version = meta.version || "1.5";
+  const attrs = { ...(meta.attributes || {}) };
 
-  // required, unknown languages get a predictable placeholder:
-  const format = localStorage.getItem("activeTagsetId");
+  // Keep original values if present; only fill in missing ones
+  if (!attrs["xmlns:saxon"]) {
+    attrs["xmlns:saxon"] = "http://saxon.sf.net/";
+  }
 
-  const xmlnsSaxon = meta.xmlnsSaxon || "http://saxon.sf.net/";
+  if (!attrs["xml:lang"]) {
+    attrs["xml:lang"] =
+      localStorage.getItem("textLanguage") ||
+      "grc";
+  }
 
-  return { xmlnsSaxon, direction, xmlLang, version, format };
+  if (!attrs["version"]) {
+    attrs["version"] = "1.5";
+  }
+
+  if (!attrs["direction"]) {
+    attrs["direction"] =
+      localStorage.getItem("textDirection") ||
+      "ltr";
+  }
+
+  if (!attrs["format"]) {
+    const activeTagset = localStorage.getItem("activeTagsetId");
+    if (activeTagset) attrs["format"] = activeTagset;
+  }
+
+  return {
+    attributes: attrs,
+    prefixNodes: Array.isArray(meta.prefixNodes) ? meta.prefixNodes : []
+  };
 }
 
 function buildTreebankOpenTag() {
-  const m = getTreebankMetaForSave();
-  return `<treebank xmlns:saxon="${m.xmlnsSaxon}" xml:lang="${m.xmlLang}" version="${m.version}" direction="${m.direction}" format="${m.format}">`;
+  const meta = getTreebankMetaForSave();
+  const attrs = meta.attributes;
+
+  const attrText = Object.entries(attrs)
+    .map(([name, value]) => {
+      const escapedValue = String(value)
+        .replace(/&/g, "&amp;")
+        .replace(/"/g, "&quot;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      return `${name}="${escapedValue}"`;
+    })
+    .join(" ");
+
+  return `<treebank${attrText ? " " + attrText : ""}>`;
 }
 
 /**
@@ -187,23 +225,62 @@ function buildTreebankOpenTag() {
  * --------------------------------------------------------------------------
  */
 export function buildXML() {
-  const textDirection = localStorage.getItem("textDirection") || "";
-  const textLangauge = localStorage.getItem("textLanguage") || "";
-  console.log("lang" + textLangauge);
   if (!window.treebankData) return "";
+
+  const meta = getTreebankMetaForSave();
+
   let xmlOut = `<?xml version="1.0" encoding="UTF-8"?>\n${buildTreebankOpenTag()}\n`;
+
+  // Reinsert everything that originally appeared before the first <sentence>
+  if (meta.prefixNodes.length > 0) {
+    for (const nodeXML of meta.prefixNodes) {
+      xmlOut += `  ${nodeXML}\n`;
+    }
+  }
+
   for (const s of window.treebankData) {
     xmlOut += `  <sentence id="${s.id}">\n`;
+
     for (const w of s.words) {
-      const lemma  = (w._displayLemma  || w.lemma  || '').replace(/"/g, '&quot;');
-      const postag = (w._displayPostag || w.postag || '').replace(/"/g, '&quot;');
-      const relation = (w.relation ?? "");
-      const head = (w.head === null || w.head === undefined) ? "" : String(w.head);
-      xmlOut += `    <word id="${w.id}" form="${w.form}" lemma="${lemma}" postag="${postag}" relation="${relation}" head="${head}" />\n`;
+      const form = String(w.form ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      const lemma = String(w._displayLemma || w.lemma || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      const postag = String(w._displayPostag || w.postag || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      const relation = String(w.relation ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+
+      const head = (w.head === null || w.head === undefined)
+        ? ""
+        : String(w.head)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+
+      xmlOut += `    <word id="${w.id}" form="${form}" lemma="${lemma}" postag="${postag}" relation="${relation}" head="${head}" />\n`;
     }
-    xmlOut += '  </sentence>\n';
+
+    xmlOut += `  </sentence>\n`;
   }
-  xmlOut += '</treebank>';
+
+  xmlOut += `</treebank>`;
   return xmlOut;
 }
 

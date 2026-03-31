@@ -6,13 +6,41 @@ function captureTreebankMeta(xmlDoc) {
   const root = xmlDoc?.documentElement;
   if (!root || root.nodeName !== "treebank") return;
 
+  // Preserve ALL root attributes
+  const attributes = {};
+  for (const attr of root.attributes) {
+    attributes[attr.name] = attr.value;
+  }
+
+  // Preserve EVERYTHING before the first <sentence>
+  // This includes elements like <date>, <annotator>, comments, etc.
+  const prefixNodes = [];
+  let hitFirstSentence = false;
+
+  for (const child of root.childNodes) {
+    const isSentenceEl =
+      child.nodeType === Node.ELEMENT_NODE &&
+      String(child.nodeName).toLowerCase() === "sentence";
+
+    if (isSentenceEl) {
+      hitFirstSentence = true;
+      break;
+    }
+
+    // Keep non-empty text nodes, comments, and regular elements
+    if (child.nodeType === Node.TEXT_NODE) {
+      if (child.textContent.trim() === "") continue;
+      prefixNodes.push(child.textContent);
+    } else {
+      prefixNodes.push(new XMLSerializer().serializeToString(child));
+    }
+  }
+
   const meta = {
-    version: root.getAttribute("version") || null,
-    format: root.getAttribute("format") || null,
-    xmlLang: (root.getAttribute("xml:lang") || root.getAttribute("lang") || "").toLowerCase() || null,
-    direction: root.getAttribute("direction") || null,
-    xmlnsSaxon: root.getAttribute("xmlns:saxon") || null,
+    attributes,
+    prefixNodes
   };
+
   window.treebankMeta = meta;
   localStorage.setItem("treebankMeta", JSON.stringify(meta));
 }
