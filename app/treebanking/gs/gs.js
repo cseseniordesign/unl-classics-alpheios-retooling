@@ -19,6 +19,7 @@
 
 import { prepareSentenceData, buildHierarchy, drawLinks, drawNodes } from '../tree/treeRender.js';
 import { fitTreeToView } from '../tree/treeUtils.js';
+import { toggleTable } from './gsTable.js';
 
 // Needed by buildHierarchy via window.verticalSpacing
 window.verticalSpacing = window.verticalSpacing || 1;
@@ -33,6 +34,11 @@ window.resetSelection    = () => {};
 window.batchSelection    = new Set();
 window.inSelection       = false;
 
+//handle table button click
+const tableBtn = document.querySelector("#gsTable");
+tableBtn.addEventListener("click",() => {
+  toggleTable();
+})
 // ─── Per-panel state ──────────────────────────────────────────────────────────
 // Each entry stores the data and the live D3 handles for that panel.
 // D3 handles are local to the render call — no window.* globals involved.

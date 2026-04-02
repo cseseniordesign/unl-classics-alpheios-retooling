@@ -98,10 +98,71 @@ html, body {
   background-color: #fff;
   color: #000;
   text-align: center;
-  width: 35px;
+  width: auto;
   height: 30px;
   line-height: 1;
   outline-color: #2a7ae2;
+}
+/* ── Header table button ──────────────────────────────────────────────────── */
+table {
+  justify-self: center;
+  margin-top: 5%;
+  width: 80%;
+  border: 1px, solid, white;
+  margin-bottom: 4%;
+  font-family: Inter, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+th{
+  padding: 1%;
+  border: 1px solid, black;
+  text-align: center;
+  color: white;
+  background-color: #4e6476;
+}
+
+td{
+  padding: 1%;
+  border: 1px solid, black;
+  text-align: center;
+}
+
+#gsTable {
+  fill: white;
+  width: 35px;
+  height: 100%;
+  appearance: none;
+  background-color: #bb8a21;
+  border-radius: 8px;
+  border-style: none;
+  box-sizing: border-box;
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  overflow: hidden;
+  padding: 5px;
+  transition: all .3s;
+  margin-right: 5px;
+}
+
+#table:hover {
+  background-color: #82878b;
+  transition-duration: .35s;
+}
+
+#table-bg {
+  display: none;
+  position: relative;
+  justify-self: center;
+  border: 1px solid #4e6476;
+  border-radius: 4px;
+  background: #fff;
+  height: 100%;
+  width: 98%;
+  box-sizing: border-box;
 }
 
 /* ── Header exit button ──────────────────────────────────────────────────── */

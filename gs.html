@@ -56,6 +56,11 @@
     </div>
 
     <div id="header-buttons">
+      <button id="gsTable" title="Table view" type="button">
+          <svg viewBox="0 0 24 24">
+              <path d="M21,2H3C2.4,2,2,2.4,2,3v18c0,0.6,0.4,1,1,1h18c0.6,0,1-0.4,1-1V3C22,2.4,21.6,2,21,2z M10,20v-4h4v4H10z M10,14v-4h4v4H10z M4,10h4v4H4V10z M10,8V4h4v4H10z M16,10h4v4h-4V10z M20,8h-4V4h4V8z M8,4v4H4V4H8z M4,16h4v4H4V16z M16,20v-4h4v4H16z"/>
+          </svg>
+      </button> 
       <button id="exit-btn" title="Exit" type="button">
         <svg viewBox="0 0 24 24">
           <path d="M4,12a1,1,0,0,0,1,1h7.59l-2.3,2.29a1,1,0,0,0,0,1.42,1,1,0,0,0,1.42,0l4-4a1,1,0,0,0,.21-.33,1,1,0,0,0,0-.76,1,1,0,0,0-.21-.33l-4-4a1,1,0,1,0-1.42,1.42L12.59,11H5A1,1,0,0,0,4,12ZM17,2H7A3,3,0,0,0,4,5V8A1,1,0,0,0,6,8V5A1,1,0,0,1,7,4H17a1,1,0,0,1,1,1V19a1,1,0,0,1-1,1H7a1,1,0,0,1-1-1V16a1,1,0,0,0-2,0v3a3,3,0,0,0,3,3H17a3,3,0,0,0,3-3V5A3,3,0,0,0,17,2Z"/>                
@@ -63,6 +68,7 @@
       </button>
     </div>
   </div>
+  
 
   <div id="body">
     <div id="trees">
@@ -136,6 +142,117 @@
     </div><!-- #trees -->
   </div><!-- #body -->
 
+  <div id="table-bg">
+    <table>
+          <tr>
+            <th>
+            </th>
+            <th>
+              Total
+            </th>
+            <th>
+              Correct
+            </th>
+            <th>
+              Incorrect
+            </th>
+            <th>
+              Almost 
+            </th>
+            <th>
+              Percent
+            </th>
+          </tr> 
+          <tr>
+            <td>Sentences</td>
+            <td id = "total-sentences"></td>
+            <td id = "right-sentences"></td>
+            <td id = "wrong-sentences"></td>
+            <td id = "almost-sentences"></td>
+            <td id = "unique-sentences"></td>
+          <tr>
+          <tr>
+            <td>Words</td>
+            <td id = "total-words"></td>
+            <td id = "right-words"></td>
+            <td id = "wrong-words"></td>
+            <td id = "almost-words"></td>
+            <td id = "unique-words"></td>
+          <tr>
+          <tr>
+            <td>Heads</td>
+            <td id = "total-heads"></td>
+            <td id = "right-heads"></td>
+            <td id = "wrong-heads"></td>
+            <td id = "almost-heads"></td>
+            <td id = "unique-heads"></td>
+          <tr>
+          <tr>
+            <td>Relations</td>
+            <td id = "total-relations"></td>
+            <td id = "right-relations"></td>
+            <td id = "wrong-relations"></td>
+            <td id = "almost-relations"></td>
+            <td id = "unique-relations"></td>
+          <tr>
+          <tr>
+            <td>Lemma</td>
+            <td id = "total-lemma"></td>
+            <td id = "right-lemma"></td>
+            <td id = "wrong-lemma"></td>
+            <td id = "almost-lemma"></td>
+            <td id = "unique-lemma"></td>
+          <tr>
+          <tr>
+            <td>Postags</td>
+            <td id = "total-postags"></td>
+            <td id = "right-postags"></td>
+            <td id = "wrong-postags"></td>
+            <td id = "almost-postags"></td>
+            <td id = "unique-postags"></td>
+          <tr>
+        </table>
+  </div>
+  <script>
+    const report = JSON.parse(localStorage.getItem('compareReport'));
+    //sentence data insertion
+    document.getElementById('total-sentences').textContent = report.sentences.total;
+    document.getElementById('right-sentences').textContent = report.sentences.right;
+    document.getElementById('wrong-sentences').textContent = report.sentences.wrong;
+    document.getElementById('almost-sentences').textContent = report.sentences.almost;
+    document.getElementById('unique-sentences').textContent = (report.sentences.right/report.sentences.total).toFixed(4)  * 100 + "%";
+    //words data insertion 
+    document.getElementById('total-words').textContent = report.words.total;
+    document.getElementById('right-words').textContent = report.words.right;
+    document.getElementById('wrong-words').textContent = report.words.wrong;
+    document.getElementById('almost-words').textContent = report.words.almost;
+    document.getElementById('unique-words').textContent = (report.words.right/report.words.total).toFixed(4) * 100 + "%";
+    //heads data insertion 
+    document.getElementById('total-heads').textContent = report.heads.total;
+    document.getElementById('right-heads').textContent = report.heads.right;
+    document.getElementById('wrong-heads').textContent = report.heads.wrong;
+    document.getElementById('almost-heads').textContent = report.heads.almost;
+    document.getElementById('unique-heads').textContent = (report.heads.right/report.heads.total).toFixed(4) * 100 + "%";
+    //relations data insertion 
+    document.getElementById('total-relations').textContent = report.relations.total;
+    document.getElementById('right-relations').textContent = report.relations.right;
+    document.getElementById('wrong-relations').textContent = report.relations.wrong;
+    document.getElementById('almost-relations').textContent = report.relations.almost;
+    document.getElementById('unique-relations').textContent = (report.relations.right/report.relations.total).toFixed(4) * 100 + "%";
+    //Lemma data insertion 
+    console.log(report)
+    document.getElementById('total-lemma').textContent = report.lemmata.total;
+    document.getElementById('right-lemma').textContent = report.lemmata.right;
+    document.getElementById('wrong-lemma').textContent = report.lemmata.wrong;
+    document.getElementById('almost-lemma').textContent = report.lemmata.almost;
+    document.getElementById('unique-lemma').textContent = (report.lemmata.right/report.lemmata.total).toFixed(4) * 100 + "%";
+    //postags data insertion 
+    document.getElementById('total-postags').textContent = report.postags.total;
+    document.getElementById('right-postags').textContent = report.postags.right;
+    document.getElementById('wrong-postags').textContent = report.postags.wrong;
+    document.getElementById('almost-postags').textContent = report.postags.almost;
+    document.getElementById('unique-postags').textContent = (report.postags.right/report.postags.total).toFixed(4) * 100 + "%";
+  </script></td>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script type="module" src="./app/treebanking/gs/gs.js"></script>
 </body>

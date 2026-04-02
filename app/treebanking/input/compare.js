@@ -116,7 +116,6 @@ async function handleCompare() {
     const dataA = parseTreeBankXML(xmlA);
     const dataB = parseTreeBankXML(xmlB);
     const comparison = compareTreebanks(dataA, dataB);
-
     console.log('=== GOLD STANDARD COMPARISON ===');
     console.log('Full comparison object:', comparison);
     console.log('Report:', comparison.report);
