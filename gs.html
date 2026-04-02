@@ -157,9 +157,6 @@
               Incorrect
             </th>
             <th>
-              Almost 
-            </th>
-            <th>
               Percent
             </th>
           </tr> 
@@ -168,7 +165,6 @@
             <td id = "total-sentences"></td>
             <td id = "right-sentences"></td>
             <td id = "wrong-sentences"></td>
-            <td id = "almost-sentences"></td>
             <td id = "unique-sentences"></td>
           <tr>
           <tr>
@@ -176,7 +172,6 @@
             <td id = "total-words"></td>
             <td id = "right-words"></td>
             <td id = "wrong-words"></td>
-            <td id = "almost-words"></td>
             <td id = "unique-words"></td>
           <tr>
           <tr>
@@ -184,7 +179,6 @@
             <td id = "total-heads"></td>
             <td id = "right-heads"></td>
             <td id = "wrong-heads"></td>
-            <td id = "almost-heads"></td>
             <td id = "unique-heads"></td>
           <tr>
           <tr>
@@ -192,7 +186,6 @@
             <td id = "total-relations"></td>
             <td id = "right-relations"></td>
             <td id = "wrong-relations"></td>
-            <td id = "almost-relations"></td>
             <td id = "unique-relations"></td>
           <tr>
           <tr>
@@ -200,7 +193,6 @@
             <td id = "total-lemma"></td>
             <td id = "right-lemma"></td>
             <td id = "wrong-lemma"></td>
-            <td id = "almost-lemma"></td>
             <td id = "unique-lemma"></td>
           <tr>
           <tr>
@@ -208,50 +200,58 @@
             <td id = "total-postags"></td>
             <td id = "right-postags"></td>
             <td id = "wrong-postags"></td>
-            <td id = "almost-postags"></td>
             <td id = "unique-postags"></td>
           <tr>
         </table>
+        <div id="average-table">
+          <table>
+            <tr>
+              <td>Average (Heads,Relations,Lemma,Postags)</td>
+              <td id="average"></td>
+            </tr>
+          </table>
+        </div>
   </div>
+
   <script>
     const report = JSON.parse(localStorage.getItem('compareReport'));
     //sentence data insertion
     document.getElementById('total-sentences').textContent = report.sentences.total;
     document.getElementById('right-sentences').textContent = report.sentences.right;
     document.getElementById('wrong-sentences').textContent = report.sentences.wrong;
-    document.getElementById('almost-sentences').textContent = report.sentences.almost;
     document.getElementById('unique-sentences').textContent = (report.sentences.right/report.sentences.total).toFixed(4)  * 100 + "%";
     //words data insertion 
     document.getElementById('total-words').textContent = report.words.total;
     document.getElementById('right-words').textContent = report.words.right;
     document.getElementById('wrong-words').textContent = report.words.wrong;
-    document.getElementById('almost-words').textContent = report.words.almost;
     document.getElementById('unique-words').textContent = (report.words.right/report.words.total).toFixed(4) * 100 + "%";
     //heads data insertion 
     document.getElementById('total-heads').textContent = report.heads.total;
     document.getElementById('right-heads').textContent = report.heads.right;
     document.getElementById('wrong-heads').textContent = report.heads.wrong;
-    document.getElementById('almost-heads').textContent = report.heads.almost;
     document.getElementById('unique-heads').textContent = (report.heads.right/report.heads.total).toFixed(4) * 100 + "%";
     //relations data insertion 
     document.getElementById('total-relations').textContent = report.relations.total;
     document.getElementById('right-relations').textContent = report.relations.right;
     document.getElementById('wrong-relations').textContent = report.relations.wrong;
-    document.getElementById('almost-relations').textContent = report.relations.almost;
     document.getElementById('unique-relations').textContent = (report.relations.right/report.relations.total).toFixed(4) * 100 + "%";
     //Lemma data insertion 
     console.log(report)
     document.getElementById('total-lemma').textContent = report.lemmata.total;
     document.getElementById('right-lemma').textContent = report.lemmata.right;
     document.getElementById('wrong-lemma').textContent = report.lemmata.wrong;
-    document.getElementById('almost-lemma').textContent = report.lemmata.almost;
     document.getElementById('unique-lemma').textContent = (report.lemmata.right/report.lemmata.total).toFixed(4) * 100 + "%";
     //postags data insertion 
     document.getElementById('total-postags').textContent = report.postags.total;
     document.getElementById('right-postags').textContent = report.postags.right;
     document.getElementById('wrong-postags').textContent = report.postags.wrong;
-    document.getElementById('almost-postags').textContent = report.postags.almost;
     document.getElementById('unique-postags').textContent = (report.postags.right/report.postags.total).toFixed(4) * 100 + "%";
+
+    //average 
+    document.getElementById('average').textContent = 
+    ((((report.heads.right/report.heads.total)+
+    (report.relations.right/report.relations.total) +
+  (report.lemmata.right/report.lemmata.total) + (report.postags.right/report.postags.total))/4)*100).toFixed(2) + "%";
   </script></td>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script type="module" src="./app/treebanking/gs/gs.js"></script>
