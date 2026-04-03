@@ -43,7 +43,7 @@ const AUX_VARIANTS = [
 const SUFFIX_KEYS = ["", "CO", "AP", "AP_CO"];
 
 /** Parse relation string like "AuxC_AP_CO" into UI state. */
-function parseRelation(relRaw) {
+export function parseRelation(relRaw) {
   const safe = (relRaw || "").trim();
   if (!safe || safe === "---") {
     return { base: "---", auxVariant: null, suffixKey: "" };
@@ -94,16 +94,16 @@ function parseRelation(relRaw) {
   return { base, auxVariant, suffixKey };
 }
 /** Label we show in the base button. */
-function labelForMain(base, variant) {
+export function labelForMain(base, variant) {
   return getRelationDisplayLabel(base, variant || "");
 }
 
-function labelForSuffix(key) {
+export function labelForSuffix(key) {
   return getSuffixDisplayLabel(key);
 }
 
 /** Build suffix <option> tags. */
-function buildSuffixMenuItems() {
+export function buildSuffixMenuItems() {
   return getResolvedSuffixKeys().map(key => `
     <li class="rel-item suffix-item" data-key="${key}">
       ${getSuffixDisplayLabel(key)}
@@ -112,7 +112,7 @@ function buildSuffixMenuItems() {
 }
 
 /** Build the <li> items for the main menu + Aux submenu. */
-function buildMenuItems() {
+export function buildMenuItems() {
   const bases = getResolvedMainBases();
   let html = "";
 
@@ -177,7 +177,7 @@ function showToast(message, kind = "info") {
 }
 
 /** Apply relation change to in-memory model + tree + XML/autosave. */
-function applyRelationChange(word, base, auxVariant, suffixKey) {
+export function applyRelationChange(word, base, auxVariant, suffixKey) {
   if (!word) return;
 
   let final = "---";

@@ -1,6 +1,8 @@
 import { colorForPOS, fitTreeToView} from './treeUtils.js';
-import {handleWordClick} from '../ui/sentenceDisplay.js'
+import { handleWordClick, moveWordToRoot, disconnectWord } from '../ui/sentenceDisplay.js'
 import { setupWordHoverSync } from './hoverSync.js';
+import { applyRelationChange, parseRelation, buildMenuItems, buildSuffixMenuItems, labelForMain,labelForSuffix } from '../relation/relationTool.js';
+
 window.selectedWordId = null; // keeps track of first clicked node
 let isInitialTreeLoad = true;
 /**
@@ -114,19 +116,23 @@ rootHierarchy.children?.forEach(child => {
   drawLinks(gx, rootHierarchy, idParentPairs);
   drawNodes(gx, rootHierarchy);
 
-  const nodes = document.querySelectorAll(".node");
-  nodes.forEach(node =>{
-    node.addEventListener("click", (event) => {
-      const wordText = node.textContent || "";
-      // save current zoom transform before changing heads
-      const prevTransform = window.svg ? d3.zoomTransform(window.svg.node()) : null;
-      handleWordClick(event, node.id, wordText);
-      // restore the previous zoom transform after changing heads
-      if (window.svg && window.zoom && prevTransform) {
-        window.svg.call(window.zoom.transform, prevTransform);
-      }
-    });
-  })
+const nodes = document.querySelectorAll(".node");
+nodes.forEach(node => {
+  node.addEventListener("click", (event) => {
+    const wordText = node.textContent || "";
+    const prevTransform = window.svg ? d3.zoomTransform(window.svg.node()) : null;
+    handleWordClick(event, node.id, wordText);
+    if (window.svg && window.zoom && prevTransform) {
+      window.svg.call(window.zoom.transform, prevTransform);
+    }
+  });
+
+  node.addEventListener("contextmenu", (event) => {
+    event.preventDefault();
+    event.stopPropagation();
+    openNodeContextMenu(event, node.id);
+  });
+});
 
   // Enable zooming and panning with safe scale limits
   window.zoom = d3.zoom()
@@ -152,6 +158,205 @@ rootHierarchy.children?.forEach(child => {
 
   // Re-sync highlights after nodes are redrawn
   setupWordHoverSync();
+}
+
+function getCurrentSentenceWord(wordId) {
+  const currentSentence = window.treebankData?.find(
+    s => String(s.id) === String(window.currentIndex)
+  );
+  return currentSentence?.words?.find(w => String(w.id) === String(wordId)) || null;
+}
+
+function closeNodeContextMenu() {
+  document.getElementById("node-context-menu")?.remove();
+  document.removeEventListener("pointerdown", handleOutsideNodeContextMenu, true);
+}
+
+function openNodeContextMenu(event, wordId) {
+  closeNodeContextMenu();
+
+  const word = getCurrentSentenceWord(wordId);
+  if (!word) return;
+
+  const { base, auxVariant, suffixKey } = parseRelation(word.relation || "---");
+
+  const menuItems = buildMenuItems();
+  const suffixItems = buildSuffixMenuItems();
+  const mainLabel = labelForMain(base, auxVariant);
+  const suffixLabel = labelForSuffix(suffixKey);
+
+  const menu = document.createElement("div");
+  menu.id = "node-context-menu";
+  menu.className = "node-context-menu";
+  menu.style.left = `${event.pageX}px`;
+  menu.style.top = `${event.pageY}px`;
+  menu.style.position = "absolute";
+
+  menu.innerHTML = `
+    <div class="node-context-title">${word.form || ""}</div>
+
+    <div class="label-dropdown">
+      <div class="rel-dropdown rel-dropdown-main node-context-main">
+        <button type="button" class="rel-button">
+          <span class="rel-button-label">${mainLabel}</span>
+          <span class="rel-button-arrow">▾</span>
+        </button>
+        <ul class="nested-dropdown">
+          ${menuItems}
+        </ul>
+      </div>
+
+      <div class="rel-dropdown rel-dropdown-suffix node-context-suffix">
+        <button type="button" class="rel-button">
+          <span class="rel-button-label">${suffixLabel}</span>
+          <span class="rel-button-arrow">▾</span>
+        </button>
+        <ul class="nested-dropdown suffix-menu">
+          ${suffixItems}
+        </ul>
+      </div>
+    </div>
+
+    <div class="node-context-actions">
+      <button type="button" data-action="disconnect">disconnect</button>
+      <button type="button" data-action="root">to root</button>
+    </div>
+  `;
+
+  document.body.appendChild(menu);
+
+  const mainDropdown = menu.querySelector(".node-context-main");
+  const mainButton = mainDropdown?.querySelector(".rel-button");
+  const mainLabelEl = mainDropdown?.querySelector(".rel-button-label");
+  const mainMenuEl = mainDropdown?.querySelector(".nested-dropdown");
+
+  const suffixDropdown = menu.querySelector(".node-context-suffix");
+  const suffixButton = suffixDropdown?.querySelector(".rel-button");
+  const suffixLabelEl = suffixDropdown?.querySelector(".rel-button-label");
+  const suffixMenuEl = suffixDropdown?.querySelector(".nested-dropdown");
+
+  let currentBase = base;
+  let currentAux = auxVariant;
+  let currentSuffix = suffixKey;
+
+  let mainCloseT = null;
+  let sufCloseT = null;
+
+  mainDropdown?.addEventListener("mouseenter", () => {
+    if (mainCloseT) {
+      clearTimeout(mainCloseT);
+      mainCloseT = null;
+    }
+    mainDropdown.classList.add("open");
+    suffixDropdown?.classList.remove("open");
+  });
+
+  mainDropdown?.addEventListener("mouseleave", () => {
+    if (mainCloseT) clearTimeout(mainCloseT);
+    mainCloseT = setTimeout(() => {
+      mainDropdown.classList.remove("open");
+    }, 120);
+  });
+
+  suffixDropdown?.addEventListener("mouseenter", () => {
+    if (sufCloseT) {
+      clearTimeout(sufCloseT);
+      sufCloseT = null;
+    }
+    suffixDropdown.classList.add("open");
+    mainDropdown?.classList.remove("open");
+  });
+
+  suffixDropdown?.addEventListener("mouseleave", () => {
+    if (sufCloseT) clearTimeout(sufCloseT);
+    sufCloseT = setTimeout(() => {
+      suffixDropdown.classList.remove("open");
+    }, 120);
+  });
+
+  function updateMainLabel() {
+    if (mainLabelEl) mainLabelEl.textContent = labelForMain(currentBase, currentAux);
+  }
+
+  function updateSuffixLabel() {
+    if (suffixLabelEl) suffixLabelEl.textContent = labelForSuffix(currentSuffix);
+  }
+
+  mainMenuEl?.addEventListener("click", (evt) => {
+    const sub = evt.target.closest(".rel-subitem");
+    if (sub) {
+      currentBase = sub.dataset.base || "---";
+      currentAux = sub.dataset.variant || null;
+      updateMainLabel();
+      applyRelationChange(word, currentBase, currentAux, currentSuffix);
+      mainDropdown?.classList.remove("open");
+      return;
+    }
+
+    const item = evt.target.closest(".rel-item");
+    if (!item || item.classList.contains("rel-has-submenu")) return;
+
+    const baseVal = item.dataset.base;
+    if (!baseVal) return;
+
+    currentBase = baseVal;
+
+    // If this base does not use a submenu, clear aux variant
+    if (currentBase !== "Aux") {
+      currentAux = null;
+    }
+
+    updateMainLabel();
+    applyRelationChange(word, currentBase, currentAux, currentSuffix);
+    mainDropdown?.classList.remove("open");
+  });
+
+
+  suffixMenuEl?.addEventListener("click", (evt) => {
+    const item = evt.target.closest(".suffix-item");
+    if (!item) return;
+
+    let key = item.dataset.key || "";
+
+    if ((currentBase === "---" || !currentBase) && key) {
+      key = "";
+    }
+
+    currentSuffix = key;
+    updateSuffixLabel();
+    applyRelationChange(word, currentBase, currentAux, currentSuffix);
+    suffixDropdown?.classList.remove("open");
+  });
+
+  updateMainLabel();
+  updateSuffixLabel();
+
+  menu.querySelector('[data-action="disconnect"]').addEventListener("click", () => {
+    disconnectWord(wordId);
+    closeNodeContextMenu();
+  });
+
+  menu.querySelector('[data-action="root"]').addEventListener("click", () => {
+    moveWordToRoot(wordId);
+    closeNodeContextMenu();
+  });
+
+  requestAnimationFrame(() => {
+    document.removeEventListener("pointerdown", handleOutsideNodeContextMenu, true);
+    document.addEventListener("pointerdown", handleOutsideNodeContextMenu, true);
+  });
+}
+
+function handleOutsideNodeContextMenu(event) {
+  const menu = document.getElementById("node-context-menu");
+  if (!menu) {
+    document.removeEventListener("pointerdown", handleOutsideNodeContextMenu, true);
+    return;
+  }
+
+  if (menu.contains(event.target)) return;
+
+  closeNodeContextMenu();
 }
 
 
@@ -211,13 +416,14 @@ export function prepareSentenceData(sentence) {
     const isComma = w.form === ",";
 
     let pId = null;
-
+    
     if (w.head === 0 || w.head === '0') {
       pId = 'root';
     } else if (hasHead) {
       pId = String(w.head);
+    } else if (w._disconnected) {
+      pId = 'root';
     } else if (isParent || isComma) {
-      // These are the "roots" of the forest trees
       pId = 'root';
     }
 
@@ -228,7 +434,7 @@ export function prepareSentenceData(sentence) {
       relation: w.relation || '',
       postag: w._displayPostag || w.postag || '',
       //flag to identify forest-roots for visual styling
-      isForestRoot: !hasHead && pId === 'root' && !isComma && w.head !== 0
+      isForestRoot: !hasHead && pId === 'root' && !!w._disconnected
     };
   });
 

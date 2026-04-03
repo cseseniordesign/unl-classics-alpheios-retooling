@@ -1185,12 +1185,14 @@ td{
   background-color: #e6e6e6;
 }
 
-.relation-tool .rel-has-submenu {
+.relation-tool .rel-has-submenu, 
+.node-context-menu .rel-has-submenu {
   position: relative;
   padding-right: 18px;
 }
 
-.relation-tool .rel-has-submenu::after {
+.relation-tool .rel-has-submenu::after,
+.node-context-menu .rel-has-submenu::after {
   content: "▸";
   position: absolute;
   right: 6px;
@@ -1637,4 +1639,101 @@ body.mode-relation #tool-body {
 
 .rel-subitem:hover {
   background: #eee;
+}
+
+.node-context-menu {
+  position: absolute;
+  z-index: 3000;
+  width: max-content;
+  max-width: 240px;
+  background: #f5f6f7;
+  border: 1px solid #cbd5e1;
+  border-radius: 14px;
+  box-shadow: 0 8px 18px rgba(0,0,0,0.18);
+  padding: 12px 14px;
+  overflow: visible;
+  font-family: Inter, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+.node-context-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.node-context-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.node-context-row label {
+  display: none;
+}
+
+.node-context-row select {
+  height: 34px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  background: #fff;
+  padding: 4px 8px;
+}
+
+.node-context-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  width: max-content;
+}
+
+.node-context-actions button {
+  appearance: none;
+  border: none;
+  border-radius: 10px;
+  padding: 5px 10px;
+  cursor: pointer;
+  background-color: #2d8aa0;
+  color: #fff;
+  font-size: 0.8rem;
+}
+
+.node-context-actions button:hover {
+  background-color: #246f81;
+}
+
+.node-context-menu .rel-submenu {
+  top: 50%;
+  left: calc(100% - 1px);
+  transform: translateY(-50%);
+}
+
+.node-context-menu,
+.node-context-menu .rel-dropdown {
+  overflow: visible;
+}
+
+.node-context-menu .label-dropdown {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin-bottom: 10px;
+  width: max-content;
+}
+
+.node-context-menu .rel-button {
+  min-width: 72px;
+  height: 28px;
+  padding: 2px 8px;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #8a8a8a;
+  background-color: #f7f7f7;
+  box-shadow: none;
+  color: #111;
+}
+
+.node-context-menu .rel-button:hover {
+  border-color: #6f6f6f;
+  background-color: #f0f0f0;
 }

@@ -203,6 +203,42 @@ function normalizeHeadId(value) {
   return null;
 }
 
+export function moveWordToRoot(wordId) {
+  const currentSentence = window.treebankData?.find(
+    s => String(s.id) === String(window.currentIndex)
+  );
+  if (!currentSentence) return;
+
+  const word = currentSentence.words.find(w => String(w.id) === String(wordId));
+  if (!word) return;
+
+  saveState();
+  word.head = "0";
+  word._disconnected = false; 
+  triggerAutoSave();
+  createNodeHierarchy(window.currentIndex);
+  if (typeof window.updateXMLIfActive === 'function') window.updateXMLIfActive();
+  if (typeof window.resetSelection === 'function') window.resetSelection();
+}
+
+export function disconnectWord(wordId) {
+  const currentSentence = window.treebankData?.find(
+    s => String(s.id) === String(window.currentIndex)
+  );
+  if (!currentSentence) return;
+
+  const word = currentSentence.words.find(w => String(w.id) === String(wordId));
+  if (!word) return;
+
+  saveState();
+  word.head = "";
+  word._disconnected = true; // Mark as disconnected for UI purposes
+  triggerAutoSave();
+  createNodeHierarchy(window.currentIndex);
+  if (typeof window.updateXMLIfActive === 'function') window.updateXMLIfActive();
+  if (typeof window.resetSelection === 'function') window.resetSelection();
+}
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: handleWordClick
@@ -216,7 +252,7 @@ export function handleWordClick(event,wordId, word) {
   const morphBtn = document.getElementById("morph").classList.contains("active");
   const selectBtn = document.getElementById("selector").classList.contains("active");
   const relationBtn = document.getElementById("relation").classList.contains("active");
-  const atBtn       = document.getElementById("aT").classList.contains("active"); // ← add this
+  const atBtn       = document.getElementById("aT").classList.contains("active"); 
 
   // Artificial Token mode
   if (atBtn && window.atSelectingAnchor) {
@@ -305,6 +341,7 @@ export function handleWordClick(event,wordId, word) {
       if (dependent && String(dependent.id) !== newHeadId) {
         if (!createsCycle(currentSentence.words, depId, newHeadId)) {
           dependent.head = newHeadId;
+          dependent._disconnected = false; // Clear disconnected status if it was set
           changesMade = true;
         }
         else {
@@ -404,10 +441,12 @@ export function handleWordClick(event,wordId, word) {
     // Flip logic — make the old head now depend on the selected word
     independent.head = dependent.head;
     dependent.head = newHeadId;
+    dependent._disconnected = false; // Clear disconnected status if it was set
     triggerAutoSave();
   } else if(dependent) {
     // Normal assignment
     dependent.head = newHeadId;
+    dependent._disconnected = false; // Clear disconnected status if it was set
     triggerAutoSave();
   }
 

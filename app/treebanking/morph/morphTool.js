@@ -6,7 +6,45 @@ import { fetchMorphology } from './morpheus.js';
 import { showConfirmDialog } from '../ui/modal.js';
 import { isMorpheusSupported, getLanguage, normalizeLang } from '../input/language.js';
 import { initMorphLexicon, incrementUsage, pickTopLexiconForm, mergeFormsIntoWord, mergeIntoAllTokens, deleteLexiconForm } from './morphLexicon.js';
-import { getActiveTagset, getPosList } from '../tags/tagsetStore.js';
+import { getActiveTagset, getPosList , getMorphAttribute, getPosValues } from '../tags/tagsetStore.js';
+
+
+const UI_TO_CFG_KEY = {
+  pos: 'pos',
+  person: 'pers',
+  number: 'num',
+  tense: 'tense',
+  mood: 'mood',
+  voice: 'voice',
+  gender: 'gend',
+  case: 'case',
+  degree: 'degree'
+};
+
+function getLongFieldLabel(uiKey) {
+  if (uiKey === 'pos') return 'Part of Speech';
+
+  const cfgKey = UI_TO_CFG_KEY[uiKey] || uiKey;
+  const attrDef = getMorphAttribute(cfgKey);
+  return attrDef?.long || uiKey;
+}
+
+function getLongValueLabel(uiKey, valueKey) {
+  if (!valueKey || valueKey === '-') return '';
+
+  if (uiKey === 'pos') {
+    const posValues = getPosValues();
+    const posDef = posValues?.[valueKey];
+    return posDef?.long || posDef?.short || valueKey;
+  }
+
+  const cfgKey = UI_TO_CFG_KEY[uiKey] || uiKey;
+  const attrDef = getMorphAttribute(cfgKey);
+  const valueDef = attrDef?.values?.[valueKey];
+
+  return valueDef?.long || valueDef?.short || valueKey;
+}
+
 
 function _mostUsedFormIndex(forms = []) {
   let bestIdx = -1;
@@ -647,98 +685,44 @@ function enableMorphEntryExpansion(scopeEl) {
     divider.className = 'morph-divider';
     entry.appendChild(divider);
 
-  // Pretty labels and ordering
-  const POS_LABELS = { v:'verb', n:'noun', a:'adjective', d:'adverb', p:'pronoun',
-                      c:'conjunction', r:'adposition', l:'article', m:'numeral',
-                      i:'interjection', u:'punctuation', e:'exclamation', x:'irregular' };
+        const DEFAULT_ORDER = ['pos','person','number','tense','mood','voice','gender','case','degree'];
 
-  const LABELS = {
-    pos:    'Part of Speech',
-    person: 'Person',
-    number: 'Number',
-    tense:  'Tense',
-    mood:   'Mood',
-    voice:  'Voice',
-    gender: 'Gender',
-    case:   'Casus',
-    degree: 'Degree'
-  };
+    const display = {};
 
-  // Pick a sensible order by POS (fallback covers all keys)
-  const DEFAULT_ORDER = ['pos','number','gender','case','person','tense','mood','voice','degree'];
-  const ORDER_BY_POS = {
-    v: ['pos','person','number','gender','tense','mood','voice', 'case', 'degree'],
-    n: ['pos','number','mood','gender','case'],
-    p: ['pos','person','number','gender','case'],
-    l: ['pos','number','gender','case'],
-    a: ['pos','number','gender','case','degree'],
-    d: ['pos', 'degree']
-  };
+    Object.entries(parsed).forEach(([key, value]) => {
+      if (!value || value === '-') return;
 
-  const posChar = (tag && tag[0]) ? tag[0].toLowerCase() : '';
-  const order = ORDER_BY_POS[posChar] || DEFAULT_ORDER;
+      if (key === 'pos') {
+        display[key] = getLongValueLabel('pos', value);
+      } else {
+        display[key] = getLongValueLabel(key, value);
+      }
+    });
 
-  // Replace raw "v/n/a/…" with pretty words
-  const pretty = { ...parsed };
-  const mappedPosLabel = (entry.dataset.posLabel || '').trim();
-  if (mappedPosLabel) {
-    pretty.pos = mappedPosLabel; // mapping wins
-  } else if (pretty.pos) {
-    pretty.pos = POS_LABELS[posChar] || pretty.pos; // fallback
-  }
-
-    // Remove all "-" or empty fields before building HTML
-  Object.keys(pretty).forEach(k => {
-    if (!pretty[k] || pretty[k] === '-' || pretty[k].trim() === '') {
-      delete pretty[k];
-    }
-  });
-
-  // Translate short codes to readable English
-  const VALUE_MAPS = {
-    number: { s:'singular', p:'plural', d:'dual' },
-    gender: { m:'masculine', f:'feminine', n:'neuter', c:'common' },
-    case:   { n:'nominative', g:'genitive', d:'dative', a:'accusative', v:'vocative', b:'ablative', l:'locative' },
-    tense:  { p:'present', i:'imperfect', r:'perfect', l:'pluperfect', f:'future', a:'aorist', t: 'future perfect' },
-    mood:   { i:'indicative', s:'subjunctive', o:'optative', n:'infinitive', m:'imperative', p:'participle', d: 'gerund', g:'gerundive', u:'supine' },
-    voice:  { a:'active', e:'medio-passive', p:'passive', d:'deponens' },
-    degree: { p:'positive', c:'comparative', s:'superlative' },
-    person: { '1':'first', '2':'second', '3':'third' }
-  };
-
-  Object.entries(pretty).forEach(([k, v]) => {
-    if (VALUE_MAPS[k] && VALUE_MAPS[k][v]) {
-      pretty[k] = VALUE_MAPS[k][v];
-    }
-  });
-
-  // Build rows in chosen order
-  let detailsHTML = order
-    .filter(k => pretty[k])
-    .map(k => `
-      <div class="morph-row">
-        <div class="morph-label">${LABELS[k]}</div>
-        <div class="morph-colon">:</div>
-        <div class="morph-value">${pretty[k]}</div>
-      </div>
-    `)
-    .join('');
-
-  // If nothing remains (like conjunctions)
-  if (!detailsHTML) {
-    detailsHTML = `
-      <div class="morph-row">
-        <div class="morph-value" style="font-style: italic; color: #777;">
-          No additional features
+    let detailsHTML = DEFAULT_ORDER
+      .filter(key => display[key])
+      .map(key => `
+        <div class="morph-row">
+          <div class="morph-label">${getLongFieldLabel(key)}</div>
+          <div class="morph-colon">:</div>
+          <div class="morph-value">${display[key]}</div>
         </div>
-      </div>`;
-  }
+      `)
+      .join('');
 
-  const detailsDiv = document.createElement('div');
-  detailsDiv.className = 'morph-details';
-  detailsDiv.innerHTML = detailsHTML;
-  entry.appendChild(detailsDiv);
+    if (!detailsHTML) {
+      detailsHTML = `
+        <div class="morph-row">
+          <div class="morph-value" style="font-style: italic; color: #777;">
+            No additional features
+          </div>
+        </div>`;
+    }
 
+    const detailsDiv = document.createElement('div');
+    detailsDiv.className = 'morph-details';
+    detailsDiv.innerHTML = detailsHTML;
+    entry.appendChild(detailsDiv);
   });
 }
 
@@ -1424,8 +1408,8 @@ function formFromMorphResult(result, word) {
     (word.form && String(word.form).trim()) ||
     '';
 
-  const cfg = getActiveTagset();
-  const posDef = cfg?.posValues?.[posKey];
+  const posValues = getPosValues();
+  const posDef = posValues?.[posKey];
 
   return {
     lemma,
