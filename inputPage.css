@@ -1,6 +1,6 @@
 html, body{
   width: 100%;
-  height: 100%;
+  height: 106%;
   margin: 0;
 }
 
@@ -413,7 +413,7 @@ a {
   border: 1px solid #ccc;
   border-radius: 6px;
   padding: 6px 10px;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   background: #fafafa;
 }
 
@@ -428,9 +428,9 @@ a {
   margin-top: 8px;
   padding: 6px 20px;
   font-size: 13px;
-  border: 2px solid #5a78c6;
+  border: 2px solid #ccc;
   border-radius: 8px;
-  background: #5a78c6;
+  background: #008CBA;
   color: white;
   cursor: pointer;
   outline: none;
@@ -439,9 +439,10 @@ a {
 }
 
 .compare-btn:hover {
-  background-color: #3f5aaa;
-  border-color: #3f5aaa;
-  transition-duration: .25s;
+  background-color: #82878b;
+  opacity: 1;
+  transform: translateY(0);
+  transition-duration: .35s;
 }
 
 .compare-btn:disabled {
