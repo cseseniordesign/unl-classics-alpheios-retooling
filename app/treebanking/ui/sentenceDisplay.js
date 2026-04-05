@@ -214,7 +214,8 @@ export function moveWordToRoot(wordId) {
 
   saveState();
   word.head = "0";
-  word._disconnected = false; 
+  word._disconnected = false;
+  word._detachedFloatingSingle = false; 
   triggerAutoSave();
   createNodeHierarchy(window.currentIndex);
   if (typeof window.updateXMLIfActive === 'function') window.updateXMLIfActive();
@@ -233,11 +234,60 @@ export function disconnectWord(wordId) {
   saveState();
   word.head = "";
   word._disconnected = true; // Mark as disconnected for UI purposes
+  word._detachedFloatingSingle = false;
   triggerAutoSave();
   createNodeHierarchy(window.currentIndex);
   if (typeof window.updateXMLIfActive === 'function') window.updateXMLIfActive();
   if (typeof window.resetSelection === 'function') window.resetSelection();
 }
+
+function detachOldFloatingPartner(words, dependent, newHeadId) {
+  if (!dependent) return;
+
+  const depId = String(dependent.id);
+  const oldHeadId = String(dependent.head ?? '').trim();
+  const incomingHeadId = String(newHeadId ?? '').trim();
+
+  // Case 1:
+  // dependent was the ROOT of a floating subtree, so detach its direct children
+  const hasNoHead =
+    dependent.head === '' ||
+    dependent.head === null ||
+    dependent.head === undefined;
+
+  if (hasNoHead) {
+    words.forEach(w => {
+      if (String(w.head) === depId) {
+        w.head = '';
+        w._disconnected = false;
+        w._detachedFloatingSingle = true;
+      }
+    });
+    return;
+  }
+
+  // Case 2:
+  // dependent was the CHILD in a floating subtree A -> dependent.
+  // Break that old pair by detaching dependent from its former parent.
+  // The former parent will then become its own subtree of one.
+  if (oldHeadId && oldHeadId !== '0' && oldHeadId !== incomingHeadId) {
+    const oldParent = words.find(w => String(w.id) === oldHeadId);
+    if (oldParent) {
+      const oldParentHasNoHead =
+        oldParent.head === '' ||
+        oldParent.head === null ||
+        oldParent.head === undefined;
+
+      // only treat it as the old floating partner if it was headless
+      if (oldParentHasNoHead) {
+        dependent.head = '';
+        oldParent._disconnected = false;
+        oldParent._detachedFloatingSingle = true;
+      }
+    }
+  }
+}
+
 
 /**
  * --------------------------------------------------------------------------
@@ -338,17 +388,44 @@ export function handleWordClick(event,wordId, word) {
 
     window.batchSelection.forEach(depId => {
       const dependent = currentSentence.words.find(w => String(w.id) === String(depId));
+
       if (dependent && String(dependent.id) !== newHeadId) {
+        const oldDependentHead = dependent.head;
+
+        const dependentHasNoHead =
+          dependent.head === '' || dependent.head === null || dependent.head === undefined;
+
+        const dependentHasChildren = currentSentence.words.some(
+          w => String(w.head) === String(dependent.id)
+        );
+
+        const preserveExistingSubtree =
+          !!dependentHasNoHead && dependentHasChildren;
+
         if (!createsCycle(currentSentence.words, depId, newHeadId)) {
+          if (!preserveExistingSubtree) {
+            detachOldFloatingPartner(currentSentence.words, dependent, newHeadId);
+          }
+
           dependent.head = newHeadId;
-          dependent._disconnected = false; // Clear disconnected status if it was set
+          dependent._disconnected = false;
+          dependent._detachedFloatingSingle = false;
           changesMade = true;
-        }
-        else {
+        } else {
           const isRoot = newHeadId === "0";
           const independent = isRoot ? { id: "0" } : currentSentence.words.find(word => word.id === newHeadId);
-          independent.head = normalizeHeadId(dependent.head) ?? "0";
+
+          if (!preserveExistingSubtree) {
+            detachOldFloatingPartner(currentSentence.words, dependent, newHeadId);
+          }
+
+          independent.head = oldDependentHead;
+          independent._disconnected = false;
+          independent._detachedFloatingSingle = false;
+
           dependent.head = newHeadId;
+          dependent._disconnected = false;
+          dependent._detachedFloatingSingle = false;
           changesMade = true;
         }
       }
@@ -426,6 +503,16 @@ export function handleWordClick(event,wordId, word) {
   //gets indepenent node (second selected node)
   const isRoot = newHeadId === "0";
   const independent = isRoot ? { id: "0" } : currentSentence.words.find(word => word.id === newHeadId);
+  const dependentHasNoHead =
+    dependent &&
+    (dependent.head === '' || dependent.head === null || dependent.head === undefined);
+
+  const dependentHasChildren = currentSentence.words.some(
+    w => String(w.head) === String(dependent?.id)
+  );
+
+  const preserveExistingSubtree =
+    !!dependentHasNoHead && dependentHasChildren;
   //remove highlight when second word is selected
   const btnNewHead = document.querySelector(`button[data-word-id="${newHeadId}"]`);
   if (btnNewHead) btnNewHead.classList.remove("highlight");
@@ -437,16 +524,31 @@ export function handleWordClick(event,wordId, word) {
 
   saveState();
 
+  const oldDependentHead = dependent.head;
+
   if (createsCycle(currentSentence.words, selectedWordId, newHeadId)) {
+    if (!preserveExistingSubtree) {
+      detachOldFloatingPartner(currentSentence.words, dependent, newHeadId);
+    }
+
     // Flip logic — make the old head now depend on the selected word
-    independent.head = dependent.head;
+    independent.head = oldDependentHead;
+    independent._disconnected = false;
+    independent._detachedFloatingSingle = false;
+
     dependent.head = newHeadId;
-    dependent._disconnected = false; // Clear disconnected status if it was set
+    dependent._disconnected = false;
+    dependent._detachedFloatingSingle = false;
     triggerAutoSave();
-  } else if(dependent) {
+  } else if (dependent) {
+    if (!preserveExistingSubtree) {
+      detachOldFloatingPartner(currentSentence.words, dependent, newHeadId);
+    }
+
     // Normal assignment
     dependent.head = newHeadId;
-    dependent._disconnected = false; // Clear disconnected status if it was set
+    dependent._disconnected = false;
+    dependent._detachedFloatingSingle = false;
     triggerAutoSave();
   }
 

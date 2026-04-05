@@ -411,21 +411,40 @@ export function prepareSentenceData(sentence) {
 
   const idParentPairs = words.map(w => {
     const wordId = String(w.id);
+    const rawHead = w.head;
+
+    const hasRealHead =
+      rawHead !== "" &&
+      rawHead !== null &&
+      rawHead !== undefined &&
+      rawHead !== 0 &&
+      rawHead !== "0";
+
+    const isRootAttached = rawHead === 0 || rawHead === "0";
     const isParent = words.some(other => String(other.head) === wordId);
-    const hasHead = w.head !== "" && w.head !== null;
     const isComma = w.form === ",";
+    const isDetachedFloatingSingle = !!w._detachedFloatingSingle;
 
     let pId = null;
-    
-    if (w.head === 0 || w.head === '0') {
-      pId = 'root';
-    } else if (hasHead) {
-      pId = String(w.head);
+
+    if (isRootAttached) {
+      pId = "root";
+    } else if (hasRealHead) {
+      pId = String(rawHead);
     } else if (w._disconnected) {
-      pId = 'root';
-    } else if (isParent || isComma) {
-      pId = 'root';
+      pId = "root";
+    } else if (isParent || isComma || isDetachedFloatingSingle) {
+      pId = "root";
     }
+
+    const isForestRoot =
+      pId === "root" &&
+      !isRootAttached &&
+      (
+        !!w._disconnected ||
+        isDetachedFloatingSingle ||
+        (!hasRealHead && isParent && !isComma)
+      );
 
     return {
       id: wordId,
@@ -433,14 +452,12 @@ export function prepareSentenceData(sentence) {
       form: w.form || '',
       relation: w.relation || '',
       postag: w._displayPostag || w.postag || '',
-      //flag to identify forest-roots for visual styling
-      isForestRoot: !hasHead && pId === 'root' && !!w._disconnected
+      isForestRoot
     };
   });
 
   idParentPairs.push({ id: 'root', parentId: null, form: '[ROOT]' });
 
-  // Only keep nodes that belong to a tree
   return idParentPairs.filter(d => d.id === 'root' || d.parentId !== null);
 }
 
