@@ -165,6 +165,13 @@ function handleWordStep(direction, e) {
 
   const words = sentence.words;
 
+  // If a multiselect batch is active, W/E should not do anything.
+  if (window.batchSelection && window.batchSelection.size > 0) {
+    e.preventDefault();
+    e.stopPropagation();
+    return;
+  }
+
   // Figure out what is currently selected
   let currentId =
     window.currentSelectedWordId ??
