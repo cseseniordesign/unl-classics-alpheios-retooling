@@ -4,7 +4,6 @@ import { setupWordHoverSync } from './hoverSync.js';
 import { applyRelationChange, parseRelation, buildMenuItems, buildSuffixMenuItems, labelForMain,labelForSuffix } from '../relation/relationTool.js';
 
 window.selectedWordId = null; // keeps track of first clicked node
-let isInitialTreeLoad = true;
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: createNodeHierarchy
@@ -16,7 +15,7 @@ let isInitialTreeLoad = true;
  * @param {string|number} sentenceId - ID of the sentence to visualize.
  * @returns {void} Runs synchronously to render the dependency tree for the specified sentence.
  */
-export function createNodeHierarchy(sentenceId, autoFit= false) {
+export function createNodeHierarchy(sentenceId) {
   const previousTransform = window.svg
   ? d3.zoomTransform(window.svg.node())
   : null;
@@ -42,6 +41,14 @@ export function createNodeHierarchy(sentenceId, autoFit= false) {
 
   window.idParentPairs = idParentPairs; // global variable for idParentPairs
 
+  // Detect new sentence
+  const isNewSentence = window.currentSentenceId !== sentenceId;
+  // Reset animation when loading a new sentence
+  if (isNewSentence) {
+    window.prevNodePositions = null;      // reset for animation
+    window.currentSentenceId = sentenceId;
+  }
+
   // Generate a hierarchical layout from the flat data
   const rootHierarchy = buildHierarchy(idParentPairs);
   
@@ -55,39 +62,58 @@ export function createNodeHierarchy(sentenceId, autoFit= false) {
     }
   });
 
-// Shift the forest roots to the right (NO overlap)
-// -----------------------------------------------
-const horizontalGap = 90;  // gap between main tree and first floating tree
-const forestGap = 90;      // gap between floating trees
+  // Shift the forest roots to the right (NO overlap)
+  // -----------------------------------------------
+  const horizontalGap = 150; // gap between main tree and first floating tree
+  const forestGap = 120;     // gap between floating trees
+  let currentForestX = maxMainX + horizontalGap;
 
-let currentForestX = maxMainX + horizontalGap;
+  rootHierarchy.children?.forEach(child => {
+    if (!child.data.isForestRoot) return;
 
-rootHierarchy.children?.forEach(child => {
-  if (!child.data.isForestRoot) return;
+    // Apply a small D3 tree layout to the forest subtree
+    const forestLayout = d3.tree()
+      .nodeSize([60, 80]);
+    forestLayout(child);
 
-  // 1) Measure this subtree's current x-span
-  let minX = Infinity;
-  let maxX = -Infinity;
+    // Shift forest subtree to the right of the main tree
+    child.each(n => {
+      n.x += currentForestX + 10; 
+      n.y += 0;
+    });
+  
+    // Measure width of the forest subtree
+    const forestXs = [];
+    child.each(n => forestXs.push(n.x));
+    const forestWidth = d3.max(forestXs) - d3.min(forestXs);
 
-  child.each(n => {
-    if (n.x < minX) minX = n.x;
-    if (n.x > maxX) maxX = n.x;
+    // Advance cursor by actual width + gap (prevents overlap)
+    currentForestX += forestWidth + forestGap;
   });
 
-  const subtreeWidth = (maxX - minX) || 0;
-
-  // 2) Shift so the LEFT edge of the subtree starts at currentForestX
-  const shiftAmount = currentForestX - minX;
-
-  child.each(n => {
-    n.x += shiftAmount;
-  });
-
-  // 3) Advance cursor by actual width + gap (prevents overlap)
-  currentForestX += subtreeWidth + forestGap;
-});
   // Make the current D3 root hierarchy globally accessible
   window.root = rootHierarchy;
+
+  // Restore previous node positions for animation if they exist
+  if (window.prevNodePositions) {
+    rootHierarchy.each(d => {
+      const prev = window.prevNodePositions[d.data.id];
+      if (prev) {
+        // Existing node → animate from previous position
+        d.x0 = prev.x;
+        d.y0 = prev.y;
+
+      } else if (d.data.isForestRoot || d.parent?.data?.isForestRoot) {
+        // Forest nodes → slide in slightly from the right
+        d.x0 = d.x - 2;
+        d.y0 = d.y;
+      } else {
+        // New main-tree node → slight downward slide animation
+        d.x0 = d.x;
+        d.y0 = d.y - 20;
+      }
+    });
+  }
 
   // Select and reset the SVG container
   window.svg = d3.select('#sandbox svg');
@@ -111,6 +137,17 @@ rootHierarchy.children?.forEach(child => {
 
   // gx is the inner drawing group containing links and nodes
   window.gx = g.append('g');
+  
+  // Apply previous node positions if they exist
+  rootHierarchy.each(d => {
+    if (!window.prevNodePositions) return;
+
+    const prev = window.prevNodePositions[d.data.id];
+    if (prev) {
+      d.x0 = prev.x;
+      d.y0 = prev.y;
+    }
+  });
 
   // Draw visual elements (edges and nodes)
   drawLinks(gx, rootHierarchy, idParentPairs);
@@ -142,22 +179,27 @@ nodes.forEach(node => {
     });
   svg.call(zoom);
 
-  if (window.svg && window.zoom && previousTransform) {
+  // Apply previous transform to forest trees only
+  if (!isNewSentence && window.svg && window.zoom && previousTransform) {
     window.svg.call(window.zoom.transform, previousTransform);
   }
 
-  if (isInitialTreeLoad && window.svg && window.zoom) {
-    fitTreeToView(svg, gx, container, zoom, margin, true);
-    isInitialTreeLoad = false;
-  }
-
-  // Adjust zoom level and centering to fit tree neatly in view
-  if (autoFit) {
+  // Fit/recenter for new sentences only
+  if (isNewSentence) {
     fitTreeToView(svg, gx, container, zoom, margin, true);
   }
 
   // Re-sync highlights after nodes are redrawn
   setupWordHoverSync();
+
+  // Save node positions for next animation
+  window.prevNodePositions = {};
+  rootHierarchy.each(d => {
+    window.prevNodePositions[d.data.id] = {
+      x: d.x,
+      y: d.y
+    };
+  });
 }
 
 function getCurrentSentenceWord(wordId) {
@@ -504,8 +546,18 @@ export function buildHierarchy(idParentPairs) {
       const avg = (a.wordWidth + b.wordWidth) / 2;
       return a.parent === b.parent ? avg / 60 : avg / 40;
     });
+  
+  // Separate main and forest tree children
+  const mainChildren = root.children?.filter(c => !c.data.isForestRoot) || [];
+  const forestChildren = root.children?.filter(c => c.data.isForestRoot) || [];
+
+  // Temporarily assign main children only to the root
+  root.children = mainChildren;
 
   const rootHierarchy = treeLayout(root);
+
+  // Return forest children to be drawn later
+  rootHierarchy.children = [...mainChildren, ...forestChildren];
 
   // Apply a uniform horizontal scaling factor for readability
   rootHierarchy.each(d => { d.x *= 60; });
@@ -529,7 +581,12 @@ export function drawNodes(gx, rootHierarchy) {
     .attr('class', 'node')
     .attr("id", d => d.data.n || d.data.id || d.data.word_id)
     .attr('data-pos', d => (d.data.postag && d.data.postag[0]) ? d.data.postag[0] : '')
-    .attr('transform', d => `translate(${d.x},${d.y})`);
+    .attr("transform", d => `translate(${d.x0 ?? d.x}, ${d.y0 ?? d.y})`)
+    .call(selection =>
+      selection.transition()
+        .duration(800)
+        .attr('transform', d => `translate(${d.x},${d.y})`)
+    );
 
   // First add the text (so we can measure it)
   nodes.append('text')
@@ -587,11 +644,11 @@ export function drawLinks(gx, rootHierarchy, idParentPairs) {
       const group = d3.select(this);
 
       // --- Spread siblings slightly to prevent overlap ---
-      const siblings = d.source.children || [];
+      const siblings = (d.source.children || []).filter(c => !c.data.isForestRoot); // exclude forest nodes
       const index = siblings.indexOf(d.target);
       const offset = (index - (siblings.length - 1) / 2) * 12;
 
-      // --- Define start and end positions ---
+      // --- Define start and end positions ---      
       const source = { x: d.source.x + offset, y: d.source.y + 10 };
       const target = { x: d.target.x, y: d.target.y - 10 };
 
@@ -637,17 +694,17 @@ export function drawLinks(gx, rootHierarchy, idParentPairs) {
       group.append("path")
         .attr("class", "link-part1")
         .attr("fill", "none")
-        .attr("stroke", "#999")
+        .attr("stroke", "#666")
         .attr("stroke-width", 1.2)
         .attr("d",
           `M${beforeGap[0]},${beforeGap[1]} C${beforeGap[2]},${beforeGap[3]} ${beforeGap[4]},${beforeGap[5]} ${beforeGap[6]},${beforeGap[7]}`
         );
-
+      
       // --- Draw second segment (after label → child) ---
       group.append("path")
         .attr("class", "link-part2")
         .attr("fill", "none")
-        .attr("stroke", "#999")
+        .attr("stroke", "#666")
         .attr("stroke-width", 1.2)
         .attr("d",
           `M${afterGap[0]},${afterGap[1]} C${afterGap[2]},${afterGap[3]} ${afterGap[4]},${afterGap[5]} ${afterGap[6]},${afterGap[7]}`
