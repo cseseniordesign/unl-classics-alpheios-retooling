@@ -39,11 +39,12 @@ const tableBtn = document.querySelector("#gsTable");
 tableBtn.addEventListener("click",() => {
   toggleTable();
 })
+
 // ─── Per-panel state ──────────────────────────────────────────────────────────
 // Each entry stores the data and the live D3 handles for that panel.
 // D3 handles are local to the render call — no window.* globals involved.
 
-const panels = {
+window.panels = {
   a: {
     sandboxId:      'sandbox-a',
     treeBankId:     'tree-bank-a',
@@ -164,6 +165,22 @@ function renderPanel(key, sentenceId) {
 
 // ─── Navigation ───────────────────────────────────────────────────────────────
 
+function jumpToSentence(sentenceNum) {
+  const keys = ['a', 'b']; 
+
+  keys.forEach(key => {
+    if (panels[key]) {
+      // Update the internal index
+      panels[key].currentIndex = parseInt(sentenceNum);
+      
+      // Re-render the visual tree for that specific sentence
+      renderPanel(key, panels[key].currentIndex);
+      
+      // Update the First/Back/Next/Last button states
+      updateNavButtons(key);
+    }
+  });
+}
 function populateSelect(key) {
   const select = document.getElementById(`select-${key}`);
   if (!select) return;
@@ -195,6 +212,16 @@ function updateNavButtons(key) {
   });
   const select = document.getElementById(`select-${key}`);
   if (select) select.value = idx;
+
+  // Highlight the button in the grid that matches the current index
+  document.querySelectorAll('.btn').forEach(btn => {
+    // Check if the button's text matches current idx
+    if (parseInt(btn.textContent) === idx) {
+      btn.classList.add('active-sentence');
+    } else {
+      btn.classList.remove('active-sentence');
+    }
+  });
 }
 
 function navigate(key, action) {
@@ -296,3 +323,7 @@ if (document.readyState === 'loading') {
 } else {
   init();
 }
+
+window.jumpToSentence = jumpToSentence;
+window.renderPanel = renderPanel;
+window.updateNavButtons = updateNavButtons;

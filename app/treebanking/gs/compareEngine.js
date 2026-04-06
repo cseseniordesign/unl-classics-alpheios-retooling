@@ -120,7 +120,6 @@ export function compareTreebanks(goldTreebank, reviewTreebank, compareOnly = ['h
     const reviewSentence = reviewSentences.get(sid);
 
     report.sentences.total += 1;
-
     if (!goldSentence || !reviewSentence) {
       report.sentences.wrong += 1;
       bumpUnique(uniqueDiffs.sentences, report.sentences, sid);

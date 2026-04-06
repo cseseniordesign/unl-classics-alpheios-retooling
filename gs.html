@@ -210,11 +210,13 @@
               <td id="average"></td>
             </tr>
           </table>
+          <div id="sentence-grid"></div>
         </div>
   </div>
 
   <script>
     const report = JSON.parse(localStorage.getItem('compareReport'));
+    const comparison = JSON.parse(localStorage.getItem('compareDetails'));
     //sentence data insertion
     document.getElementById('total-sentences').textContent = report.sentences.total;
     document.getElementById('right-sentences').textContent = report.sentences.right;
@@ -236,7 +238,6 @@
     document.getElementById('wrong-relations').textContent = report.relations.wrong;
     document.getElementById('unique-relations').textContent = (report.relations.right/report.relations.total).toFixed(4) * 100 + "%";
     //Lemma data insertion 
-    console.log(report)
     document.getElementById('total-lemma').textContent = report.lemmata.total;
     document.getElementById('right-lemma').textContent = report.lemmata.right;
     document.getElementById('wrong-lemma').textContent = report.lemmata.wrong;
@@ -246,12 +247,50 @@
     document.getElementById('right-postags').textContent = report.postags.right;
     document.getElementById('wrong-postags').textContent = report.postags.wrong;
     document.getElementById('unique-postags').textContent = (report.postags.right/report.postags.total).toFixed(4) * 100 + "%";
-
     //average 
     document.getElementById('average').textContent = 
     ((((report.heads.right/report.heads.total)+
     (report.relations.right/report.relations.total) +
-  (report.lemmata.right/report.lemmata.total) + (report.postags.right/report.postags.total))/4)*100).toFixed(2) + "%";
+    (report.lemmata.right/report.lemmata.total) + (report.postags.right/report.postags.total))/4)*100).toFixed(2) + "%";
+
+   //get the sentences with issues
+    const problematicIds = comparison
+  .filter(sentence => {
+    //Check if the sentence is missing completely
+    if (sentence.missing) {
+      return true
+    }
+    //Check if any word in the sentence has any mismatch
+    return sentence.words.some(word => {
+      const hasHeadError    = word.gold.head !== word.review.head;
+      const hasRelationError = word.gold.relation !== word.review.relation;
+      const hasPostagError   = word.gold.postag !== word.review.postag;
+      const hasLemmaError    = word.gold.lemma !== word.review.lemma;
+      // If any of these are true, the whole sentence is flagged
+      return hasHeadError || hasRelationError || hasPostagError || hasLemmaError;
+    });
+  })
+  .map(s => s.sentenceId);
+    const selectA = document.getElementById("select-a")
+    const buttonsDiv = document.getElementById("sentence-grid");
+    const sentences = comparison.filter(s => {
+      const btn = document.createElement("button");
+      btn.classList.add("btn");
+      if (problematicIds.includes(s.sentenceId)) {
+        btn.classList.add("incorrectBtn");
+        btn.textContent = `${s.sentenceId}`;
+      }
+      else{
+        btn.textContent = `${s.sentenceId}`;
+        btn.classList.add("correctBtn");
+      }
+      btn.onclick = () => {
+        jumpToSentence(s.sentenceId);
+        window.scrollTo(0,0);
+      };
+      buttonsDiv.append(btn);
+      })
+    
   </script></td>
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script type="module" src="./app/treebanking/gs/gs.js"></script>
