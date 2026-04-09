@@ -79,16 +79,6 @@ function handleExit() {
   });
 }
 
-
-function setupHistoryButton() {
-    const button = document.getElementById("history");
-    if (button) {
-        button.addEventListener("click", function() {
-            alert("Sorry, this feature is not yet implemented. Please look forward to using it in future updates!");
-        });
-    }
-}
-
 function setupCommentButton() {
     const button = document.getElementById("comment");
     if (button) {
@@ -495,7 +485,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupRedoButton();
   setupSentenceTool();  
   setupSelector();
-  setupHistoryButton();
   setupCommentButton();
   setupSettingsButton();
   setupLanguageButton();
