@@ -398,12 +398,12 @@ html, body{
   fill: #30bfbf !important;
 }
 
-.link-label {
+.text-bg {
+  fill: none;   /* Standard labels get white backgrounds */
   font-family: "Arial", sans-serif;
-  font-size: 10px;      
-  fill: #666;           
+  font-size: 10px;
   text-anchor: middle;
-  pointer-events: none; 
+  pointer-events: none;
 }
 
 #nav-buttons {

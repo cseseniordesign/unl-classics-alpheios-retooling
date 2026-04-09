@@ -622,6 +622,7 @@ export function drawNodes(gx, rootHierarchy, errorIds = [], isStudentTree) {
     .each(function() {
       // Measure the text and insert a rect *behind* it
       const bbox = this.getBBox();
+      const isError = d3.select(this.parentNode).classed('err-lemma'); // Check if text has error class
       d3.select(this.parentNode)
         .insert('rect', 'text')  // insert before text so it's behind
         .attr('x', bbox.x - 3)
@@ -630,7 +631,7 @@ export function drawNodes(gx, rootHierarchy, errorIds = [], isStudentTree) {
         .attr('height', bbox.height + 4)
         .attr('rx', 3)
         .attr('ry', 3)
-        .attr('class', 'text-bg');
+        .attr('class', isError ? 'text-bg err-bg' : 'text-bg'); // Add err-bg class if error
     });
 
   // Add POS tag label below the word form (skip [ROOT] node and nodes without a postag)
@@ -803,11 +804,11 @@ export function drawLinks(gx, rootHierarchy, idParentPairs, errorIds, isStudentT
 
       // --- Add relation label centered within the gap ---
       group.append("text")
-        .attr("class", "link-label")
         .attr("x", x)
         .attr("y", y + 6)
         .attr("text-anchor", "middle")
         .attr("font-size", "12px")
+        .attr("fill", "#333")
         .attr('class', d => {
           let classList = "link-label";
 
@@ -825,8 +826,22 @@ export function drawLinks(gx, rootHierarchy, idParentPairs, errorIds, isStudentT
 
           return classList;
         })
-        .attr("fill", "#333")
-        .text(d => d.target?.data?.relation || "");
+        .text(d => d.target?.data?.relation || "")
+        // Add the background rectangle
+        .each(function() {
+          // Measure the text and insert a rect *behind* it
+          const bbox = this.getBBox();
+          const isError = d3.select(this).classed('err-relation'); // Check if text has error class
+          d3.select(this.parentNode)
+            .insert('rect', 'text')  // insert before text so it's behind
+            .attr('x', bbox.x - 3)
+            .attr('y', bbox.y - 2)
+            .attr('width', bbox.width + 6)
+            .attr('height', bbox.height)
+            .attr('rx', 3)
+            .attr('ry', 3)
+            .attr('class', isError ? 'text-bg err-bg' : 'text-bg'); // Add err-bg class if error
+        });
         });
     }
 

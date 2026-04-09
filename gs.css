@@ -368,35 +368,23 @@ td{
   cursor: default;
 }
 
-.link-label {
-  font-family: "Arial", sans-serif;
-  font-size: 10px;
-  fill: #666;
-  text-anchor: middle;
-  pointer-events: none;
-}
-
 .node .text-bg {
   fill: #30bfbf;
   fill-opacity: 0;
   transition: fill-opacity .15s ease;
 }
 
-.err-lemma {
+.text-bg.err-bg {
   fill: red;
   fill-opacity: var(--node-selected-opacity);
 }
 
-.link-label.err-relation {
+.text-bg {
+  fill: none;
   font-family: "Arial", sans-serif;
   font-size: 10px;
-  fill: red;
   text-anchor: middle;
   pointer-events: none;
-}
-
-.link-label text{
-  color: white !important;
 }
 
 .postag-label.err-postag {
@@ -405,9 +393,6 @@ td{
   font-weight: 500px !important;
 }
 
-.text-bg.err-bg {
-  fill: red !important;    /* Red background */
-}
 .err-head {
   fill: none !important;
   stroke: red !important;
