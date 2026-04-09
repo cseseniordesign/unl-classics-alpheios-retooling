@@ -213,17 +213,17 @@ Upload two ALDT XML files as Tree A and Tree B (Under advanced options on the in
 
 The editor ships with support for the following annotation formats:
 
-| ID | Label | Language |
-|---|---|---|
-| `aldt-lat` | Ancient Language Dependency Treebank (Latin) | Latin |
-| `aldt-grc` | Ancient Language Dependency Treebank (Greek) | Greek |
-| `sg` | Smyth Grammar labels | Greek |
-| `JMH` | Ancient Greek | Multiple |
-| `ud` | Universal Dependencies | Multiple |
+| ID | Label | Language | Status |
+|---|---|---|---|
+| `aldt-lat` | Ancient Language Dependency Treebank (Latin) | Latin | Stable |
+| `aldt-grc` | Ancient Language Dependency Treebank (Greek) | Greek | Stable |
+| `sg` | Smyth Grammar labels | Greek | Stable |
+| `JMH` | JMH Ancient Greek | Greek | Stable |
+| `ud` | Universal Dependencies | Multiple | Stable |
+| `pedalion` | Pedalion Ancient Greek | Greek | Stable |
 | `persian` | Persian morphology | Persian | Beta |
-| `lyon-lat` | Latin | Multiple | Beta |
-| `lyon-grc` | Greek | Multiple | Beta |
-| `pedalion` | Ancient Greek | Multiple |
+| `lyon-lat` | Lyon Latin | Latin | Beta |
+| `lyon-grc` | Lyon Greek | Greek | Beta |
 
 To add a custom tagset, create the relation and morphology config JSONs under `configs/`, compile a dist JSON, and register it in `app/treebanking/tags/tagsetRegistry.js`.
 
