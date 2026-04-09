@@ -435,6 +435,12 @@ export function fastRefreshTree() {
     )
     .select('text')
     .style('fill', d => colorForPOS(d.data));
+
+  // Update postag label text and color
+  window.gx.selectAll('.node')
+    .select('.postag-label')
+    .text(d => d.data.postag || '')
+    .style('fill', d => colorForPOS(d.data));
 }
 window.fastRefreshTree = fastRefreshTree;
 
@@ -442,7 +448,7 @@ window.fastRefreshTree = fastRefreshTree;
  * --------------------------------------------------------------------------
  * FUNCTION: prepareSentenceData
  * --------------------------------------------------------------------------
- * Converts a sentence’s <word> elements into a flat list of rows usable by D3.
+ * Converts a sentence's <word> elements into a flat list of rows usable by D3.
  * Adds a synthetic root node for top-level words.
  *
  * @param {Object} sentence - Sentence object containing word elements.
@@ -569,7 +575,9 @@ export function buildHierarchy(idParentPairs) {
  * FUNCTION: drawNodes
  * --------------------------------------------------------------------------
  * Renders the words as text-only nodes positioned along the D3 layout.
- * Adds a rectangle behind text for background highlighting
+ * Adds a rectangle behind text for background highlighting.
+ * Also renders the POS tag as a smaller label below the word form.
+ *
  * @param {Object} gx - D3 selection of inner SVG group.
  * @param {Object} rootHierarchy - Root node with x/y layout data.
  * @returns {void} Runs synchronously to render all node text labels on the tree.
@@ -588,7 +596,7 @@ export function drawNodes(gx, rootHierarchy) {
         .attr('transform', d => `translate(${d.x},${d.y})`)
     );
 
-  // First add the text (so we can measure it)
+  // First add the word form text (so we can measure it for the background rect)
   nodes.append('text')
     .attr('dy', 4)
     .attr('text-anchor', 'middle')
@@ -598,10 +606,9 @@ export function drawNodes(gx, rootHierarchy) {
     .text(d => d.data.form)
     .each(function() {
       // Measure the text and insert a rect *behind* it
-      const text = d3.select(this);
       const bbox = this.getBBox();
       d3.select(this.parentNode)
-        .insert('rect', 'text')  // insert before text so it’s behind
+        .insert('rect', 'text')  // insert before text so it's behind
         .attr('x', bbox.x - 3)
         .attr('y', bbox.y - 2)
         .attr('width', bbox.width + 6)
@@ -610,6 +617,18 @@ export function drawNodes(gx, rootHierarchy) {
         .attr('ry', 3)
         .attr('class', 'text-bg');
     });
+
+  // Add POS tag label below the word form (skip [ROOT] node and nodes without a postag)
+  nodes.filter(d => d.data.postag && d.data.id !== 'root')
+    .append('text')
+    .attr('class', 'postag-label')
+    .attr('dy', -12)
+    .attr('text-anchor', 'middle')
+    .style('font-family', 'sans-serif')
+    .style('font-size', '10px')
+    .style('fill', d => colorForPOS(d.data))
+    .style('opacity', 0.75)
+    .text(d => d.data.postag);
 }
 
 /**
@@ -650,7 +669,7 @@ export function drawLinks(gx, rootHierarchy, idParentPairs) {
 
       // --- Define start and end positions ---      
       const source = { x: d.source.x + offset, y: d.source.y + 10 };
-      const target = { x: d.target.x, y: d.target.y - 10 };
+      const target = { x: d.target.x, y: d.target.y - 24 };
 
       // --- Define cubic Bézier control points ---
       const dx = (target.x - source.x) * 0.5;
