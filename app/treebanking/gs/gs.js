@@ -133,9 +133,27 @@ function renderPanel(key, sentenceId) {
   const g  = svg.append('g').attr('transform', `translate(${margin.left},${margin.top})`);
   const gx = g.append('g');
 
-  drawLinks(gx, rootHierarchy, idParentPairs);
-  drawNodes(gx, rootHierarchy);
+  // Identify errors for THIS sentence first
+  const currentSentenceData = comparison[sentenceId-1]; 
+  console.log(currentSentenceData)
+  const errors = currentSentenceData.words
+  .map(w => {
+  const errors = [];
+  if (w.missing || w.gold.head !== w.review.head)         errors.push("head");
+  if (w.diff.relation) errors.push("relation");
+  if (w.diff.postag)     errors.push("postag");
+  if (w.diff.lemma)      errors.push("lemma");
 
+  return {
+    id: w.wordId,
+    errorTypes: errors,
+    isProblem: errors.length > 0
+  };
+  })
+  .filter(w => w.isProblem); // Only keep the ones that actually have errors
+  const isStudentTree = (key === 'b');
+  drawLinks(gx, rootHierarchy, idParentPairs, errors, isStudentTree);
+  drawNodes(gx, rootHierarchy,errors,isStudentTree);
   // ── Zoom — closure captures local `g`, `margin` for this panel only ───────
   const zoom = d3.zoom()
     .scaleExtent([0.1, 3])
@@ -160,6 +178,24 @@ function renderPanel(key, sentenceId) {
   p.currentIndex   = sentenceId;
   p.totalSentences = p.data.length;
 
+  
+    /*// 1. Get the current sentence data from your localStorage or comparison object
+    const comparison = JSON.parse(localStorage.getItem('compareDetails'));
+    const currentSentenceData = comparison[sentenceId-1]; 
+    
+    // 2. Find this specific word in the current sentence comparison
+    currentSentenceData.words.some(word => {
+      const hasHeadError    = word.gold.head !== word.review.head;
+      const hasRelationError = word.gold.relation !== word.review.relation;
+      const hasPostagError   = word.gold.postag !== word.review.postag;
+      const hasLemmaError    = word.gold.lemma !== word.review.lemma;
+      // If any of these are true, the whole sentence is flagged
+      if (hasHeadError || hasRelationError || hasPostagError || hasLemmaError) {
+        const node = d3.select(`.node[id="${word.wordId}"]`);
+        console.log(node)
+        if (node) node.classed("problem", true);
+      }
+  });*/
   updateNavButtons(key);
 }
 

@@ -582,7 +582,7 @@ export function buildHierarchy(idParentPairs) {
  * @param {Object} rootHierarchy - Root node with x/y layout data.
  * @returns {void} Runs synchronously to render all node text labels on the tree.
  */
-export function drawNodes(gx, rootHierarchy) {
+export function drawNodes(gx, rootHierarchy, errorIds = [], isStudentTree) {
   const nodes = gx.selectAll('.node')
     .data(rootHierarchy.descendants())
     .join('g')
@@ -594,8 +594,23 @@ export function drawNodes(gx, rootHierarchy) {
       selection.transition()
         .duration(800)
         .attr('transform', d => `translate(${d.x},${d.y})`)
-    );
+    )
+    .attr('class', d => {
+      if (isStudentTree) {
+        // Find the error object for this specific node
+      const errorEntry = errorIds.find(word => word.id === d.data.id);
 
+      if (errorEntry) {
+        if (errorEntry.errorTypes.includes("lemma")) {
+          return "err-lemma";
+        }
+      }
+      // No error found
+      return "node";
+      }
+    return "node"
+  })
+  
   // First add the word form text (so we can measure it for the background rect)
   nodes.append('text')
     .attr('dy', 4)
@@ -621,14 +636,42 @@ export function drawNodes(gx, rootHierarchy) {
   // Add POS tag label below the word form (skip [ROOT] node and nodes without a postag)
   nodes.filter(d => d.data.postag && d.data.id !== 'root')
     .append('text')
-    .attr('class', 'postag-label')
     .attr('dy', -12)
     .attr('text-anchor', 'middle')
+    .attr('class', d => {
+          let classList = "postag-label";
+
+          if (isStudentTree) {
+            // Look for the error entry for the CHILD of this link
+            const errorEntry = errorIds.find(word => word.id === d.data.id);
+            if (errorEntry && errorEntry.errorTypes.includes("postag")) {
+              classList += " err-postag";
+            }
+          }
+
+          return classList;
+        })
     .style('font-family', 'sans-serif')
     .style('font-size', '10px')
     .style('fill', d => colorForPOS(d.data))
     .style('opacity', 0.75)
-    .text(d => d.data.postag);
+    .text(d => d.data.postag)
+    // Add the background rectangle
+    .each(function() {
+      // Measure the text and insert a rect *behind* it
+      const bbox = this.getBBox();
+      const isError = d3.select(this).classed('err-postag'); // Check if text has error class
+      d3.select(this.parentNode)
+        .insert('rect', 'text')  // insert before text so it's behind
+        .attr('x', bbox.x - 3)
+        .attr('y', bbox.y - 2)
+        .attr('width', bbox.width + 6)
+        .attr('height', bbox.height)
+        .attr('rx', 3)
+        .attr('ry', 3)
+        .attr('class', 'text-bg')
+        .attr('class', isError ? 'text-bg err-bg' : 'text-bg'); // Add err-bg class if error
+    });
 }
 
 /**
@@ -644,7 +687,7 @@ export function drawNodes(gx, rootHierarchy) {
  * @param {Array<Object>} idParentPairs - Flat array of word data for label lookup.
  * @returns {void}
  */
-export function drawLinks(gx, rootHierarchy, idParentPairs) {
+export function drawLinks(gx, rootHierarchy, idParentPairs, errorIds, isStudentTree) {
   const tLabel = 0.75;  // Where label sits along the curve
   const gapT = 0.15;   // Fraction of curve length to remove around label (≈ small gap)
   gx.selectAll(".link")
@@ -722,6 +765,23 @@ export function drawLinks(gx, rootHierarchy, idParentPairs) {
       // --- Draw second segment (after label → child) ---
       group.append("path")
         .attr("class", "link-part2")
+        .attr('class', d => {
+          let classList = "";
+
+          // Guard against undefined and check if it's the student tree
+          if (isStudentTree && d.target && d.target.data && d.target.data.id) {
+            
+            // Look for the error entry for the CHILD of this link
+            const errorEntry = errorIds.find(word => word.id === d.target.data.id);
+
+            //If that child has a relation error, highlight THIS label
+            if (errorEntry && errorEntry.errorTypes.includes("head")) {
+              classList += " err-head";
+            }
+          }
+
+          return classList;
+        })
         .attr("fill", "none")
         .attr("stroke", "#666")
         .attr("stroke-width", 1.2)
@@ -748,10 +808,27 @@ export function drawLinks(gx, rootHierarchy, idParentPairs) {
         .attr("y", y + 6)
         .attr("text-anchor", "middle")
         .attr("font-size", "12px")
+        .attr('class', d => {
+          let classList = "link-label";
+
+          // Guard against undefined and check if it's the student tree
+          if (isStudentTree && d.target && d.target.data && d.target.data.id) {
+            
+            // Look for the error entry for the CHILD of this link
+            const errorEntry = errorIds.find(word => word.id === d.target.data.id);
+
+            // If that child has a relation error, highlight THIS label
+            if (errorEntry && errorEntry.errorTypes.includes("relation")) {
+              classList += " err-relation";
+            }
+          }
+
+          return classList;
+        })
         .attr("fill", "#333")
         .text(d => d.target?.data?.relation || "");
-    });
-}
+        });
+    }
 
 /**
  * --------------------------------------------------------------------------
