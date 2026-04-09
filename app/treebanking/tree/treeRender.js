@@ -634,45 +634,67 @@ export function drawNodes(gx, rootHierarchy, errorIds = [], isStudentTree) {
         .attr('class', isError ? 'text-bg err-bg' : 'text-bg'); // Add err-bg class if error
     });
 
+
   // Add POS tag label below the word form (skip [ROOT] node and nodes without a postag)
-  nodes.filter(d => d.data.postag && d.data.id !== 'root')
-    .append('text')
-    .attr('dy', -12)
-    .attr('text-anchor', 'middle')
-    .attr('class', d => {
-          let classList = "postag-label";
+   // Add POS tag label below the word form (compare/gold-standard mode only)
+  const isCompareMode = !!document.getElementById('sandbox-a');
 
-          if (isStudentTree) {
-            // Look for the error entry for the CHILD of this link
-            const errorEntry = errorIds.find(word => word.id === d.data.id);
-            if (errorEntry && errorEntry.errorTypes.includes("postag")) {
-              classList += " err-postag";
+  if (isCompareMode) {
+    nodes.filter(d => d.data.postag && d.data.id !== 'root')
+      .append('text')
+      .attr('dy', -9)
+      .attr('text-anchor', 'middle')
+      .attr('class', d => {
+            let classList = "postag-label";
+
+            if (isStudentTree) {
+              // Look for the error entry for the CHILD of this link
+              const errorEntry = errorIds.find(word => word.id === d.data.id);
+              if (errorEntry && errorEntry.errorTypes.includes("postag")) {
+                classList += " err-postag";
+              }
             }
-          }
 
-          return classList;
-        })
-    .style('font-family', 'sans-serif')
-    .style('font-size', '10px')
-    .style('fill', d => colorForPOS(d.data))
-    .style('opacity', 0.75)
-    .text(d => d.data.postag)
-    // Add the background rectangle
-    .each(function() {
-      // Measure the text and insert a rect *behind* it
-      const bbox = this.getBBox();
-      const isError = d3.select(this).classed('err-postag'); // Check if text has error class
-      d3.select(this.parentNode)
-        .insert('rect', 'text')  // insert before text so it's behind
-        .attr('x', bbox.x - 3)
-        .attr('y', bbox.y - 2)
-        .attr('width', bbox.width + 6)
-        .attr('height', bbox.height)
-        .attr('rx', 3)
-        .attr('ry', 3)
-        .attr('class', 'text-bg')
-        .attr('class', isError ? 'text-bg err-bg' : 'text-bg'); // Add err-bg class if error
-    });
+            return classList;
+          })
+      .style('font-family', 'sans-serif')
+      .style('font-size', '10px')
+      .style('fill', d => colorForPOS(d.data))
+      .style('opacity', 0.75)
+      .text(d => d.data.postag)
+      // Add the background rectangle
+      .each(function() {
+        // Measure the text and insert a rect *behind* it
+        const bbox = this.getBBox();
+        const isError = d3.select(this).classed('err-postag'); // Check if text has error class
+        d3.select(this.parentNode)
+          .insert('rect', 'text')  // insert before text so it's behind
+          .attr('x', bbox.x - 3)
+          .attr('y', bbox.y - 2)
+          .attr('width', bbox.width + 6)
+          .attr('height', bbox.height)
+          .attr('rx', 3)
+          .attr('ry', 3)
+          .attr('class', 'text-bg')
+          .attr('class', isError ? 'text-bg err-bg' : 'text-bg'); // Add err-bg class if error
+      });
+    }
+
+  // Add POS tag label below the word form (compare/gold-standard mode only)
+  /*const isCompareMode = !!document.getElementById('sandbox-a');
+
+  if (isCompareMode) {
+    nodes.filter(d => d.data.postag && d.data.id !== 'root')
+      .append('text')
+      .attr('class', 'postag-label')
+      .attr('dy', -10)
+      .attr('text-anchor', 'middle')
+      .style('font-family', 'sans-serif')
+      .style('font-size', '10px')
+      .style('fill', d => colorForPOS(d.data))
+      .style('opacity', 0.75)
+      .text(d => d.data.postag);
+  }*/
 }
 
 /**
@@ -713,7 +735,14 @@ export function drawLinks(gx, rootHierarchy, idParentPairs, errorIds, isStudentT
 
       // --- Define start and end positions ---      
       const source = { x: d.source.x + offset, y: d.source.y + 10 };
-      const target = { x: d.target.x, y: d.target.y - 24 };
+
+      const isCompareMode = !!document.getElementById('sandbox-a');
+      var target = 0;
+      if (isCompareMode) {
+        var target = { x: d.target.x, y: d.target.y - 16 };
+      }else{
+        var target = { x: d.target.x, y: d.target.y - 10 };
+      }
 
       // --- Define cubic Bézier control points ---
       const dx = (target.x - source.x) * 0.5;

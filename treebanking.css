@@ -1737,3 +1737,8 @@ body.mode-relation #tool-body {
   border-color: #6f6f6f;
   background-color: #f0f0f0;
 }
+
+.preselect-locked {
+  opacity: 0.55;
+  pointer-events: none;
+}

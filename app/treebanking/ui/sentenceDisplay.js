@@ -659,6 +659,7 @@ function resetSelection() {
   // Clear selection state
   selectedWordId = null;                 
   window.currentSelectedWordId = null;
+  window._lastOpenMorphWordId = null; 
 
   // If you also track this globally anywhere:
   if ("selectedWordId" in window) window.selectedWordId = null;

@@ -83,6 +83,61 @@ function normalizeSource(src) {
   return 'you';
 }
 
+function getFrozenMorphOrder(word) {
+  ensureFormsArray(word);
+
+  const existing = Array.isArray(word._openMorphOrder)
+    ? word._openMorphOrder
+    : null;
+
+  if (existing) {
+    const valid = existing.filter(
+      idx => Number.isInteger(idx) && idx >= 0 && idx < word.forms.length
+    );
+
+    const missing = [];
+    for (let i = 0; i < word.forms.length; i++) {
+      if (!valid.includes(i)) missing.push(i);
+    }
+
+    word._openMorphOrder = [...valid, ...missing];
+    return word._openMorphOrder;
+  }
+
+  word._openMorphOrder = _sortedFormIndicesByCount(word.forms);
+  return word._openMorphOrder;
+}
+
+function clearFrozenMorphOrder(word) {
+  if (word && '_openMorphOrder' in word) {
+    delete word._openMorphOrder;
+  }
+}
+
+function setPreselectNavigationLocked(locked) {
+  const ids = ['first', 'back', 'next', 'last', 'sentence-select'];
+
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    if (locked) {
+      if (!el.dataset.preselectPrevDisabled) {
+        el.dataset.preselectPrevDisabled = el.disabled ? 'true' : 'false';
+      }
+      el.disabled = true;
+      el.classList.add('preselect-locked');
+      el.setAttribute('aria-busy', 'true');
+    } else {
+      const wasDisabled = el.dataset.preselectPrevDisabled === 'true';
+      el.disabled = wasDisabled;
+      delete el.dataset.preselectPrevDisabled;
+      el.classList.remove('preselect-locked');
+      el.removeAttribute('aria-busy');
+    }
+  });
+}
+
 
 // =====================================================
 // GLOBAL Preselect state 
@@ -118,6 +173,11 @@ export function setupMorphTool() {
   // Allow other code to close Morph (e.g., when sentence changes)
   window.closeMorphTool = function () {
     if (!window.isMorphActive) return;
+
+    const currentSentence = window.treebankData?.find(
+      s => String(s.id) === String(window.currentIndex)
+    );
+    currentSentence?.words?.forEach(w => clearFrozenMorphOrder(w));
 
     window.isMorphActive = false;
     morphBtn.classList.remove('active');
@@ -401,8 +461,8 @@ export async function renderUserFormsList(word, toolBody) {
     toolBody.querySelector('.morph-container')?.appendChild(list);
   }
 
-  // Render sorted by count (display order only)
-  const order = _sortedFormIndicesByCount(word.forms);
+  // Keep the currently open pane's visual order stable while it remains open
+  const order = getFrozenMorphOrder(word);
 
   const expandedIds = new Set(
     [...list.querySelectorAll('.morph-entry.expanded')].map(el => String(el.dataset.index))
@@ -454,13 +514,18 @@ export async function renderUserFormsList(word, toolBody) {
       }
       triggerAutoSave();
 
-      await renderUserFormsList(word, toolBody);
+      // Do NOT rerender the morph list here.
+      // Keep the currently open panel visually stable while the user is interacting.
+      list.querySelectorAll('.morph-entry input[type="radio"]').forEach(input => {
+        const parent = input.closest('.user-form');
+        const parentIdx = Number(parent?.dataset.index);
+        input.checked = (parentIdx === idx);
+      });
 
-      const rerenderedCard = toolBody.querySelector(`.morph-entry[data-index="${idx}"]`);
-      if (rerenderedCard && wasExpanded) {
-        rerenderedCard.classList.add('expanded');
-        rerenderedCard.dataset.expanded = 'true';
-        rerenderedCard.setAttribute('aria-expanded', 'true');
+      if (wasExpanded && card) {
+        card.classList.add('expanded');
+        card.dataset.expanded = 'true';
+        card.setAttribute('aria-expanded', 'true');
       }
 
       if (typeof window.updateXMLIfActive === 'function') {
@@ -511,8 +576,9 @@ export async function renderUserFormsList(word, toolBody) {
 // Forms management helpers
 // =========================
 
-export async function preselectMissingMorphForCurrentSentence(toolBody = null) {
+export async function preselectMissingMorphForCurrentSentence(toolBody = null, opts = {}) {
   const sid = String(window.currentIndex);
+  const runId = opts.runId ?? null;
   const sentence = window.treebankData?.find(s => String(s.id) === sid);
   if (!sentence) return;
 
@@ -523,75 +589,85 @@ export async function preselectMissingMorphForCurrentSentence(toolBody = null) {
   }
 
   let changed = 0;
-  try{
+  try {
     for (const word of sentence.words) {
-    // Ensure doc snapshot exists so we can detect "already has morph"
-    ensureDocumentSnapshot(word);
-
-    const docLemma  = (word._doc?.lemma  ?? word.lemma  ?? '').trim();
-    const docPostag = (word._doc?.postag ?? word.postag ?? '').trim();
-
-    const alreadyHasMorph =
-      (typeof word.activeForm === 'number' && word.activeForm >= 0) ||
-      (docLemma !== '' || docPostag !== '');
-
-    if (alreadyHasMorph) continue;
-
-    // Make sure we have morpheus/user forms available
-    ensureFormsArray(word);
-
-    try {
-      await initMorphLexicon();
-      await mergeFormsIntoWord({ lang, word });
-    } catch (e) {}
-
-    // 1) Try lexicon first (most-used persistent form)
-    try {
-      const bestLex = await pickTopLexiconForm({ lang, surface: word.form });
-
-      if (bestLex && bestLex.lemma && bestLex.postag) {
-        const key = `${bestLex.lemma.trim()}::${bestLex.postag}`;
-        const exists = word.forms.some(ff => `${(ff.lemma || '').trim()}::${ff.postag || ''}` === key);
-
-        if (!exists) {
-          word.forms.push({
-            lemma: bestLex.lemma,
-            postag: bestLex.postag,
-            source: normalizeSource(bestLex.source),
-            _count: bestLex._count || 0
-          });
-        } else {
-          // ensure count is present for sorting/preselect
-          const match = word.forms.find(ff => `${(ff.lemma || '').trim()}::${ff.postag || ''}` === key);
-          if (match) {
-            match._count = Math.max(Number(match._count) || 0, Number(bestLex._count) || 0);
-            match.source = normalizeSource(match.source);
-          }
-        }
-
-        // If preselect is enabled, select it immediately and skip Morpheus
-        const bestIdx = _mostUsedFormIndex(word.forms);
-        word.activeForm = bestIdx >= 0 ? bestIdx : 0;
-        applyActiveSelectionToWord(word);
-        changed++;
-        continue; // move to next word (don’t call Morpheus)
+      if (String(window.currentIndex) !== sid) {
+        console.log('[Preselect] Stopping because sentence changed.');
+        return;
       }
-    } catch (e) {
-      // non-fatal, Morpheus fallback will still work
-    }
 
-    // If we haven't fetched Morpheus yet (or no forms exist), fetch now
-    if (!word._morpheusLoaded || word.forms.length === 0) {
-      await attachMorpheusSuggestions(word, toolBody);
-    }
-    if (!Array.isArray(word.forms) || word.forms.length === 0) continue;
+      if (runId !== null && runId !== window._morphPreselectRunId) {
+        console.log('[Preselect] Stopping because a newer preselect run started.');
+        return;
+      }
 
-    // Select the FIRST suggestion
-    const bestIdx = _mostUsedFormIndex(word.forms);
-    word.activeForm = bestIdx >= 0 ? bestIdx : 0;
-    applyActiveSelectionToWord(word);
-    changed++;
-  }
+      // Ensure doc snapshot exists so we can detect "already has morph"
+      ensureDocumentSnapshot(word);
+
+      const docLemma  = (word._doc?.lemma  ?? word.lemma  ?? '').trim();
+      const docPostag = (word._doc?.postag ?? word.postag ?? '').trim();
+
+      const alreadyHasMorph =
+        (typeof word.activeForm === 'number' && word.activeForm >= 0) ||
+        (docLemma !== '' || docPostag !== '');
+
+      if (alreadyHasMorph) continue;
+
+      // Make sure we have morpheus/user forms available
+      ensureFormsArray(word);
+
+      try {
+        await initMorphLexicon();
+        await mergeFormsIntoWord({ lang, word });
+      } catch (e) {}
+
+      // 1) Try lexicon first (most-used persistent form)
+      try {
+        const bestLex = await pickTopLexiconForm({ lang, surface: word.form });
+
+        if (bestLex && bestLex.lemma && bestLex.postag) {
+          const key = `${bestLex.lemma.trim()}::${bestLex.postag}`;
+          const exists = word.forms.some(ff => `${(ff.lemma || '').trim()}::${ff.postag || ''}` === key);
+
+          if (!exists) {
+            word.forms.push({
+              lemma: bestLex.lemma,
+              postag: bestLex.postag,
+              source: normalizeSource(bestLex.source),
+              _count: bestLex._count || 0
+            });
+          } else {
+            // ensure count is present for sorting/preselect
+            const match = word.forms.find(ff => `${(ff.lemma || '').trim()}::${ff.postag || ''}` === key);
+            if (match) {
+              match._count = Math.max(Number(match._count) || 0, Number(bestLex._count) || 0);
+              match.source = normalizeSource(match.source);
+            }
+          }
+
+          // If preselect is enabled, select it immediately and skip Morpheus
+          const bestIdx = _mostUsedFormIndex(word.forms);
+          word.activeForm = bestIdx >= 0 ? bestIdx : 0;
+          applyActiveSelectionToWord(word);
+          changed++;
+          continue; // move to next word (don’t call Morpheus)
+        }
+      } catch (e) {
+        // non-fatal, Morpheus fallback will still work
+      }
+
+      // If we haven't fetched Morpheus yet (or no forms exist), fetch now
+      if (!word._morpheusLoaded || word.forms.length === 0) {
+        await attachMorpheusSuggestions(word, toolBody);
+      }
+      if (!Array.isArray(word.forms) || word.forms.length === 0) continue;
+
+      // Select the FIRST suggestion
+      const bestIdx = _mostUsedFormIndex(word.forms);
+      word.activeForm = bestIdx >= 0 ? bestIdx : 0;
+      applyActiveSelectionToWord(word);
+      changed++;
+    }
 
   if (changed > 0) {
     // One refresh at the end (instead of rebuilding per word)
@@ -622,6 +698,8 @@ export async function preselectMissingMorphForCurrentSentence(toolBody = null) {
 // =====================================================
 // Global hook: call after a sentence is rendered
 // =====================================================
+window._morphPreselectRunId = window._morphPreselectRunId || 0;
+
 window.maybeRunMorphPreselect = async function maybeRunMorphPreselect() {
   if (!window.morphPreselectEnabled) return;
 
@@ -630,18 +708,34 @@ window.maybeRunMorphPreselect = async function maybeRunMorphPreselect() {
   // Don’t rerun forever when revisiting the same sentence
   if (window._morphPreselectApplied.has(sid)) return;
 
+  // If a run is already active, do nothing here.
   if (window._morphPreselectRunning) return;
+
   window._morphPreselectRunning = true;
+  window._morphPreselectRunId += 1;
+  const runId = window._morphPreselectRunId;
+
+  setPreselectNavigationLocked(true);
 
   try {
     const toolBody = document.getElementById("tool-body") || null;
 
-    // Fills ONLY missing morph (your function already does the "only if empty" logic)
-    await preselectMissingMorphForCurrentSentence(toolBody);
+    await preselectMissingMorphForCurrentSentence(toolBody, { runId });
 
-    window._morphPreselectApplied.add(sid);
+    // Only mark applied if we are still on the same sentence
+    // and this is still the newest run.
+    if (
+      String(window.currentIndex) === sid &&
+      runId === window._morphPreselectRunId
+    ) {
+      window._morphPreselectApplied.add(sid);
+    }
   } finally {
-    window._morphPreselectRunning = false;
+    // Only the newest run should unlock nav.
+    if (runId === window._morphPreselectRunId) {
+      window._morphPreselectRunning = false;
+      setPreselectNavigationLocked(false);
+    }
   }
 };
 
@@ -742,11 +836,24 @@ async function appendCreateAndUserForms(word, toolBody) {
       topRadio.checked = (Number(word.activeForm) === -1);
 
       topRadio.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          word.activeForm = -1;
-          applyActiveSelectionToWord(word);
-          window.renderMorphInfo(word);
-          triggerAutoSave();
+        if (!e.target.checked) return;
+
+        word.activeForm = -1;
+        applyActiveSelectionToWord(word);
+        triggerAutoSave();
+
+        // Keep the current open panel visually stable.
+        const list = toolBody.querySelector('.user-forms-list');
+        if (list) {
+          list.querySelectorAll('.morph-entry input[type="radio"]').forEach(input => {
+            const parent = input.closest('.user-form');
+            const parentIdx = Number(parent?.dataset.index);
+            input.checked = (parentIdx === -1);
+          });
+        }
+
+        if (typeof window.updateXMLIfActive === 'function') {
+          window.updateXMLIfActive();
         }
       });
     }
@@ -792,9 +899,9 @@ async function appendCreateAndUserForms(word, toolBody) {
       });
     }
   } else if (docEntry) {
-    // Keep checkbox in sync on rerender even if we don't rebind
-    const topCheckbox = docEntry.querySelector('input[type="checkbox"]');
-    if (topCheckbox) topCheckbox.checked = (Number(word.activeForm) === -1);
+    // Keep radio in sync on rerender even if we don't rebind
+    const topRadio = docEntry.querySelector('input[type="radio"]');
+    if (topRadio) topRadio.checked = (Number(word.activeForm) === -1);
   }
 
   // ---------- Create button (under top card) ----------
@@ -1050,7 +1157,7 @@ async function removeForm(word, index, opts = {}) {
 // PUBLIC: renderMorphInfo(word) — keep your top card intact,
 // then append "Create new form" + user-forms list underneath
 // ---------------------------------------------------------
-function renderMorphInfo(wordOrWords, opts = {}) {
+async function renderMorphInfo(wordOrWords, opts = {}) {
   if (!window.isMorphActive) return;
 
   const slot = (opts && opts.slot === "hover") ? "hover" : "pinned";
@@ -1069,7 +1176,7 @@ function renderMorphInfo(wordOrWords, opts = {}) {
   // Keep stable order
   words.sort((a,b) => Number(a.id) - Number(b.id));
 
-  const renderOne = (word, mountEl) => {
+  const renderOne = async (word, mountEl) => {
     ensureDocumentSnapshot(word);
 
     const af = Number(word.activeForm);
@@ -1101,8 +1208,9 @@ function renderMorphInfo(wordOrWords, opts = {}) {
     const mc = mountEl.querySelector(".morph-container");
     if (mc) enableMorphEntryExpansion(mc);
 
-    appendCreateAndUserForms(word, mountEl);
-    attachMorpheusSuggestions(word, mountEl);
+    getFrozenMorphOrder(word); // initialize if not present
+    await appendCreateAndUserForms(word, mountEl);
+    await attachMorpheusSuggestions(word, mountEl);
 
     // Collapse entries scoped to this mount only
     mountEl.querySelectorAll(".morph-entry").forEach(entry => {
@@ -1118,20 +1226,37 @@ function renderMorphInfo(wordOrWords, opts = {}) {
     root.innerHTML = `<div class="morph-multi"></div>`;
     const wrap = root.querySelector(".morph-multi");
 
-    words.forEach(w => {
+    words.forEach(async w => {
       const block = document.createElement("div");
       block.className = "morph-word-block";
       block.dataset.wordId = String(w.id);
       wrap.appendChild(block);
-      renderOne(w, block);
+      await renderOne(w, block);
     });
 
     return;
   }
 
   // ---- SINGLE ----
-  root.innerHTML = ""; // or keep your old structure if you want
-  renderOne(words[0], root);
+  const nextWord = words[0];
+
+  if (
+    window._lastOpenMorphWordId != null &&
+    String(window._lastOpenMorphWordId) !== String(nextWord.id)
+  ) {
+    const currentSentence = window.treebankData?.find(
+      s => String(s.id) === String(window.currentIndex)
+    );
+    const prevWord = currentSentence?.words?.find(
+      w => String(w.id) === String(window._lastOpenMorphWordId)
+    );
+    if (prevWord) clearFrozenMorphOrder(prevWord);
+  }
+
+  window._lastOpenMorphWordId = String(nextWord.id);
+
+  root.innerHTML = "";
+  await renderOne(nextWord, root);
 }
 
 // ============================================================================
@@ -1574,7 +1699,7 @@ async function attachMorpheusSuggestions(word, toolBody) {
   }
 
   if (toolBody) {
-    appendCreateAndUserForms(word, toolBody);
+    await appendCreateAndUserForms(word, toolBody);
   }
 
   word._morpheusLoading = false;
@@ -1631,8 +1756,16 @@ function wireMorphSettingsUI(toolBody) {
     // If we *do* want it to persist across refresh, then uncomment:
     // localStorage.setItem('morphPreselectEnabled', enabled ? 'true' : 'false');
 
-    if (enabled) {     
-      await preselectMissingMorphForCurrentSentence(toolBody);
+    if (enabled) {
+      const sid = String(window.currentIndex);
+
+      // Force the current sentence to go through the normal guarded path
+      window._morphPreselectApplied.delete(sid);
+
+      if (typeof window.maybeRunMorphPreselect === 'function') {
+        await window.maybeRunMorphPreselect();
+      }
+
       try { triggerAutoSave(); } catch {}
     }
   });
