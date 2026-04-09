@@ -114,6 +114,7 @@ export function handleFileUpload() {
 
   localStorage.removeItem("xmlContent");
   localStorage.removeItem("treebankData");
+  localStorage.removeItem("uploadedFileName");
 
   const fileInput = document.getElementById("file");
   const file = fileInput.files[0];
@@ -123,6 +124,11 @@ export function handleFileUpload() {
     alert("Please upload an XML file.");
     fileInput.value = "";
     return;
+  }
+
+  // store uploaded XML file name in local storage for display later
+  if (file) {
+    localStorage.setItem("uploadedFileName", file.name);
   }
 
   const reader = new FileReader();

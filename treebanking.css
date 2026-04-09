@@ -420,6 +420,18 @@ html, body{
   gap: 0;
 }
 
+.nav-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #a8d0dc;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 4px;
+  margin-left: 25px;
+}
+
 .nav-btn {
   background: transparent;
   border: none;
