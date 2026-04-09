@@ -618,17 +618,21 @@ export function drawNodes(gx, rootHierarchy) {
         .attr('class', 'text-bg');
     });
 
-  // Add POS tag label below the word form (skip [ROOT] node and nodes without a postag)
-  nodes.filter(d => d.data.postag && d.data.id !== 'root')
-    .append('text')
-    .attr('class', 'postag-label')
-    .attr('dy', -12)
-    .attr('text-anchor', 'middle')
-    .style('font-family', 'sans-serif')
-    .style('font-size', '10px')
-    .style('fill', d => colorForPOS(d.data))
-    .style('opacity', 0.75)
-    .text(d => d.data.postag);
+  // Add POS tag label below the word form (compare/gold-standard mode only)
+  const isCompareMode = !!document.getElementById('sandbox-a');
+
+  if (isCompareMode) {
+    nodes.filter(d => d.data.postag && d.data.id !== 'root')
+      .append('text')
+      .attr('class', 'postag-label')
+      .attr('dy', -10)
+      .attr('text-anchor', 'middle')
+      .style('font-family', 'sans-serif')
+      .style('font-size', '10px')
+      .style('fill', d => colorForPOS(d.data))
+      .style('opacity', 0.75)
+      .text(d => d.data.postag);
+  }
 }
 
 /**
@@ -669,7 +673,14 @@ export function drawLinks(gx, rootHierarchy, idParentPairs) {
 
       // --- Define start and end positions ---      
       const source = { x: d.source.x + offset, y: d.source.y + 10 };
-      const target = { x: d.target.x, y: d.target.y - 24 };
+
+      const isCompareMode = !!document.getElementById('sandbox-a');
+      var target = 0;
+      if (isCompareMode) {
+        var target = { x: d.target.x, y: d.target.y - 16 };
+      }else{
+        var target = { x: d.target.x, y: d.target.y - 10 };
+      }
 
       // --- Define cubic Bézier control points ---
       const dx = (target.x - source.x) * 0.5;
