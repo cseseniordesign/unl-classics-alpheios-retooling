@@ -83,6 +83,37 @@ function normalizeSource(src) {
   return 'you';
 }
 
+function getFrozenMorphOrder(word) {
+  ensureFormsArray(word);
+
+  const existing = Array.isArray(word._openMorphOrder)
+    ? word._openMorphOrder
+    : null;
+
+  if (existing) {
+    const valid = existing.filter(
+      idx => Number.isInteger(idx) && idx >= 0 && idx < word.forms.length
+    );
+
+    const missing = [];
+    for (let i = 0; i < word.forms.length; i++) {
+      if (!valid.includes(i)) missing.push(i);
+    }
+
+    word._openMorphOrder = [...valid, ...missing];
+    return word._openMorphOrder;
+  }
+
+  word._openMorphOrder = _sortedFormIndicesByCount(word.forms);
+  return word._openMorphOrder;
+}
+
+function clearFrozenMorphOrder(word) {
+  if (word && '_openMorphOrder' in word) {
+    delete word._openMorphOrder;
+  }
+}
+
 
 // =====================================================
 // GLOBAL Preselect state 
@@ -118,6 +149,11 @@ export function setupMorphTool() {
   // Allow other code to close Morph (e.g., when sentence changes)
   window.closeMorphTool = function () {
     if (!window.isMorphActive) return;
+
+    const currentSentence = window.treebankData?.find(
+      s => String(s.id) === String(window.currentIndex)
+    );
+    currentSentence?.words?.forEach(w => clearFrozenMorphOrder(w));
 
     window.isMorphActive = false;
     morphBtn.classList.remove('active');
@@ -401,8 +437,8 @@ export async function renderUserFormsList(word, toolBody) {
     toolBody.querySelector('.morph-container')?.appendChild(list);
   }
 
-  // Render sorted by count (display order only)
-  const order = _sortedFormIndicesByCount(word.forms);
+  // Keep the currently open pane's visual order stable while it remains open
+  const order = getFrozenMorphOrder(word);
 
   const expandedIds = new Set(
     [...list.querySelectorAll('.morph-entry.expanded')].map(el => String(el.dataset.index))
@@ -454,13 +490,18 @@ export async function renderUserFormsList(word, toolBody) {
       }
       triggerAutoSave();
 
-      await renderUserFormsList(word, toolBody);
+      // Do NOT rerender the morph list here.
+      // Keep the currently open panel visually stable while the user is interacting.
+      list.querySelectorAll('.morph-entry input[type="radio"]').forEach(input => {
+        const parent = input.closest('.user-form');
+        const parentIdx = Number(parent?.dataset.index);
+        input.checked = (parentIdx === idx);
+      });
 
-      const rerenderedCard = toolBody.querySelector(`.morph-entry[data-index="${idx}"]`);
-      if (rerenderedCard && wasExpanded) {
-        rerenderedCard.classList.add('expanded');
-        rerenderedCard.dataset.expanded = 'true';
-        rerenderedCard.setAttribute('aria-expanded', 'true');
+      if (wasExpanded && card) {
+        card.classList.add('expanded');
+        card.dataset.expanded = 'true';
+        card.setAttribute('aria-expanded', 'true');
       }
 
       if (typeof window.updateXMLIfActive === 'function') {
@@ -742,11 +783,24 @@ async function appendCreateAndUserForms(word, toolBody) {
       topRadio.checked = (Number(word.activeForm) === -1);
 
       topRadio.addEventListener('change', (e) => {
-        if (e.target.checked) {
-          word.activeForm = -1;
-          applyActiveSelectionToWord(word);
-          window.renderMorphInfo(word);
-          triggerAutoSave();
+        if (!e.target.checked) return;
+
+        word.activeForm = -1;
+        applyActiveSelectionToWord(word);
+        triggerAutoSave();
+
+        // Keep the current open panel visually stable.
+        const list = toolBody.querySelector('.user-forms-list');
+        if (list) {
+          list.querySelectorAll('.morph-entry input[type="radio"]').forEach(input => {
+            const parent = input.closest('.user-form');
+            const parentIdx = Number(parent?.dataset.index);
+            input.checked = (parentIdx === -1);
+          });
+        }
+
+        if (typeof window.updateXMLIfActive === 'function') {
+          window.updateXMLIfActive();
         }
       });
     }
@@ -792,9 +846,9 @@ async function appendCreateAndUserForms(word, toolBody) {
       });
     }
   } else if (docEntry) {
-    // Keep checkbox in sync on rerender even if we don't rebind
-    const topCheckbox = docEntry.querySelector('input[type="checkbox"]');
-    if (topCheckbox) topCheckbox.checked = (Number(word.activeForm) === -1);
+    // Keep radio in sync on rerender even if we don't rebind
+    const topRadio = docEntry.querySelector('input[type="radio"]');
+    if (topRadio) topRadio.checked = (Number(word.activeForm) === -1);
   }
 
   // ---------- Create button (under top card) ----------
@@ -1050,7 +1104,7 @@ async function removeForm(word, index, opts = {}) {
 // PUBLIC: renderMorphInfo(word) — keep your top card intact,
 // then append "Create new form" + user-forms list underneath
 // ---------------------------------------------------------
-function renderMorphInfo(wordOrWords, opts = {}) {
+async function renderMorphInfo(wordOrWords, opts = {}) {
   if (!window.isMorphActive) return;
 
   const slot = (opts && opts.slot === "hover") ? "hover" : "pinned";
@@ -1069,7 +1123,7 @@ function renderMorphInfo(wordOrWords, opts = {}) {
   // Keep stable order
   words.sort((a,b) => Number(a.id) - Number(b.id));
 
-  const renderOne = (word, mountEl) => {
+  const renderOne = async (word, mountEl) => {
     ensureDocumentSnapshot(word);
 
     const af = Number(word.activeForm);
@@ -1101,8 +1155,9 @@ function renderMorphInfo(wordOrWords, opts = {}) {
     const mc = mountEl.querySelector(".morph-container");
     if (mc) enableMorphEntryExpansion(mc);
 
-    appendCreateAndUserForms(word, mountEl);
-    attachMorpheusSuggestions(word, mountEl);
+    getFrozenMorphOrder(word); // initialize if not present
+    await appendCreateAndUserForms(word, mountEl);
+    await attachMorpheusSuggestions(word, mountEl);
 
     // Collapse entries scoped to this mount only
     mountEl.querySelectorAll(".morph-entry").forEach(entry => {
@@ -1118,20 +1173,37 @@ function renderMorphInfo(wordOrWords, opts = {}) {
     root.innerHTML = `<div class="morph-multi"></div>`;
     const wrap = root.querySelector(".morph-multi");
 
-    words.forEach(w => {
+    words.forEach(async w => {
       const block = document.createElement("div");
       block.className = "morph-word-block";
       block.dataset.wordId = String(w.id);
       wrap.appendChild(block);
-      renderOne(w, block);
+      await renderOne(w, block);
     });
 
     return;
   }
 
   // ---- SINGLE ----
-  root.innerHTML = ""; // or keep your old structure if you want
-  renderOne(words[0], root);
+  const nextWord = words[0];
+
+  if (
+    window._lastOpenMorphWordId != null &&
+    String(window._lastOpenMorphWordId) !== String(nextWord.id)
+  ) {
+    const currentSentence = window.treebankData?.find(
+      s => String(s.id) === String(window.currentIndex)
+    );
+    const prevWord = currentSentence?.words?.find(
+      w => String(w.id) === String(window._lastOpenMorphWordId)
+    );
+    if (prevWord) clearFrozenMorphOrder(prevWord);
+  }
+
+  window._lastOpenMorphWordId = String(nextWord.id);
+
+  root.innerHTML = "";
+  await renderOne(nextWord, root);
 }
 
 // ============================================================================
@@ -1574,7 +1646,7 @@ async function attachMorpheusSuggestions(word, toolBody) {
   }
 
   if (toolBody) {
-    appendCreateAndUserForms(word, toolBody);
+    await appendCreateAndUserForms(word, toolBody);
   }
 
   word._morpheusLoading = false;
