@@ -21,6 +21,7 @@ import { getRegistryEntry } from './app/treebanking/tags/tagsetRegistry.js';
 import { loadTagsetConfig } from './app/treebanking/tags/tagsetConfig.js';
 import { setActiveTagset, getPosMeta, onTagsetChange, getActiveTagset } from './app/treebanking/tags/tagsetStore.js';
 import { setupaT } from './app/treebanking/aT/aT.js';
+import { showConfirmDialog } from './app/treebanking/ui/modal.js';
 
 window.handleFileUpload = handleFileUpload;
 window.batchSelection = new Set();
@@ -64,18 +65,29 @@ function setupRedoButton() {
         button.addEventListener("click", redoButton);
     }
 }
-function handleExit() {
+
+async function handleExit() {
   const exit = document.querySelector("#exit");
-  if(!exit) return;
-  exit.addEventListener("click", ()=> {
-    if(confirm("Are you sure you want to exit?") == true){
-      localStorage.removeItem("xmlContent");
-      localStorage.removeItem("treebankData");
-      sessionStorage.removeItem("userInput");
-      window.uploadedFileHandle = null;
-      window.treebankData = null;
-      window.location = '/index.html';
-    }
+  if (!exit) return;
+
+  exit.addEventListener("click", async () => {
+    const ok = await showConfirmDialog(
+      "Are you sure you want to exit?",
+      {
+        titleText: "Exit?",
+        okText: "Exit",
+        cancelText: "Cancel"
+      }
+    );
+
+    if (!ok) return;
+
+    localStorage.removeItem("xmlContent");
+    localStorage.removeItem("treebankData");
+    sessionStorage.removeItem("userInput");
+    window.uploadedFileHandle = null;
+    window.treebankData = null;
+    window.location = '/index.html';
   });
 }
 
