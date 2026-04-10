@@ -1,5 +1,5 @@
 import { handleWordClick } from './sentenceDisplay.js';
-
+import { undoButton, redoButton } from '../xml/undo.js';
 
 export function setupEscapeHotkey() {
   if (window._treebankEscapeReady) return;
@@ -231,4 +231,117 @@ function handleWordStep(direction, e) {
 
   e.preventDefault();
   e.stopPropagation();
+}
+
+/**
+ * Setup number hotkeys:
+ * 1 = morph
+ * 2 = relation
+ * 3 = aT
+ * 4 = selector
+ * 5 = sentence
+ * 6 = xml
+ */
+export function setupTabHotkeys() {
+  if (window._treebankTabHotkeysReady) return;
+  window._treebankTabHotkeysReady = true;
+
+  window.addEventListener(
+    'keydown',
+    (e) => {
+      const key = e.key;
+
+      // only plain number keys
+      if (!['1', '2', '3', '4', '5', '6'].includes(key)) return;
+
+      // don't interfere with browser/system shortcuts
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      // if a modal is open, do nothing
+      const overlay = document.getElementById('app-modal-overlay');
+      if (overlay && !overlay.hidden) return;
+
+      // ignore while typing
+      const target = e.target;
+      if (target) {
+        const tag = target.tagName;
+        if (
+          tag === 'INPUT' ||
+          tag === 'TEXTAREA' ||
+          tag === 'SELECT' ||
+          target.isContentEditable
+        ) {
+          return;
+        }
+      }
+
+      const buttonMap = {
+        '1': 'morph',
+        '2': 'relation',
+        '3': 'aT',
+        '4': 'selector',
+        '5': 'sentence-tools',
+        '6': 'xml'
+      };
+
+      const btnId = buttonMap[key];
+      const btn = document.getElementById(btnId);
+
+      if (!btn) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+      btn.click();
+    },
+    true
+  );
+}
+
+/**
+ * Setup undo / redo hotkeys
+ * Ctrl/Cmd + Z         = undo
+ * Ctrl/Cmd + Shift + Z = redo
+ */
+export function setupUndoRedoHotkeys() {
+  if (window._treebankUndoRedoReady) return;
+  window._treebankUndoRedoReady = true;
+
+  window.addEventListener(
+    'keydown',
+    (e) => {
+      const key = e.key.toLowerCase();
+
+      // require Ctrl on Windows/Linux or Cmd on Mac
+      const mod = e.ctrlKey || e.metaKey;
+      if (!mod || key !== 'z') return;
+
+      // if a modal is open, do nothing
+      const overlay = document.getElementById('app-modal-overlay');
+      if (overlay && !overlay.hidden) return;
+
+      // ignore while typing in normal inputs/editors
+      const target = e.target;
+      if (target) {
+        const tag = target.tagName;
+        if (
+          tag === 'INPUT' ||
+          tag === 'TEXTAREA' ||
+          tag === 'SELECT' ||
+          target.isContentEditable
+        ) {
+          return;
+        }
+      }
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (e.shiftKey) {
+        redoButton();
+      } else {
+        undoButton();
+      }
+    },
+    true
+  );
 }
