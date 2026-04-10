@@ -6,6 +6,12 @@ Built at the University of Nebraska–Lincoln Classics department, it supports a
 
 ---
 
+## Team Info
+
+* Project Manager: Grant Kerrigan
+* Development Manager: Sam DuBois
+* Developers: Connor Raatz, Amgad Ahmed, Alaa Ismail, Braelyn Riley
+
 ## Features
 
 - **Dependency tree editor** — visualize and edit syntactic dependency trees using an interactive D3.js SVG canvas
