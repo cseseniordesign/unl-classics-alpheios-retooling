@@ -44,10 +44,18 @@
     <hr>
 
     <h3><u>Hotkeys</u></h3>
-    <p><strong>Esc:</strong> Deselect all currently selected word tokens.</p>
-    <p><strong>W:</strong> Move the active selection one word forward in the sentence.</p>
-    <p><strong>E:</strong> Move the active selection one word backward in the sentence.</p>
-    <p><strong>Right-click (tree node):</strong> Opens a quick-edit menu on the clicked word, letting you reassign its dependency relation without switching to the Relation tab.</p>
+    <p><strong>Esc:</strong> Clears the current selection, including batch selections. Does nothing if a modal is open.</p>
+    <p><strong>W:</strong> Moves the selection forward to the next word. If nothing is selected, starts at the first word. Wraps around to the first word after reaching the end of the sentence. Disabled when a modal is open, the XML tab is active, or a batch selection is active.</p>
+    <p><strong>E:</strong> Moves the selection backward to the previous word. If nothing is selected, starts at the last word. Wraps around to the last word after reaching the beginning of the sentence. Disabled when a modal is open, the XML tab is active, or a batch selection is active.</p>
+    <p><strong>1:</strong> Opens the Morph tab.</p>
+    <p><strong>2:</strong> Opens the Relation tab.</p>
+    <p><strong>3:</strong> Opens the aT tab.</p>
+    <p><strong>4:</strong> Opens the Selector tab.</p>
+    <p><strong>5:</strong> Opens the Sentence tab.</p>
+    <p><strong>6:</strong> Opens the XML tab.</p>
+    <p><strong>Ctrl+Z / Cmd+Z:</strong> Undo the last structural edit.</p>
+    <p><strong>Ctrl+Shift+Z / Cmd+Shift+Z:</strong> Redo the last undone structural edit.</p>
+    <p><strong>Right-click (tree node):</strong> Opens a mini menu to change the relation label of a node. Also includes shortcut buttons to disconnect the node or connect it directly to the root, where applicable. On a trackpad, use a two-finger click.</p>
     <hr>
 
     <h3><u>XML Editing</u></h3>
