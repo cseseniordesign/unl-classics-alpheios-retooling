@@ -151,6 +151,14 @@ The main workspace has three areas:
 - Prompts to ensure exit
 - *ENSURE ALL WORK IS SAVED THAT WOULD LIKE TO BE KEPT BEFORE EXITING*
 
+***-=Hot Keys=-***
+| Key | Action |
+|---|---|
+| `Esc` | Deselect all currently selected word tokens |
+| `W` | Move the active selection one word forward in the sentence |
+| `E` | Move the active selection one word backward in the sentence |
+| `Right-click` (tree node) | Opens a quick-edit menu to reassign the word's dependency relation without switching to the Relation tab |
+
 ### 3. Tree Comparison (`gs.html`)
 
 Upload two ALDT XML files as Tree A and Tree B (Under advanced options on the input page). Differences in head assignments or relation labels are highlighted. Navigation buttons for each tree can be operated independently.

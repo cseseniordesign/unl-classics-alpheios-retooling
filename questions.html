@@ -1,52 +1,91 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="questions.css">
     <title>Questions Content</title>
 </head>
 <body>
-    <h3>Getting Started</h3>
-    <p> Welcome to Arethusa Lite! This is a lightweight treebanking tool for syntactic annotation. 
-    Use the navigation buttons at the top to move between sentences, or select a specific sentence from the dropdown menu.</p>
-    <br>
+    <h3><u>Getting Started</u></h3>
+    <p>Welcome to Arethusa Lite! This is a lightweight browser-based dependency treebanking editor for ancient and modern languages. 
+    To begin, go to the input page and either paste raw text or upload an existing ALDT XML file. Select your language and text direction, 
+    then click <strong>Edit</strong> to open the editor. Use the <strong>Advanced Options</strong> panel to choose an annotation tagset, 
+    configure a custom tokenization service, or load two files for tree comparison.</p>
+    <hr>
 
-    <h3>Navigation</h3>
-    <p><strong>First/Last buttons:</strong> These double arrows allow users to jump to the first or last 
-        sentence in your document.</p>
-    <p><strong>Previous/Next buttons:</strong> These single arrows move one sentence backward or forward.</p>
-    <p><strong>Sentence selector:</strong> Choose any sentence directly from the dropdown.</p>
-    <br>
+    <h3><u>Navigation</u></h3>
+    <p><strong>First/Last buttons:</strong> The double arrows jump to the first or last sentence in your document.</p>
+    <p><strong>Previous/Next buttons:</strong> The single arrows move one sentence backward or forward.</p>
+    <p><strong>Sentence selector:</strong> The dropdown lists all sentences in the file along with a preview of their contents — choose any sentence directly.</p>
+    <hr>
 
-    <h3>Editing the Tree</h3>
-    <p><strong>Changing heads:</strong> Click on a dependent node, then click on its new head to create the relationship.</p>
-    <p><strong>Relations:</strong> Use the relation tool in the sidebar to modify dependency relations.</p>
-    <p><strong>Morphology:</strong> Click the morph tool and then any word node to edit morphological attributes
-         of selected tokens.</p>
-    <br>
+    <h3><u>Editing the Tree</u></h3>
+    <p><strong>Morphology (Morph tab):</strong> Click the <strong>Morph</strong> tab, then click any word token. The morphology panel will 
+    populate — if the language is supported, attributes are fetched from the Morpheus API. Adjust the POS and attribute dropdowns as needed 
+    and confirm. Click the cog icon for additional options: <em>Preselect</em> assigns every word a morphology from the service's first choice; 
+    <em>Alternate Morph</em> allows input of alternate morphology microservice URLs.</p>
+    <p><strong>Dependency relations (Relation tab):</strong> Click the <strong>Relation</strong> tab, then click the intended child word. 
+    Select the label and the arc updates immediately. Click the cog icon to enable <em>Advanced Mode</em>, which lets you assign the same 
+    relation to multiple selected words at once.</p>
+    <p><strong>Artificial tokens (aT tab):</strong> Click the <strong>aT</strong> tab to add a token that is not in the original text. 
+    Enter the word, select its insertion point, and click <strong>Add token</strong>.</p>
+    <p><strong>Undo / Redo:</strong> The undo and redo buttons in the header reverse or replay structural edits in order. Note that undo 
+    and redo only affect structural changes to the tree, not other edits.</p>
+    <hr>
 
-    <h3>View Options</h3>
-    <p><strong>Compact/Expand:</strong> Adjust the spacing of the tree visualization.</p>
-    <p><strong>Focus root:</strong> Center the view on the root of the sentence.</p>
-    <p><strong>Focus selection:</strong> Center the view on the currently selected node.</p>
-    <p><strong>Center:</strong> Reset the view to the center of the tree.</p>
-    <p><strong>Table view:</strong> Switch to a tabular representation of the sentence.</p>
-    <br>
+    <h3><u>Working with Sentences</u></h3>
+    <p><strong>Selecting batches of words (Selector tab):</strong> Click the <strong>Selector</strong> tab and enter a token, form, or 
+    label to search by. Matching words across the document are highlighted; click any to deselect them from the batch.</p>
+    <p><strong>Merging sentences (Sentence tab):</strong> Click the <strong>Sentence</strong> tab, select the sentence to append to the 
+    current one, then click <strong>Merge sentences</strong>.</p>
+    <p><strong>Splitting sentences (Sentence tab):</strong> Click the <strong>Sentence</strong> tab, select the word that should be the 
+    last word before the split, then click <strong>Split sentences</strong>.</p>
+    <hr>
 
-    <h3>Saving Your Work</h3>
-    <p>Click the green Save button located first in the toolbar at the top right of the screen or use
-         the hot key "Ctrl + s". The system will also autosave when changes are made to the tree,indicated
-         in the lower right of the tree.</p>
-    <br>
+    <h3><u>Hotkeys</u></h3>
+    <p><strong>Esc:</strong> Deselect all currently selected word tokens.</p>
+    <p><strong>W:</strong> Move the active selection one word forward in the sentence.</p>
+    <p><strong>E:</strong> Move the active selection one word backward in the sentence.</p>
+    <p><strong>Right-click (tree node):</strong> Opens a quick-edit menu on the clicked word, letting you reassign its dependency relation without switching to the Relation tab.</p>
+    <hr>
 
-    <h3>Troubleshooting</h3>
-    <p>If the tree doesn't display correctly, try using the Center button to reset the view.</p>
-    <p>If you experience issues, use the Exit button to return to the main menu and try reloading the document.</p>
-    <br>
-    
+    <h3><u>XML Editing</u></h3>
+    <p>Click the <strong>XML</strong> tab in the sidebar, then click <strong>Edit XML</strong> to view and hand-edit the raw ALDT XML for 
+    the current sentence. Make your changes and click <strong>Confirm</strong>. The XML tool includes schema validation via WebAssembly 
+    (xmllint) to catch errors before they are applied.</p>
+    <hr>
+
+    <h3><u>View Options</u></h3>
+    <p><strong>Table view:</strong> Switch between the interactive tree visualization and a tabular representation of the sentence data.</p>
+    <p><strong>Tree comparison:</strong> Load two ALDT XML files side-by-side from the Advanced Options panel on the input page (or via the 
+    compare button in the header). Differences in head assignments or relation labels are highlighted on the right tree. Each tree can be 
+    navigated independently. Scroll down from the trees (or click the <strong>Table</strong> button) to view an empirical difference table — 
+    sentence numbers are colored green if identical and red if any inconsistency exists; clicking a number jumps both trees to that sentence.</p>
+    <hr>
+
+    <h3><u>Saving Your Work</u></h3>
+    <p>Every edit is automatically saved to <code>localStorage</code> — look for the autosave indicator in the lower right of the tree. 
+    To download a permanent copy, click the <strong>Save</strong> (floppy disk) button in the header toolbar, or use 
+    <strong>Ctrl+S</strong>. This exports the current treebank as an <code>.xml</code> file. Be sure to save before exiting — 
+    the Exit button will prompt you to confirm, but unsaved work not yet downloaded will be lost if localStorage is cleared.</p>
+    <hr>
+
+    <h3><u>Supported Languages and Tagsets</u></h3>
+    <p>Arethusa Lite supports Greek, Latin, English, Persian, Arabic, and more. Available annotation tagsets include ALDT (Latin and Greek), 
+    Universal Dependencies, Smyth Grammar, JMH Ancient Greek, Harrington, Wheelock, Pedalion, and beta support for Persian, Lyon Latin, and 
+    Lyon Greek</p>
+    <hr>
+
+    <h3><u>Troubleshooting</u></h3>
+    <p>Chrome or Edge are recommended. Firefox and Safari have known issues with downloading XML smoothly.</p>
+    <p>If the tree doesn't display correctly, try the Center button to reset the view.</p>
+    <p>If you experience persistent issues, click the <strong>Exit</strong> button to return to the input page and try reloading your document. 
+    Confirm exit when prompted, and ensure any work you want to keep has been downloaded first.</p>
+    <hr>
+
     <h3>Further Documentation</h3>
-    <a href="https://github.com/cseseniordesign/unl-classics-alpheios-retooling/wiki" target="_blank"> Project Wiki</a>
+    <a href="https://github.com/cseseniordesign/unl-classics-alpheios-retooling/wiki" target="_blank">Project Wiki</a>
 
 </body>
 </html>
