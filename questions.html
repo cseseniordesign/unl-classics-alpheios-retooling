@@ -93,7 +93,18 @@
     Confirm exit when prompted, and ensure any work you want to keep has been downloaded first.</p>
     <hr>
 
-    <h3>Further Documentation</h3>
+    <h3><u>Adding an Instructor Tree</u></h3>
+    <p>
+        To add a new tree to the instructor set, prepare a valid treebank XML file with the standard root element 
+        and set its code attribute to a unique 6-digit numeric string (e.g. code='004217') — this is the code you 
+        will distribute to students. Place the completed file in the instructorTrees/ folder at the project root, 
+        then open app/treebanking/ui/compareModal.js and add the file's basename to the INSTRUCTOR_TREE_FILES array 
+        near the top of the file (e.g. 'MyPassage_TEACHER.xml'). That one-line addition is all that is required; 
+        the modal will fetch and search the new file automatically the next time a student enters a matching code. 
+        The header line should look something like: <code>&lt;treebank xml:lang="grc" version="1.5" direction="ltr" format="morphgrc" code='000000'&gt;&lt;/treebank&gt;</code>
+    </p>
+
+    <h3><u>Further Documentation</u></h3>
     <a href="https://github.com/cseseniordesign/unl-classics-alpheios-retooling/wiki" target="_blank">Project Wiki</a>
 
 </body>

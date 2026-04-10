@@ -86,6 +86,20 @@ The main workspace has three areas:
 - **Sentence strip** — the words of the current sentence as clickable tokens
 - **Tool panel** (left sidebar) — tabbed tools: Treebank (Default Mode), Morph, Relation, aT (Artifical Token), Selector, Sentence, XML
 
+**Header Buttons**
+| Button | Behaviour |
+|---|---|
+| Save | Downloads the current treebank as an `.xml` file — **save before exiting** |
+| Undo | Undoes structural changes in reverse order; does not affect other changes |
+| Redo | Redoes undone structural changes in order; does not affect other changes |
+| Questions | Opens the in-app help modal (`questions.html`) covering navigation, editing, and view options |
+| Tree compare | Opens the tree comparison page |
+| Exit | Prompts for confirmation then clears session data and returns to the input page |
+
+#### Adding an instructor tree for *'Tree compare'*
+
+To add a new tree to the instructor set, prepare a valid treebank XML file with the standard <treebank> root element and set its code attribute to a unique 6-digit numeric string (e.g. code='004217') — this is the code you will distribute to students. Place the completed file in the instructorTrees/ folder at the project root, then open app/treebanking/ui/compareModal.js and add the file's basename to the INSTRUCTOR_TREE_FILES array near the top of the file (e.g. 'MyPassage_TEACHER.xml'). That one-line addition is all that is required; the modal will fetch and search the new file automatically the next time a student enters a matching code. The header line should look something like: `<treebank xml:lang="grc" version="1.5" direction="ltr" format="morphgrc" code='000000'>`
+
 **Editing morphology:**
 1. Click the **morph** tab
 2. Click a word token — the morphology panel populates (fetching from Morpheus if supported for the language)
