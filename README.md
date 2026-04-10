@@ -10,7 +10,7 @@ Built at the University of Nebraska–Lincoln Classics department, it supports a
 
 * Project Manager: Grant Kerrigan
 * Development Manager: Sam DuBois
-* Developers: Connor Raatz, Amgad Ahmed, Alaa Ismail, Braelyn Riley
+* Developers: Connor Raatz, Amgad Ahmed, Alaa Ismail
 
 ## Features
 
