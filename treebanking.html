@@ -202,22 +202,40 @@
             </div>
         </div>
     </div>
+
+    <!-- Compare Code Modal -->
+    <div id="compare-modal-overlay" class="app-modal-overlay" hidden>
+        <div class="app-modal" role="dialog" aria-modal="true" aria-labelledby="compare-modal-title">
+            <h2 id="compare-modal-title" class="app-modal-title">Enter Instructor Code</h2>
+            <p class="app-modal-message">Enter the 6-digit code provided by your instructor to load their reference tree.</p>
+            <div style="display:flex; justify-content:center; margin: 12px 0;">
+                <input
+                    id="compare-code-input"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="6"
+                    placeholder="000000"
+                    style="
+                        font-size: 1.6em;
+                        letter-spacing: 0.3em;
+                        text-align: center;
+                        width: 8em;
+                        padding: 8px 12px;
+                        border: 2px solid #555;
+                        border-radius: 6px;
+                        background: #1e1e1e;
+                        color: #fff;
+                        outline: none;
+                    "
+                />
+            </div>
+            <p id="compare-error-msg" style="color:#e05555; text-align:center; min-height:1.2em; margin:4px 0;"></p>
+            <div class="app-modal-buttons">
+                <button type="button" id="compare-modal-cancel" class="btn-secondary">Cancel</button>
+                <button type="button" id="compare-modal-ok" class="btn-primary">Load Tree</button>
+            </div>
+        </div>
+    </div>
 </body>
 
-<script>
-// Modal open/close functionality
-const questionsBtn = document.getElementById('questions');
-const questionsModal = document.getElementById('questionsModal');
-const closeBtn = questionsModal.querySelector('.close');
-
-questionsBtn.addEventListener('click', function() {
-    questionsModal.style.display = 'block';
-});
-
-closeBtn.addEventListener('click', function() {
-    questionsModal.style.display = 'none';
-});
-</script>
-
-<script type = "module" src="main.js"></script>
 </html>

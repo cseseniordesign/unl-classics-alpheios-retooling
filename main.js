@@ -22,6 +22,8 @@ import { loadTagsetConfig } from './app/treebanking/tags/tagsetConfig.js';
 import { setActiveTagset, getPosMeta, onTagsetChange, getActiveTagset } from './app/treebanking/tags/tagsetStore.js';
 import { setupaT } from './app/treebanking/aT/aT.js';
 import { showConfirmDialog } from './app/treebanking/ui/modal.js';
+import { setupQuestionsModal } from './app/treebanking/ui/questionsModal.js';
+import { setupCompareModal } from './app/treebanking/ui/compareModal.js';
 
 window.handleFileUpload = handleFileUpload;
 window.batchSelection = new Set();
@@ -504,4 +506,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   setupUnusedButton();
   setupHighlightButton();
   setupaT();
+  setupQuestionsModal();
+  setupCompareModal();
 });
