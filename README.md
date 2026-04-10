@@ -180,6 +180,7 @@ To add a new tree to the instructor set, prepare a valid treebank XML file with 
 | `6` | Opens the XML tab |
 | `Ctrl+Z` / `Cmd+Z` | Undo the last structural edit |
 | `Ctrl+Shift+Z` / `Cmd+Shift+Z` | Redo the last undone structural edit |
+| `Ctrl+S / Cmd+S` | Save the treebank that is open in the editor |
 | `Right-click` (tree node) | Opens a mini menu to change the relation label of a node. Includes shortcut buttons to disconnect the node or connect it to root. On a trackpad, use a two-finger click |
 
 ### 3. Tree Comparison (`gs.html`)
