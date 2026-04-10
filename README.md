@@ -151,13 +151,22 @@ The main workspace has three areas:
 - Prompts to ensure exit
 - *ENSURE ALL WORK IS SAVED THAT WOULD LIKE TO BE KEPT BEFORE EXITING*
 
-***-=Hot Keys=-***
+***-=Hotkeys=-***
+
 | Key | Action |
 |---|---|
-| `Esc` | Deselect all currently selected word tokens |
-| `W` | Move the active selection one word forward in the sentence |
-| `E` | Move the active selection one word backward in the sentence |
-| `Right-click` (tree node) | Opens a quick-edit menu to reassign the word's dependency relation without switching to the Relation tab |
+| `Esc` | Clears the current selection, including batch selections. Does nothing if a modal is open |
+| `W` | Moves selection forward to the next word. Starts at the first word if nothing is selected; wraps around at the end. Disabled when a modal is open, the XML tab is active, or a batch selection is active |
+| `E` | Moves selection backward to the previous word. Starts at the last word if nothing is selected; wraps around at the beginning. Disabled when a modal is open, the XML tab is active, or a batch selection is active |
+| `1` | Opens the Morph tab |
+| `2` | Opens the Relation tab |
+| `3` | Opens the aT tab |
+| `4` | Opens the Selector tab |
+| `5` | Opens the Sentence tab |
+| `6` | Opens the XML tab |
+| `Ctrl+Z` / `Cmd+Z` | Undo the last structural edit |
+| `Ctrl+Shift+Z` / `Cmd+Shift+Z` | Redo the last undone structural edit |
+| `Right-click` (tree node) | Opens a mini menu to change the relation label of a node. Includes shortcut buttons to disconnect the node or connect it to root. On a trackpad, use a two-finger click |
 
 ### 3. Tree Comparison (`gs.html`)
 
