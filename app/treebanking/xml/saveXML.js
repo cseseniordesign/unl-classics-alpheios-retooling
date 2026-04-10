@@ -284,6 +284,20 @@ export function buildXML() {
   return xmlOut;
 }
 
+async function writeXMLToExistingHandle(xmlOut) {
+  if (
+    !window.uploadedFileHandle ||
+    typeof window.uploadedFileHandle.createWritable !== "function"
+  ) {
+    return false;
+  }
+
+  const writable = await window.uploadedFileHandle.createWritable();
+  await writable.write(xmlOut);
+  await writable.close();
+  return true;
+}
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: saveCurrentTreebank
@@ -292,17 +306,19 @@ export function buildXML() {
  * otherwise prompts the user to select a save location.
  * --------------------------------------------------------------------------
  */
-export async function saveCurrentTreebank() {
+export async function saveCurrentTreebank(options = {}) {
+  const { silent = false } = options;
   let statusEl;
 
   try {
     const xmlOut = buildXML();
     if (!xmlOut) {
-      alert("No treebank data to save!");
-      return;
+      if (!silent) {
+        alert("No treebank data to save!");
+      }
+      return false;
     }
 
-    // Show "Saving..." feedback immediately when the user clicks Save
     statusEl = document.getElementById("autosave-status");
     if (statusEl) {
       statusEl.textContent = "Saving...";
@@ -311,76 +327,98 @@ export async function saveCurrentTreebank() {
       statusEl.style.transform = "translateY(0)";
     }
 
-    // If user already opened/uploaded a file, reuse its handle
+    // Silent mode: ONLY save if we already have a real file handle
+    if (silent) {
+      const wrote = await writeXMLToExistingHandle(xmlOut);
+      if (!wrote) {
+        // No handle available -> cannot silently autosave to disk
+        return false;
+      }
+
+      lastXML = xmlOut;
+
+      if (statusEl) {
+        clearTimeout(window._autosaveTransition);
+        window._autosaveTransition = setTimeout(() => {
+          statusEl.textContent = "Saved";
+          statusEl.style.background = "#2e7d32";
+        }, 150);
+
+        clearTimeout(window._autosaveFade);
+        window._autosaveFade = setTimeout(() => {
+          statusEl.style.opacity = "0";
+          statusEl.style.transform = "translateY(10px)";
+        }, 1800);
+      }
+
+      return true;
+    }
+
+    // Normal/manual save path
     if (window.uploadedFileHandle && typeof window.uploadedFileHandle.createWritable === "function") {
       const writable = await window.uploadedFileHandle.createWritable();
       await writable.write(xmlOut);
       await writable.close();
       console.log("Saved to existing file handle.");
     } else {
-    // Safari/Firefox don't support showSaveFilePicker — fall back to download
-    if (typeof window.showSaveFilePicker !== "function") {
-      const defaultName = getSuggestedXmlName();
+      if (typeof window.showSaveFilePicker !== "function") {
+        const defaultName = getSuggestedXmlName();
 
-      const userName = await showPromptDialog("Choose a file name:", {
-        titleText: "Save XML",
-        okText: "Save",
-        cancelText: "Cancel",
-        defaultValue: defaultName,
-        placeholder: "treebank.xml"
-      });
+        const userName = await showPromptDialog("Choose a file name:", {
+          titleText: "Save XML",
+          okText: "Save",
+          cancelText: "Cancel",
+          defaultValue: defaultName,
+          placeholder: "treebank.xml"
+        });
 
-      if (!userName) {
-        // user cancelled
-        return;
+        if (!userName) {
+          return false;
+        }
+
+        let finalName = sanitizeFileName(userName);
+        if (!finalName.toLowerCase().endsWith(".xml")) finalName += ".xml";
+
+        localStorage.setItem("treebankFileName", finalName);
+
+        const blob = new Blob([xmlOut], { type: "application/xml;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = finalName;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        console.log("Saved via download fallback with filename:", finalName);
+      } else {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: "treebank.xml",
+          types: [{
+            description: "XML Files",
+            accept: { "application/xml": [".xml"] },
+          }],
+        });
+
+        const writable = await handle.createWritable();
+        await writable.write(xmlOut);
+        await writable.close();
+        window.uploadedFileHandle = handle;
+        console.log("File saved and handle stored for future autosaves.");
       }
-
-      let finalName = sanitizeFileName(userName);
-      if (!finalName.toLowerCase().endsWith(".xml")) finalName += ".xml";
-
-      // remember for next time
-      localStorage.setItem("treebankFileName", finalName);
-
-      const blob = new Blob([xmlOut], { type: "application/xml;charset=utf-8" });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = finalName;
-      document.body.appendChild(a); // Safari likes it attached
-      a.click();
-      a.remove();
-
-      setTimeout(() => URL.revokeObjectURL(url), 1000);
-
-      console.log("Saved via download fallback with filename:", finalName);
-    } else {
-      // Chrome/Edge path
-      const handle = await window.showSaveFilePicker({
-        suggestedName: "treebank.xml",
-        types: [{
-          description: "XML Files",
-          accept: { "application/xml": [".xml"] },
-        }],
-      });
-
-      const writable = await handle.createWritable();
-      await writable.write(xmlOut);
-      await writable.close();
-      window.uploadedFileHandle = handle; // remember for next saves
-      console.log("File saved and handle stored for future autosaves.");
     }
-  }
 
     lastXML = xmlOut;
 
-    // Turn "Saving..." into "Saved" and fade it out, same style as autosave
     if (statusEl) {
       clearTimeout(window._autosaveTransition);
       window._autosaveTransition = setTimeout(() => {
         statusEl.textContent = "Saved";
         statusEl.style.background = "#2e7d32";
-      }, 300); // small delay so the user sees "Saving..."
+      }, 300);
 
       clearTimeout(window._autosaveFade);
       window._autosaveFade = setTimeout(() => {
@@ -389,10 +427,10 @@ export async function saveCurrentTreebank() {
       }, 2500);
     }
 
+    return true;
   } catch (err) {
     console.error("Error saving XML:", err);
 
-    // Show an error in the status pill if available
     statusEl = statusEl || document.getElementById("autosave-status");
     if (statusEl) {
       statusEl.textContent = "Save failed!";
@@ -406,6 +444,8 @@ export async function saveCurrentTreebank() {
         statusEl.style.transform = "translateY(10px)";
       }, 4000);
     }
+
+    return false;
   }
 }
 
@@ -425,24 +465,40 @@ export function triggerAutoSave() {
     const statusEl = document.getElementById("autosave-status");
     if (!statusEl) return;
 
-    // Show Saving...
     statusEl.textContent = "Saving...";
     statusEl.style.background = "#333";
     statusEl.style.opacity = "1";
     statusEl.style.transform = "translateY(0)";
 
-    clearTimeout(window._autosaveTransition);
-    window._autosaveTransition = setTimeout(() => {
-      statusEl.textContent = "Saved";
-      statusEl.style.background = "#2e7d32"; 
-    }, 1000);
+    clearTimeout(autoSaveTimer);
+    autoSaveTimer = setTimeout(async () => {
+      try {
+        const wroteToDisk = await saveCurrentTreebank({ silent: true });
 
-    clearTimeout(window._autosaveFade);
-    window._autosaveFade = setTimeout(() => {
-      statusEl.style.opacity = "0";
-      statusEl.style.transform = "translateY(10px)";
-    }, 3000);
+        // If no writable file handle exists yet, don't pretend disk save happened.
+        if (!wroteToDisk) {
+          statusEl.textContent = "Saved in app";
+          statusEl.style.background = "#2e7d32";
 
+          clearTimeout(window._autosaveFade);
+          window._autosaveFade = setTimeout(() => {
+            statusEl.style.opacity = "0";
+            statusEl.style.transform = "translateY(10px)";
+          }, 2000);
+        }
+      } catch (err) {
+        console.error("AutoSave failed:", err);
+        statusEl.textContent = "Save failed!";
+        statusEl.style.background = "#c62828";
+        statusEl.style.opacity = "1";
+
+        clearTimeout(window._autosaveFade);
+        window._autosaveFade = setTimeout(() => {
+          statusEl.style.opacity = "0";
+          statusEl.style.transform = "translateY(10px)";
+        }, 4000);
+      }
+    }, 500);
   } catch (err) {
     console.error("AutoSave failed:", err);
     const statusEl = document.getElementById("autosave-status");
@@ -450,6 +506,7 @@ export function triggerAutoSave() {
       statusEl.textContent = "Save failed!";
       statusEl.style.background = "#c62828";
       statusEl.style.opacity = "1";
+
       clearTimeout(window._autosaveFade);
       window._autosaveFade = setTimeout(() => {
         statusEl.style.opacity = "0";
