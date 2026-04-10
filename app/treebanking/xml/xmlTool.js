@@ -160,10 +160,18 @@ export function setupXMLTool() {
       }
       allToolButtons.forEach(btn => btn.style.backgroundColor = '#4e6476');
       xmlBtn.style.backgroundColor = 'green';
-      // Clear any word selection (we're leaving the tree/sentence context)
+      
+      // Clear any word selection logically and visually before entering XML mode
       if (typeof window.resetSelection === "function") {
         window.resetSelection();
       }
+
+      if (window.batchSelection && typeof window.batchSelection.clear === "function") {
+        window.batchSelection.clear();
+      }
+
+      window.selectedWordId = null;
+      window.currentSelectedWordId = null;
       const rawXML = getCurrentSentenceXML();
       const formatted = formatXML(rawXML);
       const highlighted = highlightXML(formatted);
