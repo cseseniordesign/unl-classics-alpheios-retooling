@@ -45,9 +45,6 @@ function isValidCode(value) {
  * attribute matches the supplied 6-digit code.
  *
  * Returns the raw XML string of the first matching file, or null if none match.
- *
- * NOTE: Requires the page to be served over HTTP/HTTPS (fetch won't work on
- * file:// URLs without a local server).
  */
 async function findInstructorTree(code) {
     const baseUrl = new URL('instructorTrees/', window.location.href).href;
