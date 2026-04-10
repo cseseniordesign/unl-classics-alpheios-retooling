@@ -41,6 +41,7 @@ export function setupSentenceSelector() {
   setupEscapeHotkey();
   setupWHotkey();
   setupEHotkey();
+  document.getElementById('file-name').textContent = localStorage.getItem("uploadedFileName") || "";
   const select = document.getElementById('sentence-select');
   if (!select) return;
 

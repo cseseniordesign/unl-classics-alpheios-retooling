@@ -145,27 +145,34 @@ export function fitTreeToView(svg, gx, container, zoom, margin, hardFit= false) 
 /**  
  *
  * ------------------------------------------------------------------------
+ * FUNCTION: zoomTree
+ * ------------------------------------------------------------------------
+ * Adjusts zoom of the tree by given scale factor
+ * 
+ * @returns {void} zooms tree by scale factor
+ */
+function zoomTree(scaleFactor) {
+  if (!window.svg || !window.zoom) return;
+
+  const currentZoom = d3.zoomTransform(window.svg.node());
+
+  window.svg
+    .transition()
+    .duration(300)
+    .call(window.zoom.transform, currentZoom.scale(scaleFactor));
+}
+
+/**  
+ *
+ * ------------------------------------------------------------------------
  * FUNCTION: compactTree
  * ------------------------------------------------------------------------
- * Decreases vertical spacing between nodes and used to support compact button
- * Preserves zoom state during redraw
+ * Decreases zoom of the current view of the tree
  * 
- * @returns {void} compacts the tree
+ * @returns {void} compacts the view of the tree
  */
 export function compactTree() {
-  // Save current zoom transform before redrawing the tree
-  const prevTransform = window.svg ? d3.zoomTransform(window.svg.node()) : null;
-
-  // Decrease vertical spacing between nodes
-  window.verticalSpacing = Math.max(0.2, window.verticalSpacing - 0.2);
-  
-  // Redraw the tree
-  createNodeHierarchy(window.currentIndex);
-
-  // Restore previous zoom transform after redraw
-  if (window.svg && window.zoom && prevTransform) {
-    window.svg.call(window.zoom.transform, prevTransform);
-  }
+  zoomTree(0.75);
 }
 
 /**  
@@ -173,25 +180,12 @@ export function compactTree() {
  * ------------------------------------------------------------------------
  * FUNCTION: expandTree
  * ------------------------------------------------------------------------
- * Increases vertical spacing between nodes and used to support expand button
- * Preserves zoom state during redraw
+ * Increases zoom of the current view of the tree
  * 
- * @returns {void} expands the tree
+ * @returns {void} expands the view of the tree
  */
 export function expandTree() {
-  // Save current zoom transform before redrawing the tree
-  const prevTransform = window.svg ? d3.zoomTransform(window.svg.node()) : null;
-
-  // Increase vertical spacing between nodes
-  window.verticalSpacing += 0.2;
-
-  // Redraw the tree
-  createNodeHierarchy(window.currentIndex);
-
-  // Restore previous zoom transform after redraw
-  if (window.svg && window.zoom && prevTransform) {
-    window.svg.call(window.zoom.transform, prevTransform);
-  }
+  zoomTree(1.33);
 }
 
 /**  

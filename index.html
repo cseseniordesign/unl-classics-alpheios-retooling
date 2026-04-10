@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="inputPage.css">
-  <title>Arethusa Input Page</title>
+  <title>Arethusa Lite</title>
 </head>
 
 <body>
@@ -19,40 +19,12 @@
       <div class="input-box">
         <textarea class="input-text" title="Input Text" id="input-text" rows="10" cols="55" placeholder="Enter the text you want to treebank..." font="Arial"></textarea>
       </div>
-      
-      <!-- <div id="search-and-URI-container">
-        <p>Search for a Text:</p>
-        <div class="search-box">
-          <textarea class="search-input" title="Search Text" rows="1" cols="49" placeholder="Search for a Text"></textarea>
-          <button class="retrieve-passage-btn" type="submit" title="Retrieve Passage" aria-label="Retrieve Passage">Retrieve Passage</button>
-        </div>
-        <div class="available-works">
-          <a rel="noopener" target="_blank" href="https://cts.perseids.org/">Available Works</a>
-        </div>
 
-        <div id="enter-URI">
-          <p>Enter your own Text URI:</p>
-          <div class="URI-box">
-            <textarea class="URI-input" title="URI Input" rows="1" cols="50" placeholder="Enter a Text URI"></textarea>
-            <button class="enter-URI-btn" type="submit" title="Enter URI" aria-label="Enter URI">Enter Text URI</button>
-          </div>
-        </div>
-      </div> -->
-
-      <p>or</p>
-      
       <div id="upload-XML">
-        <p>Upload Base XML Treebank:</p>
+        <p>Upload Base XML Treebank</p>
         <fieldset class="upload-file">
           <input type="file" id="file" accept=".xml" title="files" onchange="handleFileUpload()">
         </fieldset>
-
-        <!-- <p>or</p>
-
-        <div class="URL-box">
-          <textarea class="URL-input" title="URL Input" rows="1" cols="50" placeholder="Enter URL of the Treebank Template"></textarea>
-          <button class="enter-url-btn" type="submit" title="Enter URL" aria-label="Enter URL">Enter URL</button>
-        </div> -->
       </div>
     </div>
 
@@ -67,10 +39,6 @@
         <label for="lang-eng">English</label>
         <input type="radio" id="lang-per" name="lang" value="fas">
         <label for="lang-per">Persian</label>
-        <input type="radio" id="lang-ara" name="lang" value="ara">
-        <label for="lang-ara">Arabic</label>
-        <input type="radio" id="lang-other" name="lang" value="other">
-        <label for="lang-other">Other</label>
       </fieldset>
 
       <fieldset class="dir-btns">
@@ -89,8 +57,8 @@
           <br>
           <div id="tagset-selector-root"></div>
           <p>Enter your own Tokenization Service URL:</p>
-          <div id="alternativeTokenizer" class="search-box">
-            <textarea id="tokenizer-URL" class="search-input" type="url" rows="1" cols="50" placeholder="Enter Custom Tokenizer URL..."></textarea>
+          <div id="alternativeTokenizer" class="tokenizer-box">
+            <textarea id="tokenizer-URL" class="tokenizer-input" type="url" rows="1" cols="50" placeholder="Enter Custom Tokenizer URL..."></textarea>
             <button id="saveTokenizer" class="save-default-btn">Save</button>
             <button id="resetTokenizer" class="save-default-btn">Reset</button>
           </div>

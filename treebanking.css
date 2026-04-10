@@ -398,12 +398,12 @@ html, body{
   fill: #30bfbf !important;
 }
 
-.link-label {
+.text-bg {
+  fill: none;
   font-family: "Arial", sans-serif;
-  font-size: 10px;      
-  fill: #666;           
+  font-size: 10px;
   text-anchor: middle;
-  pointer-events: none; 
+  pointer-events: none;
 }
 
 #nav-buttons {
@@ -418,6 +418,18 @@ html, body{
   display: flex;
   align-items: center;
   gap: 0;
+}
+
+.nav-label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #a8d0dc;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-right: 4px;
+  margin-left: 25px;
 }
 
 .nav-btn {
@@ -1736,4 +1748,9 @@ body.mode-relation #tool-body {
 .node-context-menu .rel-button:hover {
   border-color: #6f6f6f;
   background-color: #f0f0f0;
+}
+
+.preselect-locked {
+  opacity: 0.55;
+  pointer-events: none;
 }
