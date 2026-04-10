@@ -1,6 +1,6 @@
 import { clearStacks } from "../xml/undo.js";
 import { displaySentence, safeDisplaySentence } from '../ui/sentenceDisplay.js';
-import { setupEHotkey, setupEscapeHotkey, setupWHotkey } from '../ui/hotKeys.js';
+import { setupEHotkey, setupEscapeHotkey, setupTabHotkeys, setupUndoRedoHotkeys, setupWHotkey } from '../ui/hotKeys.js';
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: updateNavigationButtons
@@ -41,6 +41,9 @@ export function setupSentenceSelector() {
   setupEscapeHotkey();
   setupWHotkey();
   setupEHotkey();
+  setupTabHotkeys();
+  setupUndoRedoHotkeys();
+
   document.getElementById('file-name').textContent = localStorage.getItem("uploadedFileName") || "";
   const select = document.getElementById('sentence-select');
   if (!select) return;
