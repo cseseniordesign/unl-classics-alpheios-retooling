@@ -1,5 +1,6 @@
 import { handleWordClick } from './sentenceDisplay.js';
 import { undoButton, redoButton } from '../xml/undo.js';
+import { saveCurrentTreebank } from '../xml/saveXML.js';
 
 export function setupEscapeHotkey() {
   if (window._treebankEscapeReady) return;
@@ -340,6 +341,51 @@ export function setupUndoRedoHotkeys() {
         redoButton();
       } else {
         undoButton();
+      }
+    },
+    true
+  );
+}
+
+export function setupSaveHotkey() {
+  if (window._treebankSaveReady) return;
+  window._treebankSaveReady = true;
+
+  window.addEventListener(
+    'keydown',
+    async (e) => {
+      const key = e.key.toLowerCase();
+      const mod = e.metaKey || e.ctrlKey;
+
+      // Cmd+S on Mac, Ctrl+S on Windows/Linux
+      if (!mod || key !== 's') return;
+
+      // stop browser Save Page dialog
+      e.preventDefault();
+      e.stopPropagation();
+
+      // let modal interactions stay in control
+      const overlay = document.getElementById('app-modal-overlay');
+      if (overlay && !overlay.hidden) return;
+
+      // if the XML editor is currently in edit mode, confirm those edits first
+      const xmlDisplay = document.getElementById('xml-display');
+      const confirmBtn = document.getElementById('xml-confirm');
+
+      if (
+        xmlDisplay &&
+        xmlDisplay.classList.contains('editing') &&
+        confirmBtn &&
+        !confirmBtn.disabled
+      ) {
+        confirmBtn.click();
+        return;
+      }
+
+      try {
+        await saveCurrentTreebank();
+      } catch (err) {
+        console.error('Save hotkey failed:', err);
       }
     },
     true
