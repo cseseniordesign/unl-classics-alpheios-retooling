@@ -399,7 +399,7 @@ html, body{
 }
 
 .text-bg {
-  fill: none;   /* Standard labels get white backgrounds */
+  fill: none;
   font-family: "Arial", sans-serif;
   font-size: 10px;
   text-anchor: middle;

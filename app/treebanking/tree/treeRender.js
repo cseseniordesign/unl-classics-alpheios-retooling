@@ -628,9 +628,9 @@ export function drawNodes(gx, rootHierarchy, errorIds = [], isStudentTree) {
         .attr('x', bbox.x - 3)
         .attr('y', bbox.y - 2)
         .attr('width', bbox.width + 6)
-        .attr('height', bbox.height + 4)
+        .attr('height', bbox.height)
         .attr('rx', 3)
-        .attr('ry', 3)
+        .attr('ry', 1)
         .attr('class', isError ? 'text-bg err-bg' : 'text-bg'); // Add err-bg class if error
     });
 
@@ -642,7 +642,7 @@ export function drawNodes(gx, rootHierarchy, errorIds = [], isStudentTree) {
   if (isCompareMode) {
     nodes.filter(d => d.data.postag && d.data.id !== 'root')
       .append('text')
-      .attr('dy', -9)
+      .attr('dy', -10)
       .attr('text-anchor', 'middle')
       .attr('class', d => {
             let classList = "postag-label";
@@ -670,7 +670,7 @@ export function drawNodes(gx, rootHierarchy, errorIds = [], isStudentTree) {
         d3.select(this.parentNode)
           .insert('rect', 'text')  // insert before text so it's behind
           .attr('x', bbox.x - 3)
-          .attr('y', bbox.y - 2)
+          .attr('y', bbox.y - 3)
           .attr('width', bbox.width + 6)
           .attr('height', bbox.height)
           .attr('rx', 3)
@@ -679,22 +679,6 @@ export function drawNodes(gx, rootHierarchy, errorIds = [], isStudentTree) {
           .attr('class', isError ? 'text-bg err-bg' : 'text-bg'); // Add err-bg class if error
       });
     }
-
-  // Add POS tag label below the word form (compare/gold-standard mode only)
-  /*const isCompareMode = !!document.getElementById('sandbox-a');
-
-  if (isCompareMode) {
-    nodes.filter(d => d.data.postag && d.data.id !== 'root')
-      .append('text')
-      .attr('class', 'postag-label')
-      .attr('dy', -10)
-      .attr('text-anchor', 'middle')
-      .style('font-family', 'sans-serif')
-      .style('font-size', '10px')
-      .style('fill', d => colorForPOS(d.data))
-      .style('opacity', 0.75)
-      .text(d => d.data.postag);
-  }*/
 }
 
 /**
@@ -788,13 +772,6 @@ export function drawLinks(gx, rootHierarchy, idParentPairs, errorIds, isStudentT
         .attr("fill", "none")
         .attr("stroke", "#666")
         .attr("stroke-width", 1.2)
-        .attr("d",
-          `M${beforeGap[0]},${beforeGap[1]} C${beforeGap[2]},${beforeGap[3]} ${beforeGap[4]},${beforeGap[5]} ${beforeGap[6]},${beforeGap[7]}`
-        );
-      
-      // --- Draw second segment (after label → child) ---
-      group.append("path")
-        .attr("class", "link-part2")
         .attr('class', d => {
           let classList = "";
 
@@ -812,6 +789,30 @@ export function drawLinks(gx, rootHierarchy, idParentPairs, errorIds, isStudentT
 
           return classList;
         })
+        .attr("d",
+          `M${beforeGap[0]},${beforeGap[1]} C${beforeGap[2]},${beforeGap[3]} ${beforeGap[4]},${beforeGap[5]} ${beforeGap[6]},${beforeGap[7]}`
+        );
+      
+      // --- Draw second segment (after label → child) ---
+      group.append("path")
+        .attr("class", "link-part2")
+        /*.attr('class', d => {
+          let classList = "";
+
+          // Guard against undefined and check if it's the student tree
+          if (isStudentTree && d.target && d.target.data && d.target.data.id) {
+            
+            // Look for the error entry for the CHILD of this link
+            const errorEntry = errorIds.find(word => word.id === d.target.data.id);
+
+            //If that child has a relation error, highlight THIS label
+            if (errorEntry && errorEntry.errorTypes.includes("head")) {
+              classList += " err-head";
+            }
+          }
+
+          return classList;
+        })*/
         .attr("fill", "none")
         .attr("stroke", "#666")
         .attr("stroke-width", 1.2)
