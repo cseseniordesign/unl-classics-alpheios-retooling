@@ -26,6 +26,16 @@ document.addEventListener("DOMContentLoaded", () => {
 document.getElementById("saveTokenizer").addEventListener("click", handleSave);
 document.getElementById("resetTokenizer").addEventListener("click", handleReset);
 
+
+// Display file names for trees to be compared in the compare section (if any)
+document.getElementById('compare-file-a').addEventListener('change', function () {
+  document.getElementById('file-name-a').textContent = this.files[0]?.name ?? 'No file chosen';
+});
+
+document.getElementById('compare-file-b').addEventListener('change', function () {
+  document.getElementById('file-name-b').textContent = this.files[0]?.name ?? 'No file chosen';
+});
+
 /**
  * --------------------------------------------------------------------------
  * FUNCTION: sendSentence

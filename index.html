@@ -19,12 +19,13 @@
       <div class="input-box">
         <textarea class="input-text" title="Input Text" id="input-text" rows="10" cols="55" placeholder="Enter the text you want to treebank..." font="Arial"></textarea>
       </div>
-
       <div id="upload-XML">
         <p>Upload Base XML Treebank</p>
-        <fieldset class="upload-file">
+        <label class="file-label edit-button" for="file">
+          Choose File
           <input type="file" id="file" accept=".xml" title="files" onchange="handleFileUpload()">
-        </fieldset>
+        </label>
+        <span class="file-name" id="editTree">No file chosen</span>
       </div>
     </div>
 
@@ -72,19 +73,24 @@
             <input type="checkbox" id="shift-enclitics">
           </div>
           <br>
-          <div id="compare-section">
-          <hr class="compare-divider">
-          <p>Compare Two Treebanks:</p>
-          <fieldset class="upload-file compare-upload">
-            <label class="compare-label">Tree A</label>
-            <input type="file" id="compare-file-a" accept=".xml" title="Tree A">
-          </fieldset>
-          <fieldset class="upload-file compare-upload">
-            <label class="compare-label">Tree B</label>
-            <input type="file" id="compare-file-b" accept=".xml" title="Tree B">
-          </fieldset>
+          <p>Compare Two Treebanks</p>
+          <div class="compare-upload">
+            <span class="compare-label">Tree A</span>
+            <label class="edit-button file-label" for="compare-file-a">
+              Choose File
+              <input type="file" id="compare-file-a" accept=".xml" title="Tree A">
+            </label>
+            <span class="file-name" id="file-name-a">No file chosen</span>
+          </div>
+          <div class="compare-upload">
+            <span class="compare-label">Tree B</span>
+            <label class="edit-button file-label" for="compare-file-b">
+              Choose File
+              <input type="file" id="compare-file-b" accept=".xml" title="Tree B">
+            </label>
+            <span class="file-name" id="file-name-b">No file chosen</span>
+          </div>
           <button class="compare-btn" id="compareBtn" type="button" title="Compare Trees" aria-label="Compare Trees">Compare</button>
-        </div>
         </div>
       </div>
     </div>

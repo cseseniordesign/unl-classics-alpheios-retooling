@@ -91,6 +91,15 @@ html, body{
   margin: 3px;
 }
 
+.file-label input[type="file"] {
+  display: none;
+}
+
+.file-label {
+  display: inline-block;
+  cursor: pointer;
+}
+
 .edit-button {
   font-size: medium;
   margin-top: 2%;
@@ -281,7 +290,6 @@ html, body{
   font-weight: lighter;
   font-family: "Arial", sans-serif;
 }
-/* ── Compare section ────────────────────────────────────────────────────────── */
 
 #compare-section {
   margin-top: 10px;
@@ -297,11 +305,7 @@ html, body{
   display: flex;
   align-items: center;
   gap: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 6px 10px;
   margin-bottom: 8px;
-  background: #fafafa;
 }
 
 .compare-label {
@@ -313,27 +317,33 @@ html, body{
 
 .compare-btn {
   margin-top: 8px;
-  padding: 6px 20px;
-  font-size: 13px;
+  padding: 0.875rem 1.75rem 0.9375rem;
+  font-size: 0.8125rem;
   border: 2px solid #ccc;
   border-radius: 8px;
-  background: #008CBA;
+  background: #52bb7e;
   color: white;
   cursor: pointer;
   outline: none;
-  height: 34px;
   box-sizing: border-box;
+  font-family: Arial, sans-serif;
+  transition: background-color 0.35s;
 }
 
 .compare-btn:hover {
   background-color: #82878b;
-  opacity: 1;
-  transform: translateY(0);
-  transition-duration: .35s;
 }
 
 .compare-btn:disabled {
   background-color: #aaa;
   border-color: #aaa;
   cursor: default;
+}
+
+.file-name {
+  font-size: 0.78rem;
+  color: #555;
+  font-style: italic;
+  margin-left: 4px;
+  word-break: break-all;
 }
