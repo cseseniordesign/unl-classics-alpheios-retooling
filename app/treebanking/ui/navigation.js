@@ -46,6 +46,8 @@ export function setupSentenceSelector() {
   setupSaveHotkey();
 
   document.getElementById('file-name').textContent = localStorage.getItem("uploadedFileName") || "";
+  localStorage.removeItem("uploadedFileName");
+  
   const select = document.getElementById('sentence-select');
   if (!select) return;
 
