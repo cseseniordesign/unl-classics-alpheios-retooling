@@ -9,7 +9,7 @@ export function setupQuestionsModal() {
     const closeBtn = questionsModal.querySelector('.close');
 
     questionsBtn.addEventListener('click', () => {
-        questionsModal.style.display = 'block';
+        questionsModal.style.display = 'flex';
     });
 
     closeBtn?.addEventListener('click', () => {
