@@ -67,10 +67,29 @@ function clearUnassignedHighlight() {
 }
 
 /**
- * Called after a relation is applied so the highlight stays in sync.
- * If unassigned-highlight is active, refresh it.
+ * Recompute the number of words without a relation in the current sentence
+ * and update the badge in the settings panel (if visible).
  */
+function updateUnassignedCount() {
+  const currentSentence = window.treebankData?.find(
+    s => String(s.id) === String(window.currentIndex)
+  );
+  const count = currentSentence?.words
+    ? currentSentence.words.filter(w => w.id !== 'root' && isRelationUnassigned(w)).length
+    : 0;
+
+  const badge = document.getElementById('relation-unassigned-count');
+  if (badge) {
+    badge.textContent = String(count);
+    // Dim the badge when everything is assigned
+    badge.style.background = count > 0 ? '#ff8c00' : '#aaa';
+  }
+
+  return count;
+}
 function refreshUnassignedHighlightIfActive() {
+  // Always keep the count badge current, even when highlight is off
+  updateUnassignedCount();
   if (!window.unassignedHighlightActive) return;
   clearUnassignedHighlight();
   applyUnassignedHighlight();
@@ -803,6 +822,9 @@ function wireRelationSettingsUI(toolBody) {
   const highlightUnassignedLabel = toolBody.querySelector('#relation-highlight-unassigned-label');
 
   if (highlightUnassignedBtn) {
+    // Populate the count badge immediately when the panel opens
+    updateUnassignedCount();
+
     // Restore active visual state if highlight was already on
     if (window.unassignedHighlightActive) {
       highlightUnassignedBtn.style.background = 'rgba(255,140,0,0.15)';
@@ -948,29 +970,50 @@ export function setupRelationTool() {
           <span>Advanced Mode</span>
         </label>
         <hr style="border:none; border-top:1px solid #ddd; margin:8px 0;" />
-        <button
-          id="relation-highlight-unassigned-btn"
-          type="button"
-          style="
-            display:flex;
-            align-items:center;
-            gap:8px;
-            width:100%;
-            background:none;
-            border:1px solid #ccc;
-            border-radius:6px;
-            padding:6px 10px;
-            cursor:pointer;
-            font-size:0.85em;
-            color:#333;
-            white-space:nowrap;
-          "
-        >
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="flex-shrink:0;">
-            <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
-          </svg>
-          <span id="relation-highlight-unassigned-label">Highlight Unassigned</span>
-        </button>
+        <div style="display:flex; align-items:center; gap:6px;">
+          <button
+            id="relation-highlight-unassigned-btn"
+            type="button"
+            style="
+              display:flex;
+              align-items:center;
+              gap:8px;
+              flex:1;
+              background:none;
+              border:1px solid #ccc;
+              border-radius:6px;
+              padding:6px 10px;
+              cursor:pointer;
+              font-size:0.85em;
+              color:#333;
+              white-space:nowrap;
+            "
+          >
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="flex-shrink:0;">
+              <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+            </svg>
+            <span id="relation-highlight-unassigned-label">Highlight Unassigned</span>
+          </button>
+          <span
+            id="relation-unassigned-count"
+            title="Words without a relation"
+            style="
+              display:inline-flex;
+              align-items:center;
+              justify-content:center;
+              min-width:22px;
+              height:22px;
+              padding:0 5px;
+              border-radius:11px;
+              background:#ff8c00;
+              color:#fff;
+              font-size:0.78em;
+              font-weight:600;
+              line-height:1;
+              flex-shrink:0;
+            "
+          >0</span>
+        </div>
       </div>
     `);
 
@@ -1095,4 +1138,5 @@ window.renderRelationInfo = function (wordOrWords, opts = {}) {
   // Expose for sentence re-render sync
   window.refreshUnassignedHighlightIfActive = refreshUnassignedHighlightIfActive;
   window.clearUnassignedHighlight = clearUnassignedHighlight;
+  window.updateUnassignedCount = updateUnassignedCount;
 }
