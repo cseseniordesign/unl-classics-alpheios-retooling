@@ -104,7 +104,7 @@ The main workspace has three areas:
 
 #### Adding an instructor tree for *'Tree compare'*
 
-To add a new tree to the instructor set, prepare a valid treebank XML file with the standard <treebank> root element and set its code attribute to a unique 6-digit numeric string (e.g. code='004217') — this is the code you will distribute to students. Place the completed file in the instructorTrees/ folder at the project root, then open app/treebanking/ui/compareModal.js and add the file's basename to the INSTRUCTOR_TREE_FILES array near the top of the file (e.g. 'MyPassage_TEACHER.xml'). That one-line addition is all that is required; the modal will fetch and search the new file automatically the next time a student enters a matching code. The header line should look something like: `<treebank xml:lang="grc" version="1.5" direction="ltr" format="morphgrc" code='000000'>`
+To add a new tree to the instructor set, prepare a valid treebank XML file with the standard `<treebank>` root element and set its code attribute to a unique 6-digit numeric string (e.g. code='004217') — this is the code you will distribute to students. Place the completed file in the instructorTrees/ folder at the project root, then open app/treebanking/ui/compareModal.js and add the file's basename to the INSTRUCTOR_TREE_FILES array near the top of the file (e.g. 'MyPassage_TEACHER.xml'). That one-line addition is all that is required; the modal will fetch and search the new file automatically the next time a student enters a matching code. The header line should look something like: `<treebank xml:lang="grc" version="1.5" direction="ltr" format="morphgrc" code='000000'>`
 
 **Editing morphology:**
 1. Click the **morph** tab
