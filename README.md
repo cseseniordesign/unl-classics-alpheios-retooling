@@ -120,6 +120,7 @@ To add a new tree to the instructor set, prepare a valid treebank XML file with 
 3. Select the label; the arc and label update immediately above the word
 - *Clicking the cog icon*
     - Advanced Mode: When multiple words are selected, the option to assign all selected words the same relation appears
+    - Highlight Unassigned: Highlights all words that are not assigned a relation tag in orange
 
 **Adding an Artifical Token (aT)**
 1. Click the **aT** tab to activate the artifical token tool

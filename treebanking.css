@@ -12,6 +12,10 @@ html, body{
   --select-yellow: #ffeb3b;                 /* selected */
   --select-yellow-bg: rgba(255,235,59,.45); /* tokens selected */
   --node-selected-opacity: .38;
+
+  --unassigned-orange: #ff8c00;                  /* unassigned highlight */
+  --unassigned-orange-bg: rgba(255,140,0,.30);   /* tokens unassigned */
+  --node-unassigned-opacity: .35;
 }
 
 #header {
@@ -564,9 +568,20 @@ html, body{
   background-color: var(--select-yellow-bg) !important;
 }
 
+.token.unassigned-highlight {
+  background-color: var(--unassigned-orange-bg) !important;
+  outline: 1px solid var(--unassigned-orange);
+  border-radius: 3px;
+}
+
 .node.highlight .text-bg {
   fill: var(--hover-teal);
   fill-opacity: var(--node-hover-opacity) !important;
+}
+
+.node.unassigned-highlight .text-bg {
+  fill: var(--unassigned-orange);
+  fill-opacity: var(--node-unassigned-opacity) !important;
 }
 
 .node text {

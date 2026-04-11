@@ -8,6 +8,75 @@ import { getRelationConfig, getRawRelationConfig } from "../tags/tagsetStore.js"
 window.relationAdvancedModeEnabled = false;
 window._relationSettingsOutsideCloseBound = window._relationSettingsOutsideCloseBound || false;
 
+// =====================================================
+// Unassigned Relation Highlight Helpers
+// =====================================================
+
+/**
+ * Returns true if a word has no meaningful relation assigned.
+ * Covers: missing, empty string, or the sentinel "---".
+ */
+function isRelationUnassigned(word) {
+  const rel = (word.relation || "").trim();
+  return !rel || rel === "---";
+}
+
+/**
+ * Highlight all words that have no relation in both the sentence
+ * token bar and the D3 tree.  The root pseudo-node is skipped.
+ */
+function applyUnassignedHighlight() {
+  const currentSentence = window.treebankData?.find(
+    s => String(s.id) === String(window.currentIndex)
+  );
+  if (!currentSentence?.words) return;
+
+  const unassignedIds = new Set(
+    currentSentence.words
+      .filter(w => w.id !== 'root' && isRelationUnassigned(w))
+      .map(w => String(w.id))
+  );
+
+  // ── Sentence token bar ──────────────────────────────────────
+  document.querySelectorAll('.token').forEach(tok => {
+    if (unassignedIds.has(String(tok.dataset.wordId))) {
+      tok.classList.add('unassigned-highlight');
+    }
+  });
+
+  // ── D3 tree nodes ───────────────────────────────────────────
+  if (typeof d3 !== 'undefined' && window.gx) {
+    window.gx.selectAll('.node')
+      .filter(d => unassignedIds.has(String(d.data.id)))
+      .classed('unassigned-highlight', true);
+  }
+}
+
+/**
+ * Remove the unassigned-highlight class from every token and tree node.
+ */
+function clearUnassignedHighlight() {
+  document.querySelectorAll('.token.unassigned-highlight').forEach(tok => {
+    tok.classList.remove('unassigned-highlight');
+  });
+
+  if (typeof d3 !== 'undefined' && window.gx) {
+    window.gx.selectAll('.node.unassigned-highlight')
+      .classed('unassigned-highlight', false);
+  }
+}
+
+/**
+ * Called after a relation is applied so the highlight stays in sync.
+ * If unassigned-highlight is active, refresh it.
+ */
+function refreshUnassignedHighlightIfActive() {
+  if (!window.unassignedHighlightActive) return;
+  clearUnassignedHighlight();
+  applyUnassignedHighlight();
+}
+
+// =====================================================
 // Order of main relation bases in the menu
 const MAIN_BASES = [
   "---",
@@ -228,6 +297,9 @@ export function applyRelationChange(word, base, auxVariant, suffixKey) {
     window.updateXMLIfActive();
   }
   triggerAutoSave();
+
+  // Keep unassigned highlight in sync
+  refreshUnassignedHighlightIfActive();
 }
 
 /** Render relation editor for a single word into a container. */
@@ -725,6 +797,43 @@ function wireRelationSettingsUI(toolBody) {
       if (words.length > 0) window.renderRelationInfo(words);
     }
   });
+
+  // ── Highlight Unassigned button ──────────────────────────────────────
+  const highlightUnassignedBtn = toolBody.querySelector('#relation-highlight-unassigned-btn');
+  const highlightUnassignedLabel = toolBody.querySelector('#relation-highlight-unassigned-label');
+
+  if (highlightUnassignedBtn) {
+    // Restore active visual state if highlight was already on
+    if (window.unassignedHighlightActive) {
+      highlightUnassignedBtn.style.background = 'rgba(255,140,0,0.15)';
+      highlightUnassignedBtn.style.borderColor = '#ff8c00';
+      highlightUnassignedBtn.style.color = '#cc6600';
+      if (highlightUnassignedLabel) highlightUnassignedLabel.textContent = 'Clear Unassigned';
+    }
+
+    highlightUnassignedBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (window.unassignedHighlightActive) {
+        // ── CLEAR ──
+        clearUnassignedHighlight();
+        window.unassignedHighlightActive = false;
+        highlightUnassignedBtn.style.background = 'none';
+        highlightUnassignedBtn.style.borderColor = '#ccc';
+        highlightUnassignedBtn.style.color = '#333';
+        if (highlightUnassignedLabel) highlightUnassignedLabel.textContent = 'Highlight Unassigned';
+      } else {
+        // ── APPLY ──
+        applyUnassignedHighlight();
+        window.unassignedHighlightActive = true;
+        highlightUnassignedBtn.style.background = 'rgba(255,140,0,0.15)';
+        highlightUnassignedBtn.style.borderColor = '#ff8c00';
+        highlightUnassignedBtn.style.color = '#cc6600';
+        if (highlightUnassignedLabel) highlightUnassignedLabel.textContent = 'Clear Unassigned';
+      }
+    });
+  }
 }
 
 /** Attach relation tool to toolbar. */
@@ -744,6 +853,10 @@ export function setupRelationTool() {
     window.isRelationActive = false;
     toolBody.querySelector('#relation-settings-btn')?.remove();
     toolBody.querySelector('#relation-settings')?.remove();
+
+    // Clear any unassigned highlights
+    clearUnassignedHighlight();
+    window.unassignedHighlightActive = false;
 
     if (window.treebankModeHTML) {
       toolBody.innerHTML = window.treebankModeHTML;
@@ -834,6 +947,30 @@ export function setupRelationTool() {
           <input type="checkbox" id="relation-advanced-checkbox" />
           <span>Advanced Mode</span>
         </label>
+        <hr style="border:none; border-top:1px solid #ddd; margin:8px 0;" />
+        <button
+          id="relation-highlight-unassigned-btn"
+          type="button"
+          style="
+            display:flex;
+            align-items:center;
+            gap:8px;
+            width:100%;
+            background:none;
+            border:1px solid #ccc;
+            border-radius:6px;
+            padding:6px 10px;
+            cursor:pointer;
+            font-size:0.85em;
+            color:#333;
+            white-space:nowrap;
+          "
+        >
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" style="flex-shrink:0;">
+            <path d="M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+          </svg>
+          <span id="relation-highlight-unassigned-label">Highlight Unassigned</span>
+        </button>
       </div>
     `);
 
@@ -954,4 +1091,8 @@ window.renderRelationInfo = function (wordOrWords, opts = {}) {
   renderRelationEditor(words[0], root);
 };
   window.renderRelationEditor = window.renderRelationInfo;
+
+  // Expose for sentence re-render sync
+  window.refreshUnassignedHighlightIfActive = refreshUnassignedHighlightIfActive;
+  window.clearUnassignedHighlight = clearUnassignedHighlight;
 }

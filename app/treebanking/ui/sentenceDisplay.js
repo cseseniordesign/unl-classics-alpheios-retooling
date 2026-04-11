@@ -178,6 +178,11 @@ export async function displaySentence(index) {
     window.updateXMLIfActive();
   }
 
+  // Re-apply unassigned relation highlight if it was active
+  if (typeof window.refreshUnassignedHighlightIfActive === 'function') {
+    window.refreshUnassignedHighlightIfActive();
+  }
+
   if (typeof window.setupWordHoverSync === 'function') {
     window.setupWordHoverSync();
   }
