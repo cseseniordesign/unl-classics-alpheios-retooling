@@ -116,19 +116,35 @@ async function handleSubmit(els) {
             detail: { code, xmlText }
         }));
 
+        // Only run comparison when we have a valid tree
+        compareStudentAndTeacherTrees(xmlText, window.treebankData);
+
     } catch (err) {
         errorMsg.textContent = 'An error occurred while loading. Please try again.';
         console.error('Instructor tree load error:', err);
     } finally {
         okBtn.disabled    = false;
         okBtn.textContent = 'Load Tree';
-        compareStudentAndTeacherTrees(window.instructorTreeXML, window.treebankData);
     }
 }
 
 // Global variables to store the comparison state
 window.globalErrorMap = []; 
-window.isComparing = false; 
+window.isComparing = false;
+
+// ── Exit Compare Mode ─────────────────────────────────────────────────────────
+
+export function exitCompareMode() {
+    window.isComparing = false;
+    window.allComparisonResults = null;
+    window.instructorTreeXML = null;
+    window.instructorTreeCode = null;
+
+    // Re-render the current sentence without compare overlays
+    createNodeHierarchy(window.currentIndex);
+
+    document.dispatchEvent(new CustomEvent('compareExited'));
+}
 
 function compareStudentAndTeacherTrees(xmlA, xmlB) {
     const dataA = parseTreeBankXML(xmlA); // Instructor/Gold
@@ -170,5 +186,44 @@ export function setupCompareModal() {
     // Backdrop click closes the modal
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) closeCompareModal(els);
+    });
+
+    // Exit compare mode buttons
+    const exitCompareBtn = document.getElementById('exit-compare');
+    const exitCompareLink = document.getElementById('compare-mode-exit-link');
+    const banner = document.getElementById('compare-mode-banner');
+
+    function doExit() { exitCompareMode(); }
+    if (exitCompareBtn) exitCompareBtn.addEventListener('click', doExit);
+    if (exitCompareLink) exitCompareLink.addEventListener('click', doExit);
+
+    // Show/hide compare UI based on compare state
+    document.addEventListener('instructorTreeLoaded', () => {
+        if (banner) banner.style.display = 'block';
+        if (exitCompareBtn) exitCompareBtn.style.display = '';
+        if (compareBtn) compareBtn.style.display = 'none';
+        document.body.classList.add('compare-mode');
+
+        // Close any active tool tab and clear tool-body content
+        if (typeof window.closeMorphTool === 'function') window.closeMorphTool();
+        if (typeof window.closeRelationTool === 'function') window.closeRelationTool();
+        document.querySelectorAll('#toolbar button').forEach(b => b.classList.remove('active'));
+        const toolBody = document.getElementById('tool-body');
+        if (toolBody) toolBody.innerHTML = '';
+        if (banner) toolBody.appendChild(banner);
+    });
+
+    document.addEventListener('compareExited', () => {
+        if (banner) banner.style.display = 'none';
+        if (exitCompareBtn) exitCompareBtn.style.display = 'none';
+        if (compareBtn) compareBtn.style.display = '';
+        document.body.classList.remove('compare-mode');
+
+        // Restore the default treebanking tool-body content
+        const toolBody = document.getElementById('tool-body');
+        if (toolBody) {
+            toolBody.innerHTML = window.treebankModeHTML ||
+                '<p style="padding:8px;">Click a word or node to edit dependencies.</p>';
+        }
     });
 }

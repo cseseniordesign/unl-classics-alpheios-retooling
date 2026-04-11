@@ -158,6 +158,7 @@ export function createNodeHierarchy(sentenceId) {
 const nodes = document.querySelectorAll(".node");
 nodes.forEach(node => {
   node.addEventListener("click", (event) => {
+    if (window.isComparing) return; // read-only in compare mode
     const wordText = node.textContent || "";
     const prevTransform = window.svg ? d3.zoomTransform(window.svg.node()) : null;
     handleWordClick(event, node.id, wordText);
@@ -167,6 +168,7 @@ nodes.forEach(node => {
   });
 
   node.addEventListener("contextmenu", (event) => {
+    if (window.isComparing) { event.preventDefault(); return; } // read-only in compare mode
     event.preventDefault();
     event.stopPropagation();
     openNodeContextMenu(event, node.id);
@@ -675,7 +677,7 @@ export function drawNodes(gx, rootHierarchy, errorIds = [], isStudentTree) {
 
   // Add POS tag label below the word form (skip [ROOT] node and nodes without a postag)
    // Add POS tag label below the word form (compare/gold-standard mode only)
-  const isCompareMode = !!document.getElementById('sandbox-a');
+  const isCompareMode = !!document.getElementById('sandbox-a') || !!window.isComparing;
 
   if (isCompareMode) {
     nodes.filter(d => d.data.postag && d.data.id !== 'root')
@@ -758,7 +760,7 @@ export function drawLinks(gx, rootHierarchy, idParentPairs, errorIds, isStudentT
       // --- Define start and end positions ---      
       const source = { x: d.source.x + offset, y: d.source.y + 10 };
 
-      const isCompareMode = !!document.getElementById('sandbox-a');
+      const isCompareMode = !!document.getElementById('sandbox-a') || !!window.isComparing;
       var target = 0;
       if (isCompareMode) {
         var target = { x: d.target.x, y: d.target.y - 16 };

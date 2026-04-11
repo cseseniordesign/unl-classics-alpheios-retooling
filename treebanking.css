@@ -1801,3 +1801,77 @@ body.mode-relation #tool-body {
   fill-opacity: var(--node-hover-opacity) !important;
   stroke-width: 3px !important;
 }
+
+/* ── Compare mode styles ───────────────────────────────────────────── */
+body.compare-mode .node {
+    cursor: default !important;
+    pointer-events: none;
+}
+
+/* Re-enable pointer events on nodes so hover sync still works,
+   but clicks are blocked via JS guards */
+body.compare-mode .node {
+    pointer-events: auto;
+    cursor: default !important;
+}
+
+#compare-mode-banner {
+    flex-shrink: 0;
+}
+
+#exit-compare svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* ── Compare mode sidebar banner ────────────────────────────────────── */
+.sidebar-banner.compare-mode {
+  font-family: Inter, -apple-system, system-ui, "Segoe UI",
+               Helvetica, Arial, sans-serif;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  color: #333;
+
+  border-left: 3px solid #c0392b;
+  background: rgba(192, 57, 43, 0.08);
+  padding: 0.6rem 0.9rem;
+  margin-bottom: 0.5rem;
+  border-radius: 6px;
+}
+
+.sidebar-banner.compare-mode .banner-title {
+  font-weight: 600;
+  margin-bottom: 0.2rem;
+  color: #c0392b;
+}
+
+.sidebar-banner.compare-mode p {
+  font-size: 0.85rem;
+  opacity: 0.9;
+  margin: 0.1rem 0 0.5rem;
+}
+
+.compare-exit-btn {
+  display: inline-block;
+  margin-top: 0.2rem;
+  padding: 4px 12px;
+  background: transparent;
+  border: 1px solid #c0392b;
+  border-radius: 4px;
+  color: #c0392b;
+  font-family: Inter, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.compare-exit-btn:hover {
+  background: rgba(192, 57, 43, 0.12);
+}
+
+/* ── Compare mode: disable toolbar tabs ─────────────────────────────── */
+body.compare-mode #toolbar button {
+  pointer-events: none;
+  opacity: 0.35;
+  cursor: not-allowed;
+}
