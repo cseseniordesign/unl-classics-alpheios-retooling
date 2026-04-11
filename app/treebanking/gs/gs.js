@@ -135,22 +135,23 @@ function renderPanel(key, sentenceId) {
 
   // Identify errors for THIS sentence first
   const currentSentenceData = comparison[sentenceId-1]; 
-  console.log(currentSentenceData)
-  const errors = currentSentenceData.words
-  .map(w => {
-  const errors = [];
-  if (w.missing || w.gold.head !== w.review.head)         errors.push("head");
-  if (w.diff.relation) errors.push("relation");
-  if (w.diff.postag)     errors.push("postag");
-  if (w.diff.lemma)      errors.push("lemma");
+  const errors = currentSentenceData.words.map(w => {
+    let types = [];
+    if (w.missing) {
+      types = ["head", "relation", "postag", "lemma"];
+    } else {
+      if (w.gold?.head !== w.review?.head) types.push("head");
+      if (w.diff?.relation) types.push("relation");
+      if (w.diff?.postag)   types.push("postag");
+      if (w.diff?.lemma)    types.push("lemma");
+    }
 
-  return {
-    id: w.wordId,
-    errorTypes: errors,
-    isProblem: errors.length > 0
-  };
-  })
-  .filter(w => w.isProblem); // Only keep the ones that actually have errors
+    return {
+      id: w.wordId,
+      errorTypes: types,
+      isProblem: types.length > 0
+    };
+  }).filter(w => w.isProblem);
   const isStudentTree = (key === 'b');
   drawLinks(gx, rootHierarchy, idParentPairs, errors, isStudentTree);
   drawNodes(gx, rootHierarchy,errors,isStudentTree);

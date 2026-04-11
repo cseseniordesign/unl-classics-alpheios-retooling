@@ -1,3 +1,7 @@
+import { compareTreebanks } from '../gs/compareEngine.js';  
+import { createNodeHierarchy } from '../tree/treeRender.js';
+import parseTreeBankXML from '../xml/parser.js';
+
 // ─── Compare Modal: Instructor Code Lookup ───────────────────────────────────
 
 // Add the basename of every XML file placed in instructorTrees/ here.
@@ -118,7 +122,27 @@ async function handleSubmit(els) {
     } finally {
         okBtn.disabled    = false;
         okBtn.textContent = 'Load Tree';
+        compareStudentAndTeacherTrees(window.instructorTreeXML, window.treebankData);
     }
+}
+
+// Global variables to store the comparison state
+window.globalErrorMap = []; 
+window.isComparing = false; 
+
+function compareStudentAndTeacherTrees(xmlA, xmlB) {
+    const dataA = parseTreeBankXML(xmlA); // Instructor/Gold
+    const dataB = xmlB;                   // Student/Review
+    
+    // Perform the full treebank comparison
+    const comparisonResults = compareTreebanks(dataA, dataB);
+    
+    // Store globally so the rendering functions can access them during sentence navigation
+    window.allComparisonResults = comparisonResults.details;
+    window.isComparing = true;
+
+    // Trigger initial render for the current sentence
+    createNodeHierarchy(window.currentIndex);
 }
 
 // ── Public setup ──────────────────────────────────────────────────────────────

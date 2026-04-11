@@ -149,9 +149,11 @@ export function createNodeHierarchy(sentenceId) {
     }
   });
 
+  // Get errors only if we are comparing
+  const errorIds = (window.isComparing) ? getErrorsForCurrentSentence() : [];
   // Draw visual elements (edges and nodes)
-  drawLinks(gx, rootHierarchy, idParentPairs);
-  drawNodes(gx, rootHierarchy);
+  drawLinks(gx, rootHierarchy, idParentPairs,errorIds, window.isComparing);
+  drawNodes(gx, rootHierarchy,errorIds, window.isComparing);
 
 const nodes = document.querySelectorAll(".node");
 nodes.forEach(node => {
@@ -200,6 +202,42 @@ nodes.forEach(node => {
       y: d.y
     };
   });
+}
+
+function getErrorsForCurrentSentence() {
+    if (!isComparing || !window.allComparisonResults) return [];
+
+    // sentenceId must match the index in your comparison array
+    const currentSentenceData = window.allComparisonResults[window.currentIndex-1]; 
+    if (!currentSentenceData) return [];
+
+    // CASE 1: The entire sentence is missing
+  if (currentSentenceData.missing || currentSentenceData.words.length === 0) {
+    return window.idParentPairs.map(word => ({
+      id: word.id,
+      errorTypes: ["head", "relation", "postag", "lemma", "missing-sentence"],
+      isProblem: true
+    }));
+  }
+
+  // CASE 2: The sentence exists, but some words might be wrong/missing
+  return currentSentenceData.words.map(w => {
+    let types = [];
+    if (w.missing) {
+      types = ["head", "relation", "postag", "lemma"];
+    } else {
+      if (w.gold?.head !== w.review?.head) types.push("head");
+      if (w.diff?.relation) types.push("relation");
+      if (w.diff?.postag)   types.push("postag");
+      if (w.diff?.lemma)    types.push("lemma");
+    }
+
+    return {
+      id: w.wordId,
+      errorTypes: types,
+      isProblem: types.length > 0
+    };
+  }).filter(w => w.isProblem);
 }
 
 function getCurrentSentenceWord(wordId) {
@@ -796,23 +834,6 @@ export function drawLinks(gx, rootHierarchy, idParentPairs, errorIds, isStudentT
       // --- Draw second segment (after label → child) ---
       group.append("path")
         .attr("class", "link-part2")
-        /*.attr('class', d => {
-          let classList = "";
-
-          // Guard against undefined and check if it's the student tree
-          if (isStudentTree && d.target && d.target.data && d.target.data.id) {
-            
-            // Look for the error entry for the CHILD of this link
-            const errorEntry = errorIds.find(word => word.id === d.target.data.id);
-
-            //If that child has a relation error, highlight THIS label
-            if (errorEntry && errorEntry.errorTypes.includes("head")) {
-              classList += " err-head";
-            }
-          }
-
-          return classList;
-        })*/
         .attr("fill", "none")
         .attr("stroke", "#666")
         .attr("stroke-width", 1.2)

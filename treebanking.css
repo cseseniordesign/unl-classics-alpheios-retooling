@@ -1775,3 +1775,29 @@ body.mode-relation #tool-body {
   opacity: 0.55;
   pointer-events: none;
 }
+
+.text-bg.err-bg {
+  fill: red;
+  fill-opacity: var(--node-selected-opacity);
+}
+
+.text-bg {
+  fill: none;
+  font-family: "Arial", sans-serif;
+  font-size: 10px;
+  text-anchor: middle;
+  pointer-events: none;
+}
+
+.postag-label.err-postag {
+  fill: black !important;     
+  font-weight: bold !important;
+  font-weight: 500px !important;
+}
+
+.err-head {
+  fill: none !important;
+  stroke: red !important;
+  fill-opacity: var(--node-hover-opacity) !important;
+  stroke-width: 3px !important;
+}
