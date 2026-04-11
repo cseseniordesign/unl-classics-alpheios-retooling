@@ -82,6 +82,46 @@
     the Exit button will prompt you to confirm, but unsaved work not yet downloaded will be lost if localStorage is cleared.</p>
     <hr>
 
+    <h3><u>Using Compare Mode</u></h3>
+    <p>
+        Compare mode lets you check your treebank against an instructor's reference tree and see exactly where your 
+        annotations differ. To enter compare mode, click the <strong>Compare</strong> button in the header toolbar and 
+        enter the 6-digit code provided by your instructor. If the code matches a reference tree, the editor will switch 
+        into compare mode immediately.
+    </p>
+    <p>
+        While in compare mode the <strong>Compare Mode</strong> panel appears on the right side of the screen in place of 
+        the usual tool tabs. All tool tabs are disabled and the tree is <strong>read-only</strong> meaning you cannot move nodes, 
+        change relations, or open context menus. You can still navigate between sentences normally using the header buttons 
+        or the sentence selector, and the comparison highlights update automatically as you move through the document.
+    </p>
+    <p>
+        To leave compare mode and resume editing, click the <strong>Exit Compare Mode</strong> button inside the Compare 
+        Mode panel.
+    </p>
+    <p><strong>What the visual markers mean:</strong></p>
+    <ul>
+        <li>
+            <strong>Red highlighted postag:</strong> The word's <em>lemma</em> does not match the instructor's 
+            reference. The background rectangle behind the word form is filled red.
+        </li>
+        <li>
+            <strong>Thick red dependency arc:</strong> The word's <em>head assignment</em> is wrong. It is attached to a 
+            different parent than in the instructor's tree. The arc leading to that word is drawn in red with a heavier 
+            stroke weight.
+        </li>
+        <li>
+            <strong>Red highlightedrelation:</strong> The <em>dependency relation label</em> on an arc does not match the 
+            instructor's label for that word. The label text itself is highlighted red; the arc may otherwise appear 
+            correct if the head is right.
+        </li>
+    </ul>
+    <p>
+        A single word can show multiple markers at once if more than one attribute is wrong. Words with no markers are in 
+        full agreement with the instructor's reference for that sentence.
+    </p>
+    <hr>
+
     <h3><u>Supported Languages and Tagsets</u></h3>
     <p>Arethusa Lite supports Greek, Latin, English, Persian, Arabic, and more. Available annotation tagsets include ALDT (Latin and Greek), 
     Universal Dependencies, Smyth Grammar, JMH Ancient Greek, Harrington, Wheelock, Pedalion, and beta support for Persian, Lyon Latin, and 
@@ -105,6 +145,7 @@
         the modal will fetch and search the new file automatically the next time a student enters a matching code. 
         The header line should look something like: <code>&lt;treebank xml:lang="grc" version="1.5" direction="ltr" format="morphgrc" code='000000'&gt;&lt;/treebank&gt;</code>
     </p>
+    <hr>
 
     <h3><u>Further Documentation</u></h3>
     <a href="https://github.com/cseseniordesign/unl-classics-alpheios-retooling/wiki" target="_blank">Project Wiki</a>

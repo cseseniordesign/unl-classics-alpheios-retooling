@@ -75,10 +75,18 @@ h3 {
     margin-top: 20px;
 }
 
-p {
+p{
     font-family: Inter, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
     color: #616d79;
     line-height: 1.6;
+    margin-bottom: 15px;
+}
+
+li {
+    font-family: Inter, -apple-system, system-ui, "Segoe UI", Helvetica, Arial, sans-serif;
+    color: #616d79;
+    font-size: 14px;
+    line-height: 1.2;
     margin-bottom: 15px;
 }
 
