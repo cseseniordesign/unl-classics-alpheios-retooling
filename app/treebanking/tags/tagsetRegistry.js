@@ -15,7 +15,7 @@ export const TAGSET_REGISTRY = [
   {
     id: 'aldt-lat',
     label: 'Ancient Language Dependency Treebank (Latin)',
-    distFile: '/app/treebanking/dist/aldt-misc.json',
+    distFile: '/unl-classics-alpheios-retooling/app/treebanking/dist/aldt-misc.json',
     format: 'aldt',
     lang: 'lat',
     hasMorph: true,
@@ -23,7 +23,7 @@ export const TAGSET_REGISTRY = [
   {
     id: 'aldt-grc',
     label: 'Ancient Language Dependency Treebank (Greek)',
-    distFile: '/app/treebanking/dist/aldt-misc-grc.json',
+    distFile: '/unl-classics-alpheios-retooling/app/treebanking/dist/aldt-misc-grc.json',
     format: 'aldt',
     lang: 'grc',
     hasMorph: true,
@@ -31,7 +31,7 @@ export const TAGSET_REGISTRY = [
   {
     id: 'smyth',
     label: 'Smyth Grammar Tag Set',
-    distFile: '/app/treebanking/dist/smyth3.json',
+    distFile: '/unl-classics-alpheios-retooling/app/treebanking/dist/smyth3.json',
     format: 'smyth',
     lang: 'grc',
     hasMorph: true,
@@ -47,7 +47,7 @@ export const TAGSET_REGISTRY = [
   {
     id: 'jmh_grc',
     label: 'JMH Greek Tagset',
-    distFile: '/app/treebanking/dist/jmhgreek.json',
+    distFile: '/unl-classics-alpheios-retooling/app/treebanking/dist/jmhgreek.json',
     format: 'jmh_grc',
     lang: 'grc',
     hasMorph: true,
@@ -71,7 +71,7 @@ export const TAGSET_REGISTRY = [
   {
     id: 'ud_english',
     label: 'UD English',
-    distFile: '/app/treebanking/dist/ud.json',
+    distFile: '/unl-classics-alpheios-retooling/app/treebanking/dist/ud.json',
     format: 'conllu',
     lang: 'eng',
     hasMorph: true,
@@ -79,7 +79,7 @@ export const TAGSET_REGISTRY = [
   {
     id: 'persian',
     label: 'Persian (Beta)',
-    distFile: '/app/treebanking/dist/persian.json',
+    distFile: '/unl-classics-alpheios-retooling/app/treebanking/dist/persian.json',
     format: 'persian',
     lang: 'per',
     hasMorph: true,
@@ -88,7 +88,7 @@ export const TAGSET_REGISTRY = [
   {
     id: 'lyon_lat',
     label: 'Lyon Latin (Beta)',
-    distFile: '/app/treebanking/dist/lyonLatin.json',
+    distFile: '/unl-classics-alpheios-retooling/app/treebanking/dist/lyonLatin.json',
     format: 'lyon_lat',
     lang: 'lat',
     hasMorph: true,
@@ -97,7 +97,7 @@ export const TAGSET_REGISTRY = [
   {
     id: 'lyon_grc',
     label: 'Lyon Grec (Beta)',
-    distFile: '/app/treebanking/dist/lyonGrec.json',
+    distFile: '/unl-classics-alpheios-retooling/app/treebanking/dist/lyonGrec.json',
     format: 'lyon_grc',
     lang: 'grc',
     hasMorph: true,
@@ -106,7 +106,7 @@ export const TAGSET_REGISTRY = [
   {
     id: 'pedalion',
     label: 'Pedalion',
-    distFile: '/app/treebanking/dist/pedalion.json',
+    distFile: '/unl-classics-alpheios-retooling/app/treebanking/dist/pedalion.json',
     format: 'pedalion',
     lang: 'grc',
     hasMorph: true,
