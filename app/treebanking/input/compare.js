@@ -1,4 +1,4 @@
-import { showToast } from '/main.js';
+import { showToast } from '../../../main.js';
 import parseTreeBankXML from '../xml/parser.js';
 import { validateXML } from '../libs/xmllint/index-browser.mjs';
 import { compareTreebanks } from '../gs/compareEngine.js';  
@@ -6,12 +6,12 @@ import { compareTreebanks } from '../gs/compareEngine.js';
 // ─── Schema / language helpers (mirrors xmlLoader.js) ───────────────────────
 
 async function fetchSchema() {
-  return fetch('/app/treebanking/schemas/treebank-1.7.xsd').then(r => r.text());
+  return fetch('./app/treebanking/schemas/treebank-1.7.xsd').then(r => r.text());
 }
 
 async function isRealISOLanguage(code) {
   try {
-    const response = await fetch('/assets/languages.json');
+    const response = await fetch('./assets/languages.json');
     const languageCodes = await response.json();
     return languageCodes.some(l => l.Id.toLowerCase() === code.toLowerCase());
   } catch (err) {
