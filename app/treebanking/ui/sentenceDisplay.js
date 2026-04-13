@@ -49,14 +49,17 @@ export function updateTreebankSelectionBanner() {
   if (lemma)  bits.push(lemma);
   if (postag) bits.push(postag);
   if (rel)    bits.push(rel);
-  
+
+
   const label = document.querySelector(".label");
+  const value = document.querySelector(".value");
+  if (!label || !value) return;
   label.style.display = ("block");
   const div = document.createElement("div");
   const name = document.createElement("span");
   name.textContent = `${word.form}`;
   name.classList.add("tb-node-token");
-  const value = document.querySelector(".value");
+  //const value = document.querySelector(".value");
   const meta = document.createElement("span");
   meta.textContent = bits.join(" · "); 
   div.append(name);

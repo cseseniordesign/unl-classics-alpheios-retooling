@@ -274,7 +274,11 @@ export function buildXML() {
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
 
-      xmlOut += `    <word id="${w.id}" form="${form}" lemma="${lemma}" postag="${postag}" relation="${relation}" head="${head}" />\n`;
+      //xmlOut += `    <word id="${w.id}" form="${form}" lemma="${lemma}" postag="${postag}" relation="${relation}" head="${head}" />\n`;
+      const artificialAttr = w.artificial
+        ? ` artificial="${w.artificial}" insertion_id="${w.insertion_id}"`
+        : '';
+      xmlOut += `    <word id="${w.id}" form="${form}" lemma="${lemma}" postag="${postag}" relation="${relation}" head="${head}"${artificialAttr} />\n`;
     }
 
     xmlOut += `  </sentence>\n`;

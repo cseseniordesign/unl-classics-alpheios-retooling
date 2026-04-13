@@ -3,9 +3,8 @@ import { initializeKeyboard, chooseKeyboard } from '../xml/selector.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
 import { displaySentence } from '../ui/sentenceDisplay.js';
  
-window.atInsertionBefore = true;
-let insertionLetter = 'a'; // next available letter suffix
- 
+window.atInsertionBefore = false;
+let insertionLetter = 'a';
  
 /**
  * --------------------------------------------------------------------------
@@ -19,13 +18,12 @@ export function setupaT() {
   const artificialTokenBtn = document.getElementById("aT");
   if (!artificialTokenBtn) return;
   artificialTokenBtn.onmouseover = null;
-  // Open/toggle ONLY on click
   artificialTokenBtn.addEventListener("click", handleArtificialTokenClick);
 }
-
+ 
 function handleArtificialTokenClick() {
-  window.atInsertionBefore = true;
-
+  window.atInsertionBefore = false;
+ 
   const artificialTokenBtn = document.getElementById("aT");
   const wasActive = artificialTokenBtn.classList.contains("active");
   const toolBody = document.getElementById("tool-body");
@@ -45,7 +43,6 @@ function handleArtificialTokenClick() {
     return;
   }
  
-  // Clear other buttons
   const allButtons = document.querySelectorAll("#toolbar button");
   allButtons.forEach(btn => {
     btn.classList.remove("active");
@@ -56,7 +53,6 @@ function handleArtificialTokenClick() {
   artificialTokenBtn.style.backgroundColor = 'green';
   insertionLetter = 'a';
  
-  // Inject the subscreen HTML
   toolBody.innerHTML = `
     <style>
       .at-panel { padding: 4px 0; }
@@ -174,6 +170,58 @@ function handleArtificialTokenClick() {
       }
       .token-input:focus { border-color: #4e6476; }
  
+      /* --- List view styles --- */
+      .at-list {
+        list-style: none;
+        margin: 0;
+        padding: 0;
+      }
+ 
+      .at-list-empty {
+        text-align: center;
+        font-size: 13px;
+        color: #888;
+        margin-top: 16px;
+      }
+ 
+      .at-list-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 7px 8px;
+        border-radius: 4px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        margin-bottom: 4px;
+        transition: background 0.12s;
+      }
+      .at-list-item:hover {
+        background: #e8edf1;
+      }
+      .at-list-item.at-list-selected {
+        background: #d6e4f0;
+        border-color: #4e6476;
+      }
+ 
+      .at-list-form {
+        font-size: 15px;
+        font-weight: 600;
+        color: #222;
+        flex: 1;
+      }
+ 
+      .at-list-type {
+        font-size: 11px;
+        color: #888;
+        background: #eee;
+        border-radius: 3px;
+        padding: 1px 5px;
+      }
+ 
+      .at-list-pos {
+        font-size: 11px;
+        color: #666;
+      }
     </style>
  
     <div class="at-panel">
@@ -183,29 +231,36 @@ function handleArtificialTokenClick() {
         <button class="at-btn" id="at-list-btn">List</button>
       </div>
  
-      <label class="at-field-label" for="at-visual-rep">
-        Visual representation of new token (optional)
-      </label>
- 
-      <input class="token-input" type="text">
-      <div class="simple-keyboard"></div>
- 
-      <select class="at-select" id="at-token-type">
-        <option value="elliptic">elliptic</option>
-      </select>
- 
-      <p class="at-insertion-label">Insertion Point</p>
-      <div class="at-insertion-row">
-        <div class="at-insertion-text" id="at-insertion-display">
-          Please select a word
+      <!-- CREATE VIEW -->
+      <div id="at-create-view">
+        <label class="at-field-label" for="at-visual-rep">
+          Visual representation of new token (optional)
+        </label>
+   
+        <input class="token-input" type="text">
+        <div class="simple-keyboard"></div>
+   
+        <select class="at-select" id="at-token-type">
+          <option value="elliptic">elliptic</option>
+        </select>
+   
+        <p class="at-insertion-label">Insertion Point</p>
+        <div class="at-insertion-row">
+          <div class="at-insertion-text" id="at-insertion-display">
+            Please select a word
+          </div>
+          <button class="at-icon-btn" id="select-word" title="Select Word">◈</button>
+          <button class="at-icon-btn" id="place-infront" title="Toggle insertion side">→</button>
         </div>
-        <button class="at-icon-btn" id="select-word" title="Select Word">◈</button>
-    
-        <button class="at-icon-btn" id="place-infront" title="Toggle insertion side">←</button>
+   
+        <div class="at-add-btn-wrapper">
+          <button class="at-add-btn" id="at-add-token-btn">Add token</button>
+        </div>
       </div>
  
-      <div class="at-add-btn-wrapper">
-        <button class="at-add-btn" id="at-add-token-btn">Add token</button>
+      <!-- LIST VIEW -->
+      <div id="at-list-view" style="display:none;">
+        <ul class="at-list" id="at-token-list"></ul>
       </div>
  
     </div>
@@ -218,12 +273,12 @@ function handleArtificialTokenClick() {
     });
   });
  
-  // Create / List toggle
   const createBtn = toolBody.querySelector("#at-create-btn");
   const listBtn   = toolBody.querySelector("#at-list-btn");
+  const createView = toolBody.querySelector("#at-create-view");
+  const listView   = toolBody.querySelector("#at-list-view");
  
-  // Auto Toggle to Create view on open
-  createBtn.style.backgroundColor = 'green'
+  createBtn.style.backgroundColor = 'green';
   listBtn.style.backgroundColor = '#4e6476';
  
   function showCreateView() {
@@ -231,7 +286,9 @@ function handleArtificialTokenClick() {
     listBtn.style.backgroundColor = '#4e6476';
     createBtn.classList.add("active");
     listBtn.classList.remove("active");
-    // restore your original panel content here
+    createView.style.display = '';
+    listView.style.display = 'none';
+    clearAtHighlights();
   }
  
   function showListView() {
@@ -239,14 +296,14 @@ function handleArtificialTokenClick() {
     createBtn.style.backgroundColor = '#4e6476';
     listBtn.classList.add("active");
     createBtn.classList.remove("active");
-    // blank for now
+    createView.style.display = 'none';
+    listView.style.display = '';
+    renderAtList();
   }
  
   createBtn.addEventListener("click", showCreateView);
   listBtn.addEventListener("click", showListView);
- 
   createBtn.click();
- 
  
   // Select word for anchoring new token
   const selectWordBtn = toolBody.querySelector("#select-word");
@@ -255,23 +312,26 @@ function handleArtificialTokenClick() {
     selectWordBtn.style.backgroundColor = 'green';
   });
  
+  window.onAtAnchorSelected = function () {
+    selectWordBtn.style.backgroundColor = '#4e6476';
+    const anchor = getAnchorWord();
+    const insertionDisplay = document.querySelector("#at-insertion-display");
+    if (insertionDisplay && anchor) {
+      const position = window.atInsertionBefore ? 'in front of' : 'behind';
+      insertionDisplay.textContent = `${position} [${anchor.form}]`;
+    }
+  };
  
-  // Place in front of / behind selected word
-  // Default: atInsertionBefore = false → arrow points LEFT (← = in front of word)
-  // Toggled: atInsertionBefore = true  → arrow points RIGHT (→ = behind word)
   const placeInfrontBtn = toolBody.querySelector("#place-infront");
   placeInfrontBtn.addEventListener("click", () => {
     window.atInsertionBefore = !window.atInsertionBefore;
- 
-    // ← = insert in front of the word (default, not-before in array terms)
-    // → = insert behind the word
-    placeInfrontBtn.textContent = window.atInsertionBefore ? '→' : '←';
-    placeInfrontBtn.style.backgroundColor = window.atInsertionBefore ? 'green' : '#4e6476';
+    placeInfrontBtn.textContent = window.atInsertionBefore ? '←' : '→';
+    placeInfrontBtn.style.backgroundColor = window.atInsertionBefore ? '#4e6476' : 'green';
  
     const anchor = getAnchorWord();
     const insertionDisplay = document.querySelector("#at-insertion-display");
     if (insertionDisplay && anchor) {
-      const position = window.atInsertionBefore ? 'behind' : 'in front of';
+      const position = window.atInsertionBefore ? 'in front of' : 'behind';
       insertionDisplay.textContent = `${position} [${anchor.form}]`;
     }
   });
@@ -280,7 +340,6 @@ function handleArtificialTokenClick() {
     const sentence = window.treebankData?.find(s => s.id === String(window.currentIndex));
     return sentence?.words.find(w => String(w.id) === String(window.atSelectedWordId));
   }
- 
  
   // Add token button
   const addTokenBtn = toolBody.querySelector("#at-add-token-btn");
@@ -294,12 +353,11 @@ function handleArtificialTokenClick() {
     const visualRep = toolBody.querySelector(".token-input").value;
     const tokenType = toolBody.querySelector("#at-token-type").value;
     const anchorId  = String(anchor.id).padStart(4, '0');
- 
     const insertion_id = getNextInsertionId(anchorId, getCurrentArtificialTokens());
  
     const newToken = {
       id: getNextWordId(),
-      form: visualRep || `[${getATCount()}]`,
+      form: visualRep || `[${getATCount() + 1}]`,
       insertion_id,
       artificial: tokenType,
       relation: "",
@@ -307,27 +365,24 @@ function handleArtificialTokenClick() {
     };
  
     insertTokenIntoSentence(newToken);
- 
   });
  
   function getNextInsertionId(anchorPrefix, existingTokens) {
-  const taken = existingTokens
-    .filter(t => t.insertion_id?.startsWith(anchorPrefix))
-    .map(t => t.insertion_id.slice(-1));
-  return anchorPrefix + 'abcdefghijklmnopqrstuvwxyz'
-    .split('')
-    .find(l => !taken.includes(l));
+    const taken = existingTokens
+      .filter(t => t.insertion_id?.startsWith(anchorPrefix))
+      .map(t => t.insertion_id.slice(-1));
+    return anchorPrefix + 'abcdefghijklmnopqrstuvwxyz'
+      .split('')
+      .find(l => !taken.includes(l));
   }
  
   function getCurrentArtificialTokens() {
-    const sentence = window.treebankData
-      ?.find(s => s.id === String(window.currentIndex));
+    const sentence = window.treebankData?.find(s => s.id === String(window.currentIndex));
     return sentence?.words.filter(w => w.artificial) || [];
   }
  
   function getNextWordId() {
-    const sentence = window.treebankData
-      ?.find(s => s.id === String(window.currentIndex));
+    const sentence = window.treebankData?.find(s => s.id === String(window.currentIndex));
     return String((sentence?.words.length || 0) + 1);
   }
  
@@ -348,5 +403,107 @@ function handleArtificialTokenClick() {
     createNodeHierarchy(window.currentIndex);
     displaySentence(window.currentIndex);
     triggerAutoSave();
+  }
+ 
+  // ---------------------------------------------------------------------------
+  // LIST VIEW LOGIC
+  // ---------------------------------------------------------------------------
+ 
+  let selectedAtId = null;
+ 
+  function clearAtHighlights() {
+    selectedAtId = null;
+    if (window.batchSelection) window.batchSelection.clear();
+    document.querySelectorAll(".token").forEach(t => t.classList.remove("selected"));
+    if (typeof d3 !== "undefined") {
+      d3.selectAll(".node").classed("selected", false);
+    }
+  }
+ 
+  function highlightToken(wordId) {
+    // Clear previous highlights
+    clearAtHighlights();
+ 
+    selectedAtId = String(wordId);
+ 
+    // Highlight sentence token
+    const token = document.querySelector(`.token[data-word-id="${wordId}"]`);
+    if (token) token.classList.add("selected");
+ 
+    // Highlight tree node
+    const node = document.querySelector(`.node[id="${wordId}"]`);
+    if (node && typeof d3 !== "undefined") {
+      d3.select(node).classed("selected", true);
+    }
+ 
+    if (window.batchSelection) window.batchSelection.add(String(wordId));
+  }
+ 
+  function renderAtList() {
+    const listEl = toolBody.querySelector("#at-token-list");
+    if (!listEl) return;
+ 
+    listEl.replaceChildren();
+ 
+    const artificialTokens = getCurrentArtificialTokens();
+ 
+    if (artificialTokens.length === 0) {
+      const empty = document.createElement("p");
+      empty.className = "at-list-empty";
+      empty.textContent = "No artificial tokens in this sentence.";
+      listEl.appendChild(empty);
+      return;
+    }
+ 
+    artificialTokens.forEach(w => {
+      const item = document.createElement("li");
+      item.className = "at-list-item";
+      if (String(w.id) === selectedAtId) item.classList.add("at-list-selected");
+ 
+      const formSpan = document.createElement("span");
+      formSpan.className = "at-list-form";
+      formSpan.textContent = w.form;
+ 
+      const typeSpan = document.createElement("span");
+      typeSpan.className = "at-list-type";
+      typeSpan.textContent = w.artificial;
+ 
+      item.appendChild(formSpan);
+      item.appendChild(typeSpan);
+ 
+      // Click to select
+      item.addEventListener("click", () => {
+        highlightToken(w.id);
+        // Update selected state on all items
+        listEl.querySelectorAll(".at-list-item").forEach(el =>
+          el.classList.remove("at-list-selected")
+        );
+        item.classList.add("at-list-selected");
+      });
+ 
+      // Hover highlight
+      item.addEventListener("mouseenter", () => {
+        const token = document.querySelector(`.token[data-word-id="${w.id}"]`);
+        if (token && String(w.id) !== selectedAtId) token.classList.add("selected");
+        const node = document.querySelector(`.node[id="${w.id}"]`);
+        if (node && typeof d3 !== "undefined" && String(w.id) !== selectedAtId) {
+          d3.select(node).classed("selected", true);
+        }
+      });
+ 
+      item.addEventListener("mouseleave", () => {
+        // Only remove highlight if this item isn't the selected one
+        if (String(w.id) !== selectedAtId) {
+          const token = document.querySelector(`.token[data-word-id="${w.id}"]`);
+          if (token) token.classList.remove("selected");
+          const node = document.querySelector(`.node[id="${w.id}"]`);
+          if (node && typeof d3 !== "undefined") {
+            d3.select(node).classed("selected", false);
+          }
+        }
+      });
+ 
+      listEl.appendChild(item);
+    });
   }
 }

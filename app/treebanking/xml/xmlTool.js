@@ -735,7 +735,10 @@ export function getCurrentSentenceXML() {
         ? ""
         : String(w.relation);
 
-    return `  &lt;word id="${w.id}" form="${w.form}" lemma="${lemma}" postag="${postag}" relation="${relation}" head="${head}" /&gt;`;
+    const artificialAttr = w.artificial
+      ? ` artificial="${w.artificial}" insertion_id="${w.insertion_id}"`
+      : '';
+    return `  &lt;word id="${w.id}" form="${w.form}" lemma="${lemma}" postag="${postag}" relation="${relation}" head="${head}"${artificialAttr} /&gt;`;
   }).join('\n');
 
   const xml = `&lt;sentence id="${data.id}"&gt;\n${words}\n&lt;/sentence&gt;`;
