@@ -2,6 +2,7 @@ import { createNodeHierarchy } from '../tree/treeRender.js';
 import { initializeKeyboard, chooseKeyboard } from '../xml/selector.js';
 import { triggerAutoSave } from '../xml/saveXML.js';
 import { displaySentence } from '../ui/sentenceDisplay.js';
+import { showConfirmDialog } from '../ui/modal.js';
  
 window.atInsertionBefore = false;
 let insertionLetter = 'a';
@@ -343,10 +344,24 @@ function handleArtificialTokenClick() {
  
   // Add token button
   const addTokenBtn = toolBody.querySelector("#at-add-token-btn");
-  addTokenBtn.addEventListener("click", () => {
+  addTokenBtn.addEventListener("click", async () => {
     const anchor = getAnchorWord();
     if (!anchor) {
-      alert("No anchor word selected.");
+      const cancelBtn = document.getElementById("app-modal-cancel");
+      const oldDisplay = cancelBtn ? cancelBtn.style.display : "";
+
+      if (cancelBtn) cancelBtn.style.display = "none";
+
+      await showConfirmDialog(
+        "No anchor word selected.",
+        {
+          titleText: "Artificial Token",
+          okText: "Okay",
+          cancelText: "Cancel"
+        }
+      );
+
+      if (cancelBtn) cancelBtn.style.display = oldDisplay;
       return;
     }
  
