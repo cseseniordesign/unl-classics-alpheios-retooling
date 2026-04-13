@@ -89,7 +89,7 @@ async function handleExit() {
     sessionStorage.removeItem("userInput");
     window.uploadedFileHandle = null;
     window.treebankData = null;
-    window.location = '/index.html';
+    window.location = './index.html';
   });
 }
 
