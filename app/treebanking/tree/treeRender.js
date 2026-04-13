@@ -115,6 +115,19 @@ export function createNodeHierarchy(sentenceId) {
     });
   }
 
+  // Restore previous LINK endpoint positions for animation
+  if (window.prevNodePositions) {
+    rootHierarchy.links().forEach(link => {
+      const prevSource = window.prevNodePositions[link.source.data.id];
+      const prevTarget = window.prevNodePositions[link.target.data.id];
+
+      link.sourceX0 = prevSource ? prevSource.x : (link.source.x0 ?? link.source.x);
+      link.sourceY0 = prevSource ? prevSource.y : (link.source.y0 ?? link.source.y);
+      link.targetX0 = prevTarget ? prevTarget.x : (link.target.x0 ?? link.target.x);
+      link.targetY0 = prevTarget ? prevTarget.y : (link.target.y0 ?? link.target.y);
+    });
+  }
+
   // Select and reset the SVG container
   window.svg = d3.select('#sandbox svg');
   svg.selectAll('*').remove();
