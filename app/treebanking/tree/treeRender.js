@@ -749,75 +749,117 @@ export function drawNodes(gx, rootHierarchy, errorIds = [], isStudentTree) {
  */
 export function drawLinks(gx, rootHierarchy, idParentPairs, errorIds, isStudentTree) {
   const tLabel = 0.75;  // Where label sits along the curve
-  const gapT = 0.15;   // Fraction of curve length to remove around label (≈ small gap)
+  const gapT = 0.15;    // Fraction of curve length to remove around label
+
   gx.selectAll(".link")
     .data(rootHierarchy.links())
     .join("g")
     .attr("class", "link-group")
     .each(function (d) {
-      // ---FOREST CHECK ---
-      // If the parent is root, and the child is a floating word (isForestRoot), 
+      // --- FOREST CHECK ---
+      // If the parent is root, and the child is a floating word (isForestRoot),
       // do not draw the line or the label.
       if (d.source.data.id === 'root' && d.target.data.isForestRoot) {
-        const toolBody = document.getElementById("tool-body") || null;
-        
-        return; 
+        return;
       }
+
       const group = d3.select(this);
 
       // --- Spread siblings slightly to prevent overlap ---
-      const siblings = (d.source.children || []).filter(c => !c.data.isForestRoot); // exclude forest nodes
+      const siblings = (d.source.children || []).filter(c => !c.data.isForestRoot);
       const index = siblings.indexOf(d.target);
       const offset = (index - (siblings.length - 1) / 2) * 12;
 
-      // --- Define start and end positions ---      
-      const source = { x: d.source.x + offset, y: d.source.y + 10 };
-
       const isCompareMode = !!document.getElementById('sandbox-a') || !!window.isComparing;
-      var target = 0;
-      if (isCompareMode) {
-        var target = { x: d.target.x, y: d.target.y - 16 };
-      }else{
-        var target = { x: d.target.x, y: d.target.y - 10 };
-      }
 
-      // --- Define cubic Bézier control points ---
-      const dx = (target.x - source.x) * 0.5;
-      const c1x = source.x + dx;
-      const c1y = source.y + (target.y - source.y) * 0.2;
-      const c2x = target.x;
-      const c2y = target.y - (target.y - source.y) * 0.8;
+      // ---------- helper to build one link geometry ----------
+      function buildGeometry(usePrevious = false) {
+        const sourceBaseX = usePrevious
+          ? (d.sourceX0 ?? d.source.x0 ?? d.source.x)
+          : d.source.x;
 
-      // --- Helper: De Casteljau subdivision to split Bézier at t ---
-      function subdivideCurve(x0, y0, x1, y1, x2, y2, x3, y3, t) {
-        const x01 = x0 + (x1 - x0) * t;
-        const y01 = y0 + (y1 - y0) * t;
-        const x12 = x1 + (x2 - x1) * t;
-        const y12 = y1 + (y2 - y1) * t;
-        const x23 = x2 + (x3 - x2) * t;
-        const y23 = y2 + (y3 - y2) * t;
-        const x012 = x01 + (x12 - x01) * t;
-        const y012 = y01 + (y12 - y01) * t;
-        const x123 = x12 + (x23 - x12) * t;
-        const y123 = y12 + (y23 - y12) * t;
-        const x0123 = x012 + (x123 - x012) * t;
-        const y0123 = y012 + (y123 - y012) * t;
+        const sourceBaseY = usePrevious
+          ? (d.sourceY0 ?? d.source.y0 ?? d.source.y)
+          : d.source.y;
+
+        const targetBaseX = usePrevious
+          ? (d.targetX0 ?? d.target.x0 ?? d.target.x)
+          : d.target.x;
+
+        const targetBaseY = usePrevious
+          ? (d.targetY0 ?? d.target.y0 ?? d.target.y)
+          : d.target.y;
+
+        // --- Define start and end positions ---
+        const source = { x: sourceBaseX + offset, y: sourceBaseY + 10 };
+
+        let target = null;
+        if (isCompareMode) {
+          target = { x: targetBaseX, y: targetBaseY - 16 };
+        } else {
+          target = { x: targetBaseX, y: targetBaseY - 10 };
+        }
+
+        // --- Define cubic Bézier control points ---
+        const dx = (target.x - source.x) * 0.5;
+        const c1x = source.x + dx;
+        const c1y = source.y + (target.y - source.y) * 0.2;
+        const c2x = target.x;
+        const c2y = target.y - (target.y - source.y) * 0.8;
+
+        // --- Helper: De Casteljau subdivision to split Bézier at t ---
+        function subdivideCurve(x0, y0, x1, y1, x2, y2, x3, y3, t) {
+          const x01 = x0 + (x1 - x0) * t;
+          const y01 = y0 + (y1 - y0) * t;
+          const x12 = x1 + (x2 - x1) * t;
+          const y12 = y1 + (y2 - y1) * t;
+          const x23 = x2 + (x3 - x2) * t;
+          const y23 = y2 + (y3 - y2) * t;
+          const x012 = x01 + (x12 - x01) * t;
+          const y012 = y01 + (y12 - y01) * t;
+          const x123 = x12 + (x23 - x12) * t;
+          const y123 = y12 + (y23 - y12) * t;
+          const x0123 = x012 + (x123 - x012) * t;
+          const y0123 = y012 + (y123 - y012) * t;
+          return {
+            left:  [x0, y0, x01, y01, x012, y012, x0123, y0123],
+            right: [x0123, y0123, x123, y123, x23, y23, x3, y3]
+          };
+        }
+
+        // --- Compute the three parts: before-gap, gap-center, after-gap ---
+        const beforeGap = subdivideCurve(
+          source.x, source.y, c1x, c1y, c2x, c2y, target.x, target.y,
+          tLabel - gapT
+        ).left;
+
+        const afterGap = subdivideCurve(
+          source.x, source.y, c1x, c1y, c2x, c2y, target.x, target.y,
+          tLabel + gapT
+        ).right;
+
+        // --- Compute actual label coordinates at tLabel ---
+        const t = tLabel;
+        const labelX = Math.pow(1 - t, 3) * source.x +
+                  3 * Math.pow(1 - t, 2) * t * c1x +
+                  3 * (1 - t) * Math.pow(t, 2) * c2x +
+                  Math.pow(t, 3) * target.x;
+
+        const labelY = Math.pow(1 - t, 3) * source.y +
+                  3 * Math.pow(1 - t, 2) * t * c1y +
+                  3 * (1 - t) * Math.pow(t, 2) * c2y +
+                  Math.pow(t, 3) * target.y;
+
         return {
-          left:  [x0, y0, x01, y01, x012, y012, x0123, y0123],
-          right: [x0123, y0123, x123, y123, x23, y23, x3, y3]
+          part1: `M${beforeGap[0]},${beforeGap[1]} C${beforeGap[2]},${beforeGap[3]} ${beforeGap[4]},${beforeGap[5]} ${beforeGap[6]},${beforeGap[7]}`,
+          part2: `M${afterGap[0]},${afterGap[1]} C${afterGap[2]},${afterGap[3]} ${afterGap[4]},${afterGap[5]} ${afterGap[6]},${afterGap[7]}`,
+          labelX,
+          labelY
         };
       }
 
-      // --- Compute the three parts: before-gap, gap-center, after-gap ---
-      const beforeGap = subdivideCurve(
-        source.x, source.y, c1x, c1y, c2x, c2y, target.x, target.y,
-        tLabel - gapT
-      ).left;
-
-      const afterGap = subdivideCurve(
-        source.x, source.y, c1x, c1y, c2x, c2y, target.x, target.y,
-        tLabel + gapT
-      ).right;
+      const startGeom = buildGeometry(true);
+      const endGeom   = buildGeometry(false);
 
       // --- Draw first segment (parent → before label) ---
       group.append("path")
@@ -825,16 +867,11 @@ export function drawLinks(gx, rootHierarchy, idParentPairs, errorIds, isStudentT
         .attr("fill", "none")
         .attr("stroke", "#666")
         .attr("stroke-width", 1.2)
-        .attr('class', d => {
-          let classList = "";
+        .attr('class', () => {
+          let classList = "link-part1";
 
-          // Guard against undefined and check if it's the student tree
           if (isStudentTree && d.target && d.target.data && d.target.data.id) {
-            
-            // Look for the error entry for the CHILD of this link
             const errorEntry = errorIds.find(word => word.id === d.target.data.id);
-
-            //If that child has a relation error, highlight THIS label
             if (errorEntry && errorEntry.errorTypes.includes("head")) {
               classList += " err-head";
             }
@@ -842,49 +879,34 @@ export function drawLinks(gx, rootHierarchy, idParentPairs, errorIds, isStudentT
 
           return classList;
         })
-        .attr("d",
-          `M${beforeGap[0]},${beforeGap[1]} C${beforeGap[2]},${beforeGap[3]} ${beforeGap[4]},${beforeGap[5]} ${beforeGap[6]},${beforeGap[7]}`
-        );
-      
+        .attr("d", startGeom.part1)
+        .transition()
+        .duration(800)
+        .attr("d", endGeom.part1);
+
       // --- Draw second segment (after label → child) ---
       group.append("path")
         .attr("class", "link-part2")
         .attr("fill", "none")
         .attr("stroke", "#666")
         .attr("stroke-width", 1.2)
-        .attr("d",
-          `M${afterGap[0]},${afterGap[1]} C${afterGap[2]},${afterGap[3]} ${afterGap[4]},${afterGap[5]} ${afterGap[6]},${afterGap[7]}`
-        );
-
-      // --- Compute actual label coordinates at tLabel ---
-      const t = tLabel;
-      const x = Math.pow(1 - t, 3) * source.x +
-                3 * Math.pow(1 - t, 2) * t * c1x +
-                3 * (1 - t) * Math.pow(t, 2) * c2x +
-                Math.pow(t, 3) * target.x;
-
-      const y = Math.pow(1 - t, 3) * source.y +
-                3 * Math.pow(1 - t, 2) * t * c1y +
-                3 * (1 - t) * Math.pow(t, 2) * c2y +
-                Math.pow(t, 3) * target.y;
+        .attr("d", startGeom.part2)
+        .transition()
+        .duration(800)
+        .attr("d", endGeom.part2);
 
       // --- Add relation label centered within the gap ---
       group.append("text")
-        .attr("x", x)
-        .attr("y", y + 6)
+        .attr("x", startGeom.labelX)
+        .attr("y", startGeom.labelY + 6)
         .attr("text-anchor", "middle")
         .attr("font-size", "12px")
         .attr("fill", "#333")
-        .attr('class', d => {
+        .attr('class', () => {
           let classList = "link-label";
 
-          // Guard against undefined and check if it's the student tree
           if (isStudentTree && d.target && d.target.data && d.target.data.id) {
-            
-            // Look for the error entry for the CHILD of this link
             const errorEntry = errorIds.find(word => word.id === d.target.data.id);
-
-            // If that child has a relation error, highlight THIS label
             if (errorEntry && errorEntry.errorTypes.includes("relation")) {
               classList += " err-relation";
             }
@@ -893,23 +915,31 @@ export function drawLinks(gx, rootHierarchy, idParentPairs, errorIds, isStudentT
           return classList;
         })
         .text(d => d.target?.data?.relation || "")
-        // Add the background rectangle
-        .each(function() {
-          // Measure the text and insert a rect *behind* it
-          const bbox = this.getBBox();
-          const isError = d3.select(this).classed('err-relation'); // Check if text has error class
-          d3.select(this.parentNode)
-            .insert('rect', 'text')  // insert before text so it's behind
-            .attr('x', bbox.x - 3)
-            .attr('y', bbox.y - 2)
-            .attr('width', bbox.width + 6)
-            .attr('height', bbox.height)
-            .attr('rx', 3)
-            .attr('ry', 3)
-            .attr('class', isError ? 'text-bg err-bg' : 'text-bg'); // Add err-bg class if error
-        });
-        });
-    }
+        .transition()
+        .duration(800)
+        .attr("x", endGeom.labelX)
+        .attr("y", endGeom.labelY + 6);
+    });
+
+  // Rebuild label background rectangles after text exists
+  gx.selectAll(".link-group text").each(function() {
+    const oldRect = this.parentNode.querySelector("rect");
+    if (oldRect) oldRect.remove();
+
+    const bbox = this.getBBox();
+    const isError = d3.select(this).classed('err-relation');
+
+    d3.select(this.parentNode)
+      .insert('rect', 'text')
+      .attr('x', bbox.x - 3)
+      .attr('y', bbox.y - 2)
+      .attr('width', bbox.width + 6)
+      .attr('height', bbox.height)
+      .attr('rx', 3)
+      .attr('ry', 3)
+      .attr('class', isError ? 'text-bg err-bg' : 'text-bg');
+  });
+}
 
 /**
  * --------------------------------------------------------------------------
