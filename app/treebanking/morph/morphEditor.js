@@ -211,6 +211,25 @@ function normalizePosKey(posLike) {
   return match?.key || '';
 }
 
+function collectPreservedValuesFromSeedForm() {
+  if (!seedForm?.postag) {
+    return {};
+  }
+
+  const parsed = parseMorphTag(seedForm.postag) || {};
+
+  return {
+    pers: parsed.person || '',
+    num: parsed.number || '',
+    tense: parsed.tense || '',
+    mood: parsed.mood || '',
+    voice: parsed.voice || '',
+    gend: parsed.gender || '',
+    case: parsed.case || '',
+    degree: parsed.degree || ''
+  };
+}
+
 function renderDynamicForPOS(posKeyLike, preservedValues = {}) {
   nfDyn.innerHTML = '';
   const posKey = normalizePosKey(posKeyLike);
@@ -261,7 +280,21 @@ function renderDynamicForPOS(posKeyLike, preservedValues = {}) {
 
 
 nfPos.addEventListener('change', e => {
-  renderDynamicForPOS(e.target.value);
+  const currentValues = collectDynamicValuesFromUI();
+  const fallbackSeedValues = collectPreservedValuesFromSeedForm();
+
+  const preservedValues = {
+    pers: currentValues.pers || fallbackSeedValues.pers || '',
+    num: currentValues.num || fallbackSeedValues.num || '',
+    tense: currentValues.tense || fallbackSeedValues.tense || '',
+    mood: currentValues.mood || fallbackSeedValues.mood || '',
+    voice: currentValues.voice || fallbackSeedValues.voice || '',
+    gend: currentValues.gend || fallbackSeedValues.gend || '',
+    case: currentValues.case || fallbackSeedValues.case || '',
+    degree: currentValues.degree || fallbackSeedValues.degree || ''
+  };
+
+  renderDynamicForPOS(e.target.value, preservedValues);
 });
 
 // --- Prefill from clicked form (clone) ---
