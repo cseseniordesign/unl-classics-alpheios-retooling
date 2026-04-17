@@ -414,6 +414,35 @@ function handleArtificialTokenClick() {
  
     const spliceIndex = window.atInsertionBefore ? anchorIndex : anchorIndex + 1;
     sentence.words.splice(spliceIndex, 0, newToken);
+   
+    // Renumber all word ids in document order and remap heads
+    const idMap = new Map();
+  
+    sentence.words.forEach((word, index) => {
+      idMap.set(String(word.id), String(index + 1));
+    });
+  
+    sentence.words.forEach((word, index) => {
+      word.id = String(index + 1);
+    });
+  
+    sentence.words.forEach(word => {
+      const head = String(word.head ?? '').trim();
+  
+      if (!head) return;
+      if (head === '0' || head.toLowerCase() === 'root') {
+        word.head = '0';
+        return;
+      }
+  
+      word.head = idMap.get(head) || '0';
+    });
+  
+    // Keep the selected anchor id in sync after renumbering
+    const remappedSelected = idMap.get(String(window.atSelectedWordId));
+    if (remappedSelected) {
+      window.atSelectedWordId = remappedSelected;
+    }
  
     createNodeHierarchy(window.currentIndex);
     displaySentence(window.currentIndex);
