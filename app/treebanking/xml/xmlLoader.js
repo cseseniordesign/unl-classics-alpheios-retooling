@@ -162,7 +162,7 @@ export function handleFileUpload() {
 
     fileInput.value = "";
 
-    window.location.href = "../../../assets/treebank.xml";
+    window.location.href = "./assets/treebank.xml";
   };
 
   reader.readAsText(file, "UTF-8");
@@ -178,7 +178,7 @@ export async function loadTreebankData(xmlContent) {
   if (!xmlContent) {
     if (window.treebankData) return window.treebankData;
     try {
-      const response = await fetch('../../../assets/treebank.xml');
+      const response = await fetch('./assets/treebank.xml');
       const xmlText = await response.text();
       const xmlDoc = new DOMParser().parseFromString(xmlText, "text/xml");
       captureTreebankMeta(xmlDoc);
